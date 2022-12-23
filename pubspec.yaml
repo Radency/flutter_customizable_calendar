@@ -1,0 +1,30 @@
+name: flutter_customizable_calendar
+description: Customizable calendar views for Flutter.
+version: 0.0.1
+homepage: none
+
+environment:
+  sdk: '>=2.18.5 <3.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  animations: ^2.0.6
+  clock: ^1.1.1
+  cupertino_icons: ^1.0.2
+  equatable: ^2.0.5
+  extra_hittest_area: ^0.1.0
+  flutter_bloc: ^8.1.1
+  intl: ^0.17.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  bloc_test: ^9.1.0
+  mocktail: ^0.3.0
+  very_good_analysis: ^3.1.0
+
+flutter:
