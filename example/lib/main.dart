@@ -58,25 +58,22 @@ class App extends StatelessWidget {
   }
 }
 
-class CalendarPage<T extends CalendarEvent> extends StatefulWidget {
-  /// Creates a Calendar page.
+class CalendarPage<T extends FloatingCalendarEvent> extends StatefulWidget {
   const CalendarPage({
     super.key,
     this.breaks = const [],
     this.events = const [],
   });
 
-  /// Breaks list to display
   final List<Break> breaks;
 
-  /// Events list to display
-  final List<FloatingCalendarEvent> events;
+  final List<T> events;
 
   @override
   State<CalendarPage<T>> createState() => _CalendarPageState<T>();
 }
 
-class _CalendarPageState<T extends CalendarEvent> extends State<CalendarPage<T>>
+class _CalendarPageState<T extends FloatingCalendarEvent> extends State<CalendarPage<T>>
     with SingleTickerProviderStateMixin {
   final _daysViewController = DaysViewController(
     initialDate: _initialDate,
