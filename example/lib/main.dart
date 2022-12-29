@@ -98,7 +98,6 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
   void initState() {
     super.initState();
     _tabController = TabController(
-      initialIndex: 1,
       length: 3,
       vsync: this,
     );
