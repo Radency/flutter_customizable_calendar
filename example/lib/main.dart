@@ -73,8 +73,8 @@ class CalendarPage<T extends FloatingCalendarEvent> extends StatefulWidget {
   State<CalendarPage<T>> createState() => _CalendarPageState<T>();
 }
 
-class _CalendarPageState<T extends FloatingCalendarEvent> extends State<CalendarPage<T>>
-    with SingleTickerProviderStateMixin {
+class _CalendarPageState<T extends FloatingCalendarEvent>
+    extends State<CalendarPage<T>> with SingleTickerProviderStateMixin {
   final _daysViewController = DaysViewController(
     initialDate: _initialDate,
     endDate: _endDate,

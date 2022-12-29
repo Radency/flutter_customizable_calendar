@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
-import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
+import 'package:flutter_customizable_calendar/src/ui/custom_widgets/events/events.dart';
 
 class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
   const EventView(
