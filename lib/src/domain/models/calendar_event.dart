@@ -11,8 +11,8 @@ abstract class CalendarEvent extends Equatable with Comparable<CalendarEvent> {
     required this.color,
   });
 
-  /// Unique [String] value which allows to identify the event
-  final String id;
+  /// Unique [Object] which allows to identify a specific event
+  final Object id;
 
   /// The event [start] date
   final DateTime start;

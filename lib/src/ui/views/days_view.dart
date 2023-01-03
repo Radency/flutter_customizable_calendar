@@ -102,6 +102,17 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
   int get _cellExtent => widget.timelineTheme.cellExtent;
 
+  RenderBox? _getTimelineBox() =>
+      DaysViewKeys.timeline.currentContext?.findRenderObject() as RenderBox?;
+
+  RenderBox? _getLayoutBox(DateTime dayDate) =>
+      DaysViewKeys.layouts[dayDate]?.currentContext?.findRenderObject()
+          as RenderBox?;
+
+  RenderBox? _getEventBox(T event) =>
+      DaysViewKeys.events[event]?.currentContext?.findRenderObject()
+          as RenderBox?;
+
   void _animationListener({required Animation<double> animation}) {
     final newPosition = _positionTween.transform(animation.value);
     final newSize = _sizeTween.transform(animation.value)!;
@@ -170,19 +181,13 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   }
 
   void _setElevatedEvent(T event) {
-    final listViewBox =
-        DaysViewKeys.timeline.currentContext!.findRenderObject()! as RenderBox;
-
     final dayDate = DateUtils.dateOnly(event.start);
-    final layoutBox = DaysViewKeys.layouts[dayDate]!.currentContext!
-        .findRenderObject()! as RenderBox;
+    final layoutBox = _getLayoutBox(dayDate)!;
     final layoutPosition = layoutBox.localToGlobal(
       Offset.zero,
-      ancestor: listViewBox,
+      ancestor: _getTimelineBox(),
     );
-
-    final eventBox = DaysViewKeys.events[event]!.currentContext!
-        .findRenderObject()! as RenderBox;
+    final eventBox = _getEventBox(event)!;
     final eventPosition = eventBox.localToGlobal(
       layoutPosition,
       ancestor: layoutBox,
@@ -247,13 +252,10 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   void _dropEvent() {
     if (_elevatedEvent.value == null) return;
 
-    final listViewBox =
-        DaysViewKeys.timeline.currentContext!.findRenderObject()! as RenderBox;
-    final eventBox = DaysViewKeys.events[_elevatedEvent.value!]?.currentContext
-        ?.findRenderObject() as RenderBox?;
+    final eventBox = _getEventBox(_elevatedEvent.value!);
     final eventPosition = eventBox?.localToGlobal(
       Offset.zero,
-      ancestor: listViewBox,
+      ancestor: _getTimelineBox(),
     );
 
     _positionTween = Tween(
@@ -277,13 +279,11 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
   void _updateElevatedEventStart() {
     final displayedDay = DateUtils.dateOnly(_displayedDate);
-    final listViewBox =
-        DaysViewKeys.timeline.currentContext!.findRenderObject()! as RenderBox;
-    final layoutBox = DaysViewKeys.layouts[displayedDay]!.currentContext!
-        .findRenderObject()! as RenderBox;
+    final timelineBox = _getTimelineBox()!;
+    final layoutBox = _getLayoutBox(displayedDay)!;
     final eventPosition = layoutBox.globalToLocal(
       _elevatedEventBounds.origin,
-      ancestor: listViewBox,
+      ancestor: timelineBox,
     );
 
     final startOffsetInMinutes = eventPosition.dy / _minuteExtent;
@@ -296,20 +296,18 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     ) as T;
 
     // Event position correction
-    _elevatedEventBounds.origin = listViewBox.globalToLocal(
+    _elevatedEventBounds.origin = timelineBox.globalToLocal(
       layoutBox.localToGlobal(Offset(0, roundedOffset * _minuteExtent)),
     );
   }
 
   void _updateElevatedEventDuration() {
     final displayedDay = DateUtils.dateOnly(_displayedDate);
-    final listViewBox =
-        DaysViewKeys.timeline.currentContext!.findRenderObject()! as RenderBox;
-    final layoutBox = DaysViewKeys.layouts[displayedDay]!.currentContext!
-        .findRenderObject()! as RenderBox;
+    final timelineBox = _getTimelineBox()!;
+    final layoutBox = _getLayoutBox(displayedDay)!;
     final eventPosition = layoutBox.globalToLocal(
       _elevatedEventBounds.origin,
-      ancestor: listViewBox,
+      ancestor: timelineBox,
     );
 
     final endOffsetInMinutes =
