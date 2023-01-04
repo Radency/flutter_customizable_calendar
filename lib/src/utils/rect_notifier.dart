@@ -54,7 +54,7 @@ class RectNotifier extends ChangeNotifier implements ValueListenable<Rect> {
   }
 
   @override
-  Rect get value => Rect.fromLTWH(dx, dy, width, height);
+  Rect get value => _origin & _size;
   set value(Rect newValue) {
     if (value == newValue) return;
     _origin = newValue.topLeft;

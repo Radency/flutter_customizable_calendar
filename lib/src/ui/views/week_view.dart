@@ -122,13 +122,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   void _animationListener({required Animation<double> animation}) {
     final newPosition = _positionTween.transform(animation.value);
     final newSize = _sizeTween.transform(animation.value)!;
-    _elevatedEventBounds.value = Rect.fromLTWH(
-      newPosition.dx,
-      newPosition.dy,
-      newSize.width,
-      newSize.height,
-    );
+    _elevatedEventBounds.value = newPosition & newSize;
   }
+
+  void _stopTimelineScrolling() =>
+      _timelineController?.jumpTo(_timelineController!.offset);
 
   Future<void> _scrollIfNecessary() async {
     _scrolling = true;
@@ -190,7 +188,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     if (_scrolling) unawaited(_scrollIfNecessary());
   }
 
-  void _stopScrolling() => _scrolling = false;
+  void _stopAutoScrolling() => _scrolling = false;
 
   void _autoScrolling(DragUpdateDetails details) {
     _fingerPosition = details.globalPosition;
@@ -231,15 +229,14 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
           elevation: 5,
           bounds: _elevatedEventBounds,
           animation: _elevatedEventController,
-          onDragDown: (details) =>
-              _timelineController?.jumpTo(_timelineController!.offset),
+          onDragDown: (details) => _stopTimelineScrolling(),
           onDragStart: () => _dragging = true,
           onDragUpdate: (details) {
             _elevatedEventBounds.origin += details.delta;
             _autoScrolling(details);
           },
           onDragEnd: (details) {
-            _stopScrolling();
+            _stopAutoScrolling();
             _updateElevatedEventStart();
             _dragging = false;
           },
@@ -252,7 +249,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             }
           },
           onResizingEnd: (details) {
-            _stopScrolling();
+            _stopAutoScrolling();
             _updateElevatedEventDuration();
             _resizing = false;
           },
