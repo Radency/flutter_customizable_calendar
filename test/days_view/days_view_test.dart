@@ -1,12 +1,12 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/controllers/days_view_controller.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/views/days_view.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockDaysViewController extends MockCubit<DaysViewState>
     implements DaysViewController {}
@@ -177,11 +177,11 @@ void main() {
 
           final eventKey = DaysViewKeys.events[event]!;
 
-          expect(find.byKey(DaysViewKeys.elevatedEvent), findsNothing);
+          expect(find.byKey(DaysViewKeys.elevatedEventView), findsNothing);
 
           await widgetTester.longPress(find.byKey(eventKey));
 
-          expect(find.byKey(DaysViewKeys.elevatedEvent), findsOneWidget);
+          expect(find.byKey(DaysViewKeys.elevatedEventView), findsOneWidget);
         },
         skip: false,
       );
@@ -213,7 +213,8 @@ void main() {
           final layoutKey = DaysViewKeys.layouts[today]!;
           final layoutFinder = find.byKey(layoutKey);
           final layoutRect = widgetTester.getRect(layoutFinder);
-          final elevatedEventFinder = find.byKey(DaysViewKeys.elevatedEvent);
+          final elevatedEventFinder =
+              find.byKey(DaysViewKeys.elevatedEventView);
 
           await widgetTester.longPress(eventFinder);
 
@@ -261,7 +262,8 @@ void main() {
           await widgetTester.longPress(find.byKey(eventKey));
           await widgetTester.pumpAndSettle();
 
-          final elevatedEventFinder = find.byKey(DaysViewKeys.elevatedEvent);
+          final elevatedEventFinder =
+              find.byKey(DaysViewKeys.elevatedEventView);
 
           expect(elevatedEventFinder, findsOneWidget);
 

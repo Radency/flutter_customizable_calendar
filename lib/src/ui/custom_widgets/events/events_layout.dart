@@ -55,27 +55,29 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
         ...eventsToDisplay.map(
           (event) => LayoutId(
             id: event,
-            child: ValueListenableBuilder<T?>(
-              valueListenable: elevatedEvent,
-              builder: (context, elevatedEvent, child) => Opacity(
-                opacity: (event == elevatedEvent) ? 0.5 : 1,
-                child: EventView(
-                  event,
-                  key: eventsKeys[event] ??= GlobalKey(),
-                  onTap: (elevatedEvent == null)
-                      ? () => onEventTap?.call(event)
-                      : null,
-                  onLongPress: (elevatedEvent == null)
-                      ? () => onEventLongPress?.call(event)
-                      : null,
-                ),
-              ),
-            ),
+            child: _eventView(event),
           ),
         ),
       ],
     );
   }
+
+  Widget _eventView(T event) => ValueListenableBuilder(
+        valueListenable: elevatedEvent,
+        builder: (context, elevatedEvent, child) => IgnorePointer(
+          ignoring: elevatedEvent != null,
+          child: Opacity(
+            opacity: (elevatedEvent == event) ? 0.5 : 1,
+            child: child,
+          ),
+        ),
+        child: EventView(
+          event,
+          key: eventsKeys[event] ??= GlobalKey(),
+          onTap: () => onEventTap?.call(event),
+          onLongPress: () => onEventLongPress?.call(event),
+        ),
+      );
 }
 
 class _EventsLayoutDelegate<T extends FloatingCalendarEvent>

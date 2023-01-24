@@ -24,7 +24,7 @@ abstract class DaysViewKeys {
   static final events = <CalendarEvent, GlobalKey>{};
 
   /// A key for the elevated (floating) event view
-  static final elevatedEvent = UniqueKey();
+  static const elevatedEventView = ValueKey('ElevatedEventView');
 }
 
 /// Days view displays a timeline and has ability to move to a specific date.
@@ -82,8 +82,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   late final PageController _monthPickerController;
   late final ScrollController _timelineController;
   late final AnimationController _elevatedEventController;
-  late Tween<Offset> _positionTween;
-  late SizeTween _sizeTween;
+  late RectTween _rectTween;
   var _fingerPosition = Offset.zero;
   var _scrolling = false;
   var _dragging = false;
@@ -112,12 +111,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   RenderBox? _getEventBox(T event) =>
       DaysViewKeys.events[event]?.currentContext?.findRenderObject()
           as RenderBox?;
-
-  void _animationListener({required Animation<double> animation}) {
-    final newPosition = _positionTween.transform(animation.value);
-    final newSize = _sizeTween.transform(animation.value)!;
-    _elevatedEventBounds.value = newPosition & newSize;
-  }
 
   void _stopTimelineScrolling() =>
       _timelineController.jumpTo(_timelineController.offset);
@@ -191,14 +184,14 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
       ancestor: layoutBox,
     );
 
-    _positionTween = Tween(
-      begin: eventPosition,
-      end: Offset(layoutPosition.dx, eventPosition.dy),
-    );
-
-    _sizeTween = SizeTween(
-      begin: eventBox.size,
-      end: Size(layoutBox.size.width, eventBox.size.height),
+    _rectTween = RectTween(
+      begin: eventPosition & eventBox.size,
+      end: Rect.fromLTWH(
+        layoutPosition.dx,
+        eventPosition.dy,
+        layoutBox.size.width,
+        eventBox.size.height,
+      ),
     );
 
     _elevatedEvent.value = event;
@@ -207,8 +200,8 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         final minExtent = _minuteExtent * _cellExtent; // Minimal event extent
 
         return DraggableEventView(
-          _elevatedEvent.value!,
-          key: DaysViewKeys.elevatedEvent,
+          event,
+          key: DaysViewKeys.elevatedEventView,
           elevation: 5,
           bounds: _elevatedEventBounds,
           animation: _elevatedEventController,
@@ -241,6 +234,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
       },
     );
     _overlayKey.currentState!.insert(_elevatedEventEntry!);
+
     _elevatedEventController
       ..stop()
       ..forward();
@@ -255,23 +249,15 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
       ancestor: _getTimelineBox(),
     );
 
-    _positionTween = Tween(
-      end: _elevatedEventBounds.origin,
-      begin: eventPosition ?? _elevatedEventBounds.origin,
-    );
-
-    _sizeTween = SizeTween(
-      end: _elevatedEventBounds.size,
-      begin: eventBox?.size ?? _sizeTween.begin,
+    _rectTween = RectTween(
+      end: _elevatedEventBounds.origin & _elevatedEventBounds.size,
+      begin: (eventPosition ?? _elevatedEventBounds.origin) &
+          (eventBox?.size ?? _rectTween.begin?.size ?? Size.zero),
     );
 
     _elevatedEventController
       ..stop()
-      ..reverse().whenComplete(() {
-        _elevatedEventEntry?.remove();
-        _elevatedEventEntry = null;
-        _elevatedEvent.value = null;
-      });
+      ..reverse();
   }
 
   void _updateElevatedEventStart() {
@@ -322,6 +308,9 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     _elevatedEventBounds.height = newHeight;
   }
 
+  void _animateElevatedEventBounds({required Animation<double> animation}) =>
+      _elevatedEventBounds.value = _rectTween.transform(animation.value)!;
+
   int _getMonthsDeltaForDate(DateTime date) =>
       DateUtils.monthDelta(_initialDate, date);
 
@@ -359,13 +348,23 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     _elevatedEventController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
-    )..addListener(
-        () => _animationListener(
+    )
+      ..addListener(
+        () => _animateElevatedEventBounds(
           animation: CurvedAnimation(
             parent: _elevatedEventController,
             curve: Curves.fastOutSlowIn,
           ),
         ),
+      )
+      ..addStatusListener(
+        (status) {
+          if (status == AnimationStatus.dismissed) {
+            _elevatedEventEntry?.remove();
+            _elevatedEventEntry = null;
+            _elevatedEvent.value = null;
+          }
+        },
       );
   }
 
@@ -448,13 +447,16 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
           _monthPicker(),
           _daysList(),
           Expanded(
-            child: Stack(
-              children: [
-                _timeline(),
-                Positioned.fill(
-                  child: Overlay(key: _overlayKey),
-                ),
-              ],
+            child: GestureDetector(
+              onTap: _dropEvent,
+              child: Stack(
+                children: [
+                  _timeline(),
+                  Positioned.fill(
+                    child: Overlay(key: _overlayKey),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -497,37 +499,39 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   Widget _daysList() {
     final theme = widget.daysListTheme;
 
-    return NotificationListener<UserScrollNotification>(
-      onNotification: (event) {
-        // Stop scrolling the timeline if user scrolls the list
-        if (event.direction != ScrollDirection.idle) _stopTimelineScrolling();
-        return true;
-      },
-      child: SizedBox(
-        height: theme.height,
-        child: PageView.builder(
-          controller: _monthPickerController,
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, pageIndex) {
-            final monthDate =
-                DateUtils.addMonthsToMonthDate(_initialDate, pageIndex);
-            final daysInMonth = DateUtils.getDaysInMonth(
-              _displayedDate.year,
-              _displayedDate.month,
-            );
+    return SizedBox(
+      height: theme.height,
+      child: PageView.builder(
+        controller: _monthPickerController,
+        physics: const NeverScrollableScrollPhysics(),
+        itemBuilder: (context, pageIndex) {
+          final monthDate =
+              DateUtils.addMonthsToMonthDate(_initialDate, pageIndex);
+          final daysInMonth = DateUtils.getDaysInMonth(
+            _displayedDate.year,
+            _displayedDate.month,
+          );
 
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                // Dispose the previous list controller
-                _daysListController?.dispose();
-                _daysListController = ScrollController(
-                  initialScrollOffset: min(
-                    (_displayedDate.day - 1) * theme.itemExtent,
-                    daysInMonth * theme.itemExtent - constraints.maxWidth,
-                  ),
-                );
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              // Dispose the previous list controller
+              _daysListController?.dispose();
+              _daysListController = ScrollController(
+                initialScrollOffset: min(
+                  (_displayedDate.day - 1) * theme.itemExtent,
+                  daysInMonth * theme.itemExtent - constraints.maxWidth,
+                ),
+              );
 
-                return ListView.builder(
+              return NotificationListener<UserScrollNotification>(
+                onNotification: (event) {
+                  // Stop scrolling the timeline if user scrolls the list
+                  if (event.direction != ScrollDirection.idle) {
+                    _stopTimelineScrolling();
+                  }
+                  return true;
+                },
+                child: ListView.builder(
                   controller: _daysListController,
                   scrollDirection: Axis.horizontal,
                   physics: theme.physics,
@@ -550,11 +554,11 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                           DateUtils.isSameDay(previous.focusedDate, dayDate),
                     );
                   },
-                );
-              },
-            );
-          },
-        ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -572,57 +576,54 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         }
         return true;
       },
-      child: GestureDetector(
-        onTap: _dropEvent,
-        child: ListView.builder(
-          key: DaysViewKeys.timeline,
-          controller: _timelineController,
-          padding: EdgeInsets.only(
-            top: theme.padding.top,
-            bottom: theme.padding.bottom,
-          ),
-          itemExtent: _dayExtent,
-          itemCount: (_endDate != null)
-              ? _endDate!.difference(_initialDate).inDays + 1
-              : null,
-          itemBuilder: (context, index) {
-            final dayDate = DateUtils.addDaysToDate(_initialDate, index);
-            final isToday = DateUtils.isSameDay(dayDate, _now);
+      child: ListView.builder(
+        key: DaysViewKeys.timeline,
+        controller: _timelineController,
+        padding: EdgeInsets.only(
+          top: theme.padding.top,
+          bottom: theme.padding.bottom,
+        ),
+        itemExtent: _dayExtent,
+        itemCount: (_endDate != null)
+            ? _endDate!.difference(_initialDate).inDays + 1
+            : null,
+        itemBuilder: (context, index) {
+          final dayDate = DateUtils.addDaysToDate(_initialDate, index);
+          final isToday = DateUtils.isSameDay(dayDate, _now);
 
-            return GestureDetector(
-              onLongPressStart: (details) {
-                final fingerPosition = details.localPosition;
-                final offsetInMinutes = fingerPosition.dy ~/ _minuteExtent;
-                final roundedMinutes =
-                    (offsetInMinutes / _cellExtent).round() * _cellExtent;
-                final timestamp = _addMinutesToDay(dayDate, roundedMinutes);
-                widget.onDateLongPress?.call(timestamp);
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: theme.padding.left,
-                  right: theme.padding.right,
-                ),
-                child: TimeScale(
-                  showCurrentTimeMark: isToday,
-                  theme: theme.timeScaleTheme,
-                  child: EventsLayout(
-                    dayDate: dayDate,
-                    layoutsKeys: DaysViewKeys.layouts,
-                    eventsKeys: DaysViewKeys.events,
-                    breaks: widget.breaks,
-                    events: widget.events,
-                    cellExtent: _cellExtent,
-                    onEventTap: widget.onEventTap,
-                    onEventLongPress: _setElevatedEvent,
-                    elevatedEvent: _elevatedEvent,
-                  ),
+          return GestureDetector(
+            onLongPressStart: (details) {
+              final fingerPosition = details.localPosition;
+              final offsetInMinutes = fingerPosition.dy ~/ _minuteExtent;
+              final roundedMinutes =
+                  (offsetInMinutes / _cellExtent).round() * _cellExtent;
+              final timestamp = _addMinutesToDay(dayDate, roundedMinutes);
+              widget.onDateLongPress?.call(timestamp);
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: theme.padding.left,
+                right: theme.padding.right,
+              ),
+              child: TimeScale(
+                showCurrentTimeMark: isToday,
+                theme: theme.timeScaleTheme,
+                child: EventsLayout(
+                  dayDate: dayDate,
+                  layoutsKeys: DaysViewKeys.layouts,
+                  eventsKeys: DaysViewKeys.events,
+                  breaks: widget.breaks,
+                  events: widget.events,
+                  cellExtent: _cellExtent,
+                  onEventTap: widget.onEventTap,
+                  onEventLongPress: _setElevatedEvent,
+                  elevatedEvent: _elevatedEvent,
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

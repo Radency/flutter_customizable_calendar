@@ -44,7 +44,7 @@ class DraggableEventView<T extends FloatingCalendarEvent>
 class _DraggableEventViewState<T extends FloatingCalendarEvent>
     extends State<DraggableEventView<T>> {
   final _link = LayerLink();
-  OverlayEntry? _entry;
+  OverlayEntry? _sizerEntry;
 
   static const _sizerDimension = 8.0;
 
@@ -54,21 +54,18 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
     // Non-editable events can't be resized
     if (widget.event is EditableCalendarEvent) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _entry = OverlayEntry(builder: _sizerBuilder);
-        Overlay.of(context)!.insert(_entry!);
+        _sizerEntry = OverlayEntry(builder: _sizerBuilder);
+        Overlay.of(context)!.insert(_sizerEntry!);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Rect>(
+    return ValueListenableBuilder(
       valueListenable: widget.bounds,
-      builder: (context, rect, child) => Positioned(
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
+      builder: (context, rect, child) => Positioned.fromRect(
+        rect: rect,
         child: child!,
       ),
       child: Draggable(
@@ -93,7 +90,7 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
 
   @override
   void dispose() {
-    _entry?.remove();
+    _sizerEntry?.remove();
     super.dispose();
   }
 
@@ -118,7 +115,7 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
             size: widget.bounds.size,
             child: _eventView(),
           ),
-          if (_entry != null)
+          if (_sizerEntry != null)
             Positioned(
               bottom: -(_sizerDimension / 2),
               width: _sizerDimension,
