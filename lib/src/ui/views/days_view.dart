@@ -449,14 +449,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
           Expanded(
             child: GestureDetector(
               onTap: _dropEvent,
-              child: Stack(
-                children: [
-                  _timeline(),
-                  Positioned.fill(
-                    child: Overlay(key: _overlayKey),
-                  ),
-                ],
-              ),
+              child: _timeline(),
             ),
           ),
         ],
@@ -566,65 +559,72 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   Widget _timeline() {
     final theme = widget.timelineTheme;
 
-    return NotificationListener<ScrollUpdateNotification>(
-      onNotification: (event) {
-        final delta = Offset(0, event.scrollDelta ?? 0);
-        // Update nothing if user drags the event by himself/herself
-        if (!_dragging && delta != Offset.zero) {
-          _elevatedEventBounds.origin -= delta;
-          if (_resizing) _elevatedEventBounds.size += delta;
-        }
-        return true;
-      },
-      child: ListView.builder(
-        key: DaysViewKeys.timeline,
-        controller: _timelineController,
-        padding: EdgeInsets.only(
-          top: theme.padding.top,
-          bottom: theme.padding.bottom,
-        ),
-        itemExtent: _dayExtent,
-        itemCount: (_endDate != null)
-            ? _endDate!.difference(_initialDate).inDays + 1
-            : null,
-        itemBuilder: (context, index) {
-          final dayDate = DateUtils.addDaysToDate(_initialDate, index);
-          final isToday = DateUtils.isSameDay(dayDate, _now);
-
-          return GestureDetector(
-            onLongPressStart: (details) {
-              final fingerPosition = details.localPosition;
-              final offsetInMinutes = fingerPosition.dy ~/ _minuteExtent;
-              final roundedMinutes =
-                  (offsetInMinutes / _cellExtent).round() * _cellExtent;
-              final timestamp = _addMinutesToDay(dayDate, roundedMinutes);
-              widget.onDateLongPress?.call(timestamp);
-            },
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: theme.padding.left,
-                right: theme.padding.right,
-              ),
-              child: TimeScale(
-                showCurrentTimeMark: isToday,
-                theme: theme.timeScaleTheme,
-                child: EventsLayout(
-                  dayDate: dayDate,
-                  layoutsKeys: DaysViewKeys.layouts,
-                  eventsKeys: DaysViewKeys.events,
-                  breaks: widget.breaks,
-                  events: widget.events,
-                  cellExtent: _cellExtent,
-                  onEventTap: widget.onEventTap,
-                  onEventLongPress: _setElevatedEvent,
-                  elevatedEvent: _elevatedEvent,
-                ),
-              ),
+    return Stack(
+      children: [
+        NotificationListener<ScrollUpdateNotification>(
+          onNotification: (event) {
+            final delta = Offset(0, event.scrollDelta ?? 0);
+            // Update nothing if user drags the event by himself/herself
+            if (!_dragging && delta != Offset.zero) {
+              _elevatedEventBounds.origin -= delta;
+              if (_resizing) _elevatedEventBounds.size += delta;
+            }
+            return true;
+          },
+          child: ListView.builder(
+            key: DaysViewKeys.timeline,
+            controller: _timelineController,
+            padding: EdgeInsets.only(
+              top: theme.padding.top,
+              bottom: theme.padding.bottom,
             ),
-          );
-        },
-      ),
+            itemExtent: _dayExtent,
+            itemCount: (_endDate != null)
+                ? _endDate!.difference(_initialDate).inDays + 1
+                : null,
+            itemBuilder: (context, index) {
+              final dayDate = DateUtils.addDaysToDate(_initialDate, index);
+              final isToday = DateUtils.isSameDay(dayDate, _now);
+
+              return GestureDetector(
+                onLongPressStart: (details) {
+                  final fingerPosition = details.localPosition;
+                  final offsetInMinutes = fingerPosition.dy ~/ _minuteExtent;
+                  final roundedMinutes =
+                      (offsetInMinutes / _cellExtent).round() * _cellExtent;
+                  final timestamp = _addMinutesToDay(dayDate, roundedMinutes);
+                  widget.onDateLongPress?.call(timestamp);
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: theme.padding.left,
+                    right: theme.padding.right,
+                  ),
+                  child: TimeScale(
+                    showCurrentTimeMark: isToday,
+                    theme: theme.timeScaleTheme,
+                    child: EventsLayout(
+                      dayDate: dayDate,
+                      layoutsKeys: DaysViewKeys.layouts,
+                      eventsKeys: DaysViewKeys.events,
+                      breaks: widget.breaks,
+                      events: widget.events,
+                      cellExtent: _cellExtent,
+                      onEventTap: widget.onEventTap,
+                      onEventLongPress: _setElevatedEvent,
+                      elevatedEvent: _elevatedEvent,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Positioned.fill(
+          child: Overlay(key: _overlayKey),
+        ),
+      ],
     );
   }
 }

@@ -89,7 +89,7 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
     _sizerEntry?.remove();
     super.dispose();
   }

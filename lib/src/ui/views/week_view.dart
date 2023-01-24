@@ -427,16 +427,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
           Expanded(
             child: GestureDetector(
               onTap: _dropEvent,
-              child: Stack(
-                children: [
-                  _weekTimeline(),
-                  Positioned.fill(
-                    top: widget.daysRowTheme.height +
-                        (widget.divider?.height ?? 0),
-                    child: Overlay(key: _overlayKey),
-                  ),
-                ],
-              ),
+              child: _weekTimeline(),
             ),
           ),
         ],
@@ -479,46 +470,54 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   Widget _weekTimeline() {
     final theme = widget.timelineTheme;
 
-    return PageView.builder(
-      controller: _weekPickerController,
-      physics: const NeverScrollableScrollPhysics(),
-      itemBuilder: (context, pageIndex) {
-        final displayedDay =
-            DateUtils.addDaysToDate(_initialDate, pageIndex * 7);
-        final weekdays = displayedDay.weekRange.days;
-        final timeScaleWidth = theme.timeScaleTheme.width;
+    return Stack(
+      children: [
+        PageView.builder(
+          controller: _weekPickerController,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, pageIndex) {
+            final displayedDay =
+                DateUtils.addDaysToDate(_initialDate, pageIndex * 7);
+            final weekdays = displayedDay.weekRange.days;
+            final timeScaleWidth = theme.timeScaleTheme.width;
 
-        return Padding(
-          padding: EdgeInsets.only(
-            left: theme.padding.left,
-            right: theme.padding.right,
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(left: timeScaleWidth),
-                child: _daysRow(weekdays),
+            return Padding(
+              padding: EdgeInsets.only(
+                left: theme.padding.left,
+                right: theme.padding.right,
               ),
-              widget.divider ?? const SizedBox.shrink(),
-              Expanded(
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      left: timeScaleWidth,
-                      child: _stripesRow(weekdays.length),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: timeScaleWidth),
+                    child: _daysRow(weekdays),
+                  ),
+                  widget.divider ?? const SizedBox.shrink(),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          left: timeScaleWidth,
+                          child: _stripesRow(weekdays.length),
+                        ),
+                        _timeline(weekdays),
+                        Positioned.fill(
+                          left: timeScaleWidth,
+                          child: _targetsRow(weekdays.length),
+                        ),
+                      ],
                     ),
-                    _timeline(weekdays),
-                    Positioned.fill(
-                      left: timeScaleWidth,
-                      child: _targetsRow(weekdays.length),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
-      },
+            );
+          },
+        ),
+        Positioned.fill(
+          top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
+          child: Overlay(key: _overlayKey),
+        ),
+      ],
     );
   }
 
