@@ -638,6 +638,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               (dayDate) => Expanded(
                 child: GestureDetector(
                   onLongPressStart: (details) {
+                    if (_elevatedEvent.value != null) return;
                     final fingerPosition = details.localPosition;
                     final offsetInMinutes = fingerPosition.dy ~/ _minuteExtent;
                     final roundedMinutes =
@@ -645,7 +646,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                     final timestamp = _addMinutesToDay(dayDate, roundedMinutes);
                     widget.onDateLongPress?.call(timestamp);
                   },
-                  behavior: HitTestBehavior.opaque,
                   child: EventsLayout(
                     dayDate: dayDate,
                     layoutsKeys: WeekViewKeys.layouts,

@@ -588,6 +588,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
               return GestureDetector(
                 onLongPressStart: (details) {
+                  if (_elevatedEvent.value != null) return;
                   final fingerPosition = details.localPosition;
                   final offsetInMinutes = fingerPosition.dy ~/ _minuteExtent;
                   final roundedMinutes =
@@ -595,7 +596,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                   final timestamp = _addMinutesToDay(dayDate, roundedMinutes);
                   widget.onDateLongPress?.call(timestamp);
                 },
-                behavior: HitTestBehavior.opaque,
                 child: Padding(
                   padding: EdgeInsets.only(
                     left: theme.padding.left,
