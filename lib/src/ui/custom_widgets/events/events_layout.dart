@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
+import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
 class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   const EventsLayout({
@@ -13,9 +14,10 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     required this.cellExtent,
     this.breaks = const [],
     this.events = const [],
+    required this.elevatedEvent,
     this.onEventTap,
     this.onEventLongPress,
-    required this.elevatedEvent,
+    this.onLayoutLongPress,
   });
 
   final DateTime dayDate;
@@ -24,9 +26,10 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   final int cellExtent;
   final List<Break> breaks;
   final List<T> events;
+  final ValueNotifier<T?> elevatedEvent;
   final void Function(T)? onEventTap;
   final void Function(T)? onEventLongPress;
-  final ValueNotifier<T?> elevatedEvent;
+  final void Function(DateTime)? onLayoutLongPress;
 
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) => list
       .where((event) => DateUtils.isSameDay(event.start, dayDate))
@@ -37,39 +40,60 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     final breaksToDisplay = _getEventsOnDay(breaks);
     final eventsToDisplay = _getEventsOnDay(events);
 
-    return CustomMultiChildLayout(
-      key: layoutsKeys[dayDate] ??= GlobalKey(),
-      delegate: _EventsLayoutDelegate(
-        date: dayDate,
-        breaks: breaksToDisplay,
-        events: eventsToDisplay,
-        cellExtent: cellExtent,
-      ),
-      children: [
-        ...breaksToDisplay.map(
-          (event) => LayoutId(
-            id: event,
-            child: BreakView(event),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final minuteExtent = constraints.maxHeight / Duration.minutesPerDay;
+
+        return ValueListenableBuilder(
+          valueListenable: elevatedEvent,
+          builder: (context, elevatedEvent, child) => IgnorePointer(
+            ignoring: elevatedEvent != null,
+            child: child,
           ),
-        ),
-        ...eventsToDisplay.map(
-          (event) => LayoutId(
-            id: event,
-            child: _eventView(event),
+          child: GestureDetector(
+            onLongPressStart: (details) {
+              final fingerPosition = details.localPosition;
+              final offsetInMinutes = fingerPosition.dy ~/ minuteExtent;
+              final roundedMinutes =
+                  (offsetInMinutes / cellExtent).round() * cellExtent;
+              final timestamp = dayDate.addMinutesToDayDate(roundedMinutes);
+              onLayoutLongPress?.call(timestamp);
+            },
+            behavior: HitTestBehavior.opaque,
+            child: CustomMultiChildLayout(
+              key: layoutsKeys[dayDate] ??= GlobalKey(),
+              delegate: _EventsLayoutDelegate(
+                date: dayDate,
+                breaks: breaksToDisplay,
+                events: eventsToDisplay,
+                cellExtent: cellExtent,
+              ),
+              children: [
+                ...breaksToDisplay.map(
+                  (event) => LayoutId(
+                    id: event,
+                    child: BreakView(event),
+                  ),
+                ),
+                ...eventsToDisplay.map(
+                  (event) => LayoutId(
+                    id: event,
+                    child: _eventView(event),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
   Widget _eventView(T event) => ValueListenableBuilder(
         valueListenable: elevatedEvent,
-        builder: (context, elevatedEvent, child) => IgnorePointer(
-          ignoring: elevatedEvent != null,
-          child: Opacity(
-            opacity: (elevatedEvent == event) ? 0.5 : 1,
-            child: child,
-          ),
+        builder: (context, elevatedEvent, child) => Opacity(
+          opacity: (elevatedEvent == event) ? 0.5 : 1,
+          child: child,
         ),
         child: EventView(
           event,

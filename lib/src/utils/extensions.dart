@@ -13,6 +13,19 @@ extension DurationInWeeks on Duration {
 }
 
 ///
+extension AddMinutesToDayDate on DateTime {
+  /// Returns new [DateTime] which contains
+  /// current day date and passed time offset.
+  DateTime addMinutesToDayDate(int minutes) => DateTime(
+        year,
+        month,
+        day,
+        minutes ~/ Duration.minutesPerHour,
+        minutes % Duration.minutesPerHour,
+      );
+}
+
+///
 extension WeekUtils on DateTime {
   /// Returns all day dates of current week from Monday (1) to Sunday (7).
   DateTimeRange get weekRange => DateTimeRange(

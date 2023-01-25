@@ -84,7 +84,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   final _elevatedEvent = ValueNotifier<T?>(null);
   final _elevatedEventBounds = RectNotifier();
   final _weekdayPosition = ValueNotifier(0);
-  final _orientation = ValueNotifier(Orientation.portrait);
   late final PageController _weekPickerController;
   late final AnimationController _elevatedEventController;
   late RectTween _rectTween;
@@ -286,7 +285,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     final startOffsetInMinutes = eventPosition.dy / _minuteExtent;
     final roundedOffset =
         (startOffsetInMinutes / _cellExtent).round() * _cellExtent;
-    final newStart = _addMinutesToDay(_displayedDate, roundedOffset);
+    final newStart = _displayedDate.addMinutesToDayDate(roundedOffset);
 
     _elevatedEvent.value = _elevatedEvent.value!.copyWith(
       start: newStart.isBefore(_initialDate) ? _initialDate : newStart,
@@ -323,14 +322,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
   void _animateElevatedEventBounds({required Animation<double> animation}) =>
       _elevatedEventBounds.value = _rectTween.transform(animation.value)!;
-
-  DateTime _addMinutesToDay(DateTime dayDate, int minutes) => DateTime(
-        dayDate.year,
-        dayDate.month,
-        dayDate.day,
-        minutes ~/ Duration.minutesPerHour,
-        minutes % Duration.minutesPerHour,
-      );
 
   @override
   void initState() {
@@ -373,12 +364,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     //     _elevatedEventBounds.dx = layoutPosition.dx;
     //   },
     // );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _orientation.value = MediaQuery.of(context).orientation;
   }
 
   @override
@@ -623,7 +608,26 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               child: TimeScale(
                 showCurrentTimeMark: isCurrentWeek,
                 theme: theme.timeScaleTheme,
-                child: _layoutsRow(days),
+                child: Row(
+                  children: days
+                      .map(
+                        (dayDate) => Expanded(
+                          child: EventsLayout(
+                            dayDate: dayDate,
+                            layoutsKeys: WeekViewKeys.layouts,
+                            eventsKeys: WeekViewKeys.events,
+                            cellExtent: _cellExtent,
+                            breaks: widget.breaks,
+                            events: widget.events,
+                            elevatedEvent: _elevatedEvent,
+                            onEventTap: widget.onEventTap,
+                            onEventLongPress: _setElevatedEvent,
+                            onLayoutLongPress: widget.onDateLongPress,
+                          ),
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
               ),
             ),
           ),
@@ -631,35 +635,4 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
       },
     );
   }
-
-  Widget _layoutsRow(List<DateTime> days) => Row(
-        children: days
-            .map(
-              (dayDate) => Expanded(
-                child: GestureDetector(
-                  onLongPressStart: (details) {
-                    if (_elevatedEvent.value != null) return;
-                    final fingerPosition = details.localPosition;
-                    final offsetInMinutes = fingerPosition.dy ~/ _minuteExtent;
-                    final roundedMinutes =
-                        (offsetInMinutes / _cellExtent).round() * _cellExtent;
-                    final timestamp = _addMinutesToDay(dayDate, roundedMinutes);
-                    widget.onDateLongPress?.call(timestamp);
-                  },
-                  child: EventsLayout(
-                    dayDate: dayDate,
-                    layoutsKeys: WeekViewKeys.layouts,
-                    eventsKeys: WeekViewKeys.events,
-                    breaks: widget.breaks,
-                    events: widget.events,
-                    cellExtent: _cellExtent,
-                    onEventTap: widget.onEventTap,
-                    onEventLongPress: _setElevatedEvent,
-                    elevatedEvent: _elevatedEvent,
-                  ),
-                ),
-              ),
-            )
-            .toList(growable: false),
-      );
 }

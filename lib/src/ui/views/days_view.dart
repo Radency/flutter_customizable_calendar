@@ -164,10 +164,10 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
   void _updateFocusedDate() {
     final daysOffset = _timelineController.offset ~/ _dayExtent;
-    final displayedDate = _addMinutesToDay(
-      DateUtils.addDaysToDate(_initialDate, daysOffset),
-      (_timelineController.offset % _minuteExtent).truncate(),
-    );
+    final displayedDay = DateUtils.addDaysToDate(_initialDate, daysOffset);
+    final offsetInMinutes =
+        (_timelineController.offset % _minuteExtent).truncate();
+    final displayedDate = displayedDay.addMinutesToDayDate(offsetInMinutes);
     widget.controller.setFocusedDate(displayedDate);
   }
 
@@ -272,7 +272,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     final startOffsetInMinutes = eventPosition.dy / _minuteExtent;
     final roundedOffset =
         (startOffsetInMinutes / _cellExtent).round() * _cellExtent;
-    final newStart = _addMinutesToDay(displayedDay, roundedOffset);
+    final newStart = displayedDay.addMinutesToDayDate(roundedOffset);
 
     _elevatedEvent.value = _elevatedEvent.value!.copyWith(
       start: newStart.isBefore(_initialDate) ? _initialDate : newStart,
@@ -324,14 +324,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     final timeDiff = date.difference(_initialDate) + timeZoneDiff;
     return timeDiff.inHours * _hourExtent;
   }
-
-  DateTime _addMinutesToDay(DateTime dayDate, int minutes) => DateTime(
-        dayDate.year,
-        dayDate.month,
-        dayDate.day,
-        minutes ~/ Duration.minutesPerHour,
-        minutes % Duration.minutesPerHour,
-      );
 
   @override
   void initState() {
@@ -586,35 +578,25 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               final dayDate = DateUtils.addDaysToDate(_initialDate, index);
               final isToday = DateUtils.isSameDay(dayDate, _now);
 
-              return GestureDetector(
-                onLongPressStart: (details) {
-                  if (_elevatedEvent.value != null) return;
-                  final fingerPosition = details.localPosition;
-                  final offsetInMinutes = fingerPosition.dy ~/ _minuteExtent;
-                  final roundedMinutes =
-                      (offsetInMinutes / _cellExtent).round() * _cellExtent;
-                  final timestamp = _addMinutesToDay(dayDate, roundedMinutes);
-                  widget.onDateLongPress?.call(timestamp);
-                },
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: theme.padding.left,
-                    right: theme.padding.right,
-                  ),
-                  child: TimeScale(
-                    showCurrentTimeMark: isToday,
-                    theme: theme.timeScaleTheme,
-                    child: EventsLayout(
-                      dayDate: dayDate,
-                      layoutsKeys: DaysViewKeys.layouts,
-                      eventsKeys: DaysViewKeys.events,
-                      breaks: widget.breaks,
-                      events: widget.events,
-                      cellExtent: _cellExtent,
-                      onEventTap: widget.onEventTap,
-                      onEventLongPress: _setElevatedEvent,
-                      elevatedEvent: _elevatedEvent,
-                    ),
+              return Padding(
+                padding: EdgeInsets.only(
+                  left: theme.padding.left,
+                  right: theme.padding.right,
+                ),
+                child: TimeScale(
+                  showCurrentTimeMark: isToday,
+                  theme: theme.timeScaleTheme,
+                  child: EventsLayout(
+                    dayDate: dayDate,
+                    layoutsKeys: DaysViewKeys.layouts,
+                    eventsKeys: DaysViewKeys.events,
+                    cellExtent: _cellExtent,
+                    breaks: widget.breaks,
+                    events: widget.events,
+                    elevatedEvent: _elevatedEvent,
+                    onEventTap: widget.onEventTap,
+                    onEventLongPress: _setElevatedEvent,
+                    onLayoutLongPress: widget.onDateLongPress,
                   ),
                 ),
               );
