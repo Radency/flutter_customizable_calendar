@@ -52,8 +52,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
           ),
           child: GestureDetector(
             onLongPressStart: (details) {
-              final fingerPosition = details.localPosition;
-              final offsetInMinutes = fingerPosition.dy ~/ minuteExtent;
+              final offsetInMinutes = details.localPosition.dy ~/ minuteExtent;
               final roundedMinutes =
                   (offsetInMinutes / cellExtent).round() * cellExtent;
               final timestamp = dayDate.addMinutesToDayDate(roundedMinutes);
