@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
+import 'package:render_metrics/render_metrics.dart';
 
 class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   const EventsLayout({
     super.key,
     required this.dayDate,
-    required this.layoutsKeys,
-    required this.eventsKeys,
+    required this.renderParametersManager,
     required this.cellExtent,
     this.breaks = const [],
     this.events = const [],
@@ -21,8 +21,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   });
 
   final DateTime dayDate;
-  final Map<DateTime, GlobalKey> layoutsKeys;
-  final Map<CalendarEvent, GlobalKey> eventsKeys;
+  final RenderParametersManager<dynamic> renderParametersManager;
   final int cellExtent;
   final List<Break> breaks;
   final List<T> events;
@@ -59,28 +58,31 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
               onLayoutLongPress?.call(timestamp);
             },
             behavior: HitTestBehavior.opaque,
-            child: CustomMultiChildLayout(
-              key: layoutsKeys[dayDate] ??= GlobalKey(),
-              delegate: _EventsLayoutDelegate(
-                date: dayDate,
-                breaks: breaksToDisplay,
-                events: eventsToDisplay,
-                cellExtent: cellExtent,
+            child: RenderMetricsObject(
+              id: dayDate,
+              manager: renderParametersManager,
+              child: CustomMultiChildLayout(
+                delegate: _EventsLayoutDelegate(
+                  date: dayDate,
+                  breaks: breaksToDisplay,
+                  events: eventsToDisplay,
+                  cellExtent: cellExtent,
+                ),
+                children: [
+                  ...breaksToDisplay.map(
+                    (event) => LayoutId(
+                      id: event,
+                      child: BreakView(event),
+                    ),
+                  ),
+                  ...eventsToDisplay.map(
+                    (event) => LayoutId(
+                      id: event,
+                      child: _eventView(event),
+                    ),
+                  ),
+                ],
               ),
-              children: [
-                ...breaksToDisplay.map(
-                  (event) => LayoutId(
-                    id: event,
-                    child: BreakView(event),
-                  ),
-                ),
-                ...eventsToDisplay.map(
-                  (event) => LayoutId(
-                    id: event,
-                    child: _eventView(event),
-                  ),
-                ),
-              ],
             ),
           ),
         );
@@ -94,11 +96,14 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
           opacity: (elevatedEvent == event) ? 0.5 : 1,
           child: child,
         ),
-        child: EventView(
-          event,
-          key: eventsKeys[event] ??= GlobalKey(),
-          onTap: () => onEventTap?.call(event),
-          onLongPress: () => onEventLongPress?.call(event),
+        child: RenderMetricsObject(
+          id: event,
+          manager: renderParametersManager,
+          child: EventView(
+            event,
+            onTap: () => onEventTap?.call(event),
+            onLongPress: () => onEventLongPress?.call(event),
+          ),
         ),
       );
 }

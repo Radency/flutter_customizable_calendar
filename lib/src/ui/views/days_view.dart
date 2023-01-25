@@ -10,18 +10,13 @@ import 'package:flutter_customizable_calendar/src/ui/controllers/controllers.dar
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
+import 'package:render_metrics/render_metrics.dart';
 
 /// A key holder of all DaysView keys
 @visibleForTesting
 abstract class DaysViewKeys {
   /// A key for the timeline view
   static final timeline = GlobalKey();
-
-  /// Map of keys for the events layouts (by day date)
-  static final layouts = <DateTime, GlobalKey>{};
-
-  /// Map of keys for the displayed events (by event object)
-  static final events = <CalendarEvent, GlobalKey>{};
 
   /// A key for the elevated (floating) event view
   static const elevatedEventView = ValueKey('ElevatedEventView');
@@ -77,6 +72,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
 class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     with SingleTickerProviderStateMixin {
   final _overlayKey = const GlobalObjectKey<OverlayState>('DaysViewOverlay');
+  final _renderParametersManager = RenderParametersManager();
   final _elevatedEvent = ValueNotifier<T?>(null);
   final _elevatedEventBounds = RectNotifier();
   late final PageController _monthPickerController;
@@ -104,13 +100,11 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   RenderBox? _getTimelineBox() =>
       DaysViewKeys.timeline.currentContext?.findRenderObject() as RenderBox?;
 
-  RenderBox? _getLayoutBox(DateTime dayDate) =>
-      DaysViewKeys.layouts[dayDate]?.currentContext?.findRenderObject()
-          as RenderBox?;
+  RenderMetricsBox? _getLayoutBox(DateTime dayDate) =>
+      _renderParametersManager.getRenderObject(dayDate);
 
-  RenderBox? _getEventBox(T event) =>
-      DaysViewKeys.events[event]?.currentContext?.findRenderObject()
-          as RenderBox?;
+  RenderMetricsBox? _getEventBox(T event) =>
+      _renderParametersManager.getRenderObject(event);
 
   void _stopTimelineScrolling() =>
       _timelineController.jumpTo(_timelineController.offset);
@@ -588,8 +582,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                   theme: theme.timeScaleTheme,
                   child: EventsLayout(
                     dayDate: dayDate,
-                    layoutsKeys: DaysViewKeys.layouts,
-                    eventsKeys: DaysViewKeys.events,
+                    renderParametersManager: _renderParametersManager,
                     cellExtent: _cellExtent,
                     breaks: widget.breaks,
                     events: widget.events,
