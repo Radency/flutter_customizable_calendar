@@ -24,7 +24,7 @@ class DaysViewInitial extends DaysViewState {
 }
 
 class DaysViewCurrentDateIsSet extends DaysViewState {
-  DaysViewCurrentDateIsSet({
+  const DaysViewCurrentDateIsSet({
     required super.displayedDate,
     required super.reverseAnimation,
   });

@@ -23,7 +23,7 @@ class WeekViewInitial extends WeekViewState {
 }
 
 class WeekViewCurrentWeekIsSet extends WeekViewState {
-  WeekViewCurrentWeekIsSet({
+  const WeekViewCurrentWeekIsSet({
     required super.focusedDate,
     required super.reverseAnimation,
   });

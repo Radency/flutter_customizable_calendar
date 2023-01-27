@@ -43,7 +43,7 @@ class DraggableEventView<T extends FloatingCalendarEvent>
 
 class _DraggableEventViewState<T extends FloatingCalendarEvent>
     extends State<DraggableEventView<T>> {
-  final _link = LayerLink();
+  final _layerLink = LayerLink();
   OverlayEntry? _sizerEntry;
 
   static const _sizerDimension = 8.0;
@@ -55,7 +55,7 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
     if (widget.event is EditableCalendarEvent) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _sizerEntry = OverlayEntry(builder: _sizerBuilder);
-        Overlay.of(context)!.insert(_sizerEntry!);
+        Overlay.of(context).insert(_sizerEntry!);
       });
     }
   }
@@ -77,13 +77,12 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
         feedback: Builder(builder: _feedbackBuilder),
         childWhenDragging: const SizedBox.shrink(),
         child: CompositedTransformTarget(
-          link: _link,
+          link: _layerLink,
           child: GestureDetector(
             onPanDown: widget.onDragDown,
             child: _eventView(),
           ),
         ),
-        // onDragCompleted: ,
       ),
     );
   }
@@ -133,7 +132,7 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
           child: child!,
         ),
         child: CompositedTransformFollower(
-          link: _link,
+          link: _layerLink,
           showWhenUnlinked: false,
           targetAnchor: Alignment.bottomCenter,
           followerAnchor: Alignment.center,

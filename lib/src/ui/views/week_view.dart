@@ -9,13 +9,18 @@ import 'package:flutter_customizable_calendar/src/ui/controllers/controllers.dar
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
-import 'package:render_metrics/render_metrics.dart';
 
 /// A key holder of all WeekView keys
 @visibleForTesting
 abstract class WeekViewKeys {
   /// A key for the timeline view
   static GlobalKey? timeline;
+
+  /// Map of keys for the events layouts (by day date)
+  static final layouts = <DateTime, GlobalKey>{};
+
+  /// Map of keys for the displayed events (by event object)
+  static final events = <CalendarEvent, GlobalKey>{};
 
   /// A key for the elevated (floating) event view
   static const elevatedEventView = ValueKey('ElevatedEventView');
@@ -76,7 +81,6 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
 class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     with SingleTickerProviderStateMixin {
   final _overlayKey = const GlobalObjectKey<OverlayState>('WeekViewOverlay');
-  final _renderParametersManager = RenderParametersManager();
   final _elevatedEvent = ValueNotifier<T?>(null);
   final _elevatedEventBounds = RectNotifier();
   final _weekdayPosition = ValueNotifier(0);
@@ -107,11 +111,13 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   RenderBox? _getTimelineBox() =>
       WeekViewKeys.timeline?.currentContext?.findRenderObject() as RenderBox?;
 
-  RenderMetricsBox? _getLayoutBox(DateTime dayDate) =>
-      _renderParametersManager.getRenderObject(dayDate);
+  RenderBox? _getLayoutBox(DateTime dayDate) =>
+      WeekViewKeys.layouts[dayDate]?.currentContext?.findRenderObject()
+          as RenderBox?;
 
-  RenderMetricsBox? _getEventBox(T event) =>
-      _renderParametersManager.getRenderObject(event);
+  RenderBox? _getEventBox(T event) =>
+      WeekViewKeys.events[event]?.currentContext?.findRenderObject()
+          as RenderBox?;
 
   void _stopTimelineScrolling() =>
       _timelineController?.jumpTo(_timelineController!.offset);
@@ -260,7 +266,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     _rectTween = RectTween(
       end: _elevatedEventBounds.origin & _elevatedEventBounds.size,
       begin: (eventPosition ?? _elevatedEventBounds.origin) &
-          (eventBox?.size ?? _rectTween.begin?.size ?? Size.zero),
+          (eventBox?.size ?? Size.zero),
     );
 
     _elevatedEventController
@@ -448,6 +454,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
   Widget _weekTimeline() {
     final theme = widget.timelineTheme;
+    final timeScaleWidth = theme.timeScaleTheme.width;
+    const daysInWeek = 7;
 
     return Stack(
       children: [
@@ -455,10 +463,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
           controller: _weekPickerController,
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, pageIndex) {
-            final displayedDay =
-                DateUtils.addDaysToDate(_initialDate, pageIndex * 7);
-            final weekdays = displayedDay.weekRange.days;
-            final timeScaleWidth = theme.timeScaleTheme.width;
+            final weekdays = widget.controller.state.displayedWeek.days;
 
             return Padding(
               padding: EdgeInsets.only(
@@ -477,13 +482,9 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                       children: [
                         Positioned.fill(
                           left: timeScaleWidth,
-                          child: _stripesRow(weekdays.length),
+                          child: _stripesRow(daysInWeek),
                         ),
                         _timeline(weekdays),
-                        Positioned.fill(
-                          left: timeScaleWidth,
-                          child: _targetsRow(weekdays.length),
-                        ),
                       ],
                     ),
                   ),
@@ -494,7 +495,18 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         ),
         Positioned.fill(
           top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
-          child: Overlay(key: _overlayKey),
+          child: Overlay(
+            key: _overlayKey,
+            initialEntries: [
+              // DragTargets will be created in new layer
+              OverlayEntry(
+                builder: (context) => Positioned.fill(
+                  left: timeScaleWidth,
+                  child: _dragTargetsRow(daysInWeek),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -548,7 +560,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         ),
       );
 
-  Widget _targetsRow(int length) => Row(
+  Widget _dragTargetsRow(int length) => Row(
         children: List.generate(
           length,
           (index) => Expanded(
@@ -608,7 +620,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                         (dayDate) => Expanded(
                           child: EventsLayout(
                             dayDate: dayDate,
-                            renderParametersManager: _renderParametersManager,
+                            layoutsKeys: WeekViewKeys.layouts,
+                            eventsKeys: WeekViewKeys.events,
                             cellExtent: _cellExtent,
                             breaks: widget.breaks,
                             events: widget.events,

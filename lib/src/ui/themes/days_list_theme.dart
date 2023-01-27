@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
+import 'package:intl/intl.dart';
 
 part 'days_list_item_theme.dart';
 
