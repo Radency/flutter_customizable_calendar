@@ -52,7 +52,8 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
           ),
           child: GestureDetector(
             onLongPressStart: (details) {
-              final offsetInMinutes = details.localPosition.dy ~/ minuteExtent;
+              final offsetInMinutes =
+                  details.localPosition.dy ~/ minuteExtent;
               final roundedMinutes =
                   (offsetInMinutes / cellExtent).round() * cellExtent;
               final timestamp = dayDate.addMinutesToDayDate(roundedMinutes);
@@ -229,7 +230,7 @@ class _EventsLayoutDelegate<T extends FloatingCalendarEvent>
   }
 
   @override
-  bool shouldRelayout(covariant _EventsLayoutDelegate oldDelegate) {
+  bool shouldRelayout(covariant _EventsLayoutDelegate<T> oldDelegate) {
     if (events.length != oldDelegate.events.length) return true;
 
     for (var index = 0; index < events.length; index++) {

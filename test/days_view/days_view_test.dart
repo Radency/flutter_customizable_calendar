@@ -109,6 +109,7 @@ void main() {
 
           await widgetTester.pumpWidget(runTestApp(view));
 
+
           final padding = view.timelineTheme.padding;
           final currentHourOrigin = Offset(padding.left, padding.top);
           final currentHourPosition =
@@ -177,11 +178,17 @@ void main() {
 
           final eventKey = DaysViewKeys.events[event]!;
 
-          expect(find.byKey(DaysViewKeys.elevatedEventView), findsNothing);
+          expect(
+            find.byKey(DraggableEventViewKeys.elevatedEvent),
+            findsNothing,
+          );
 
           await widgetTester.longPress(find.byKey(eventKey));
 
-          expect(find.byKey(DaysViewKeys.elevatedEventView), findsOneWidget);
+          expect(
+            find.byKey(DraggableEventViewKeys.elevatedEvent),
+            findsOneWidget,
+          );
         },
         skip: false,
       );
@@ -214,7 +221,7 @@ void main() {
           final layoutFinder = find.byKey(layoutKey);
           final layoutRect = widgetTester.getRect(layoutFinder);
           final elevatedEventFinder =
-              find.byKey(DaysViewKeys.elevatedEventView);
+              find.byKey(DraggableEventViewKeys.elevatedEvent);
 
           await widgetTester.longPress(eventFinder);
 
@@ -263,7 +270,7 @@ void main() {
           await widgetTester.pumpAndSettle();
 
           final elevatedEventFinder =
-              find.byKey(DaysViewKeys.elevatedEventView);
+              find.byKey(DraggableEventViewKeys.elevatedEvent);
 
           expect(elevatedEventFinder, findsOneWidget);
 
