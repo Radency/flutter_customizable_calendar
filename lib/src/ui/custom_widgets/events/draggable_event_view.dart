@@ -4,6 +4,7 @@ import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/events/event_view.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
+/// A key holder of all DraggableEventView keys
 @visibleForTesting
 abstract class DraggableEventViewKeys {
   /// A key for the elevated (floating) event view
@@ -39,7 +40,7 @@ class DraggableEventView<T extends FloatingCalendarEvent>
   final Duration animationDuration;
   final Curve curve;
   final Rect? Function(T) getEventBounds;
-  final Rect Function(T) expandTo;
+  final Rect? Function(T) expandTo;
   final void Function(DragDownDetails)? onDragDown;
   final void Function()? onDragStart;
   final void Function(DragUpdateDetails)? onDragUpdate;
@@ -90,6 +91,11 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
       );
 
   void _elevate(T event) {
+    if (_animationController.isAnimating) {
+      _removeEntries();
+      _animationController.reset();
+    }
+
     _eventEntry = OverlayEntry(builder: _floatingEventBuilder);
     _overlay.insert(_eventEntry!);
 
@@ -103,22 +109,22 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
       begin: widget.getEventBounds(event),
       end: widget.expandTo(event),
     );
-    _animationController
-      ..reset()
-      ..forward();
+
+    _animationController.forward();
   }
 
   void _drop(T event) {
+    if (_animationController.isAnimating) _animationController.stop();
+
     _rectTween = RectTween(
       end: widget.bounds.value,
       begin: widget.getEventBounds(event),
     );
-    _animationController
-      ..stop()
-      ..reverse().whenComplete(() {
-        _removeEntries();
-        widget.onDropped?.call();
-      });
+
+    _animationController.reverse().whenComplete(() {
+      _removeEntries();
+      widget.onDropped?.call();
+    });
   }
 
   void _removeEntries() {
