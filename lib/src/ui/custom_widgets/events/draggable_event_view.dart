@@ -96,20 +96,11 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
       _animationController.reset();
     }
 
-    _eventEntry = OverlayEntry(builder: _floatingEventBuilder);
-    _overlay.insert(_eventEntry!);
-
-    // Non-editable events can't be resized
-    if (event is EditableCalendarEvent) {
-      _sizerEntry = OverlayEntry(builder: _sizerBuilder);
-      _overlay.insert(_sizerEntry!);
-    }
-
+    _createEntriesFor(event);
     _rectTween = RectTween(
       begin: widget.getEventBounds(event),
       end: widget.expandTo(event),
     );
-
     _animationController.forward();
   }
 
@@ -120,11 +111,21 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
       end: widget.bounds.value,
       begin: widget.getEventBounds(event),
     );
-
     _animationController.reverse().whenComplete(() {
       _removeEntries();
       widget.onDropped?.call();
     });
+  }
+
+  void _createEntriesFor(T event) {
+    _eventEntry = OverlayEntry(builder: _floatingEventBuilder);
+    _overlay.insert(_eventEntry!);
+
+    // Non-editable events can't be resized
+    if (event is EditableCalendarEvent) {
+      _sizerEntry = OverlayEntry(builder: _sizerBuilder);
+      _overlay.insert(_sizerEntry!);
+    }
   }
 
   void _removeEntries() {
