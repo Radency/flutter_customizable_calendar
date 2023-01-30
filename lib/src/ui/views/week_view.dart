@@ -179,10 +179,14 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     if (!_scrolling) _scrollIfNecessary();
   }
 
-  void _elevatedEventBoundsListener() => _elevatedEventBounds.height = max(
-        _elevatedEventBounds.height,
-        _minuteExtent * _cellExtent,
-      );
+  void _setElevatedEvent(T event) {
+    final dayDate = DateUtils.dateOnly(event.start);
+    _weekdayPosition.value = _displayedWeek.days.indexOf(dayDate);
+    _elevatedEvent.value = event;
+  }
+
+  void _elevatedEventHeightLimiter() => _elevatedEventBounds.height =
+      max(_elevatedEventBounds.height, _minuteExtent * _cellExtent);
 
   void _updateElevatedEventStart() {
     final timelineBox = _getTimelineBox()!;
@@ -270,19 +274,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     _weekPickerController = PageController(
       initialPage: _displayedWeek.start.difference(_initialWeek.start).inWeeks,
     );
-    _elevatedEventBounds.addListener(_elevatedEventBoundsListener);
-
-    // _weekdayPosition.addListener(
-    //   () {
-    //     final timelineBox = _getTimelineBox()!;
-    //     final layoutBox = _getLayoutBox(_displayedDate)!;
-    //     final layoutPosition = layoutBox.localToGlobal(
-    //       Offset.zero,
-    //       ancestor: timelineBox,
-    //     );
-    //     _elevatedEventBounds.dx = layoutPosition.dx;
-    //   },
-    // );
+    _elevatedEventBounds.addListener(_elevatedEventHeightLimiter);
   }
 
   @override
@@ -535,8 +527,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                             events: widget.events,
                             elevatedEvent: _elevatedEvent,
                             onEventTap: widget.onEventTap,
-                            onEventLongPress: (event) =>
-                                _elevatedEvent.value = event,
+                            onEventLongPress: _setElevatedEvent,
                             onLayoutLongPress: widget.onDateLongPress,
                           ),
                         ),

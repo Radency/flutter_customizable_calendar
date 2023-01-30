@@ -40,46 +40,44 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     final breaksToDisplay = _getEventsOnDay(breaks);
     final eventsToDisplay = _getEventsOnDay(events);
 
-    return LayoutBuilder(
-      builder: (context, constraints) => ValueListenableBuilder(
-        valueListenable: elevatedEvent,
-        builder: (context, elevatedEvent, child) => IgnorePointer(
-          ignoring: elevatedEvent != null,
-          child: child,
-        ),
-        child: GestureDetector(
-          onLongPressStart: (details) {
-            final minuteExtent = constraints.maxHeight / Duration.minutesPerDay;
-            final offsetInMinutes = details.localPosition.dy ~/ minuteExtent;
-            final roundedMinutes =
-                (offsetInMinutes / cellExtent).round() * cellExtent;
-            final timestamp = dayDate.addMinutesToDayDate(roundedMinutes);
-            onLayoutLongPress?.call(timestamp);
-          },
-          behavior: HitTestBehavior.opaque,
-          child: CustomMultiChildLayout(
-            key: layoutsKeys[dayDate] ??= GlobalKey(),
-            delegate: _EventsLayoutDelegate(
-              date: dayDate,
-              breaks: breaksToDisplay,
-              events: eventsToDisplay,
-              cellExtent: cellExtent,
-            ),
-            children: [
-              ...breaksToDisplay.map(
-                (event) => LayoutId(
-                  id: event,
-                  child: BreakView(event),
-                ),
-              ),
-              ...eventsToDisplay.map(
-                (event) => LayoutId(
-                  id: event,
-                  child: _eventView(event),
-                ),
-              ),
-            ],
+    return ValueListenableBuilder(
+      valueListenable: elevatedEvent,
+      builder: (context, elevatedEvent, child) => IgnorePointer(
+        ignoring: elevatedEvent != null,
+        child: child,
+      ),
+      child: GestureDetector(
+        onLongPressStart: (details) {
+          final minuteExtent = context.size!.height / Duration.minutesPerDay;
+          final offsetInMinutes = details.localPosition.dy ~/ minuteExtent;
+          final roundedMinutes =
+              (offsetInMinutes / cellExtent).round() * cellExtent;
+          final timestamp = dayDate.addMinutesToDayDate(roundedMinutes);
+          onLayoutLongPress?.call(timestamp);
+        },
+        behavior: HitTestBehavior.opaque,
+        child: CustomMultiChildLayout(
+          key: layoutsKeys[dayDate] ??= GlobalKey(),
+          delegate: _EventsLayoutDelegate(
+            date: dayDate,
+            breaks: breaksToDisplay,
+            events: eventsToDisplay,
+            cellExtent: cellExtent,
           ),
+          children: [
+            ...breaksToDisplay.map(
+              (event) => LayoutId(
+                id: event,
+                child: BreakView(event),
+              ),
+            ),
+            ...eventsToDisplay.map(
+              (event) => LayoutId(
+                id: event,
+                child: _eventView(event),
+              ),
+            ),
+          ],
         ),
       ),
     );

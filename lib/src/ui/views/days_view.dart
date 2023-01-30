@@ -166,10 +166,8 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     widget.controller.setFocusedDate(displayedDate);
   }
 
-  void _elevatedEventBoundsListener() => _elevatedEventBounds.height = max(
-        _elevatedEventBounds.height,
-        _minuteExtent * _cellExtent,
-      );
+  void _elevatedEventHeightLimiter() => _elevatedEventBounds.height =
+      max(_elevatedEventBounds.height, _minuteExtent * _cellExtent);
 
   void _updateElevatedEventStart() {
     final displayedDay = DateUtils.dateOnly(_displayedDate);
@@ -276,7 +274,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     _timelineController = ScrollController(
       initialScrollOffset: _getTimelineOffsetForDate(_displayedDate),
     )..addListener(_updateFocusedDate);
-    _elevatedEventBounds.addListener(_elevatedEventBoundsListener);
+    _elevatedEventBounds.addListener(_elevatedEventHeightLimiter);
   }
 
   @override

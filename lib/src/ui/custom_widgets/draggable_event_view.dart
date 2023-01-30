@@ -62,8 +62,8 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
   final _layerLink = LayerLink();
   late AnimationController _animationController;
   late Animation<double> _animation;
-  late RectTween _rectTween;
-  T? _elevatedEvent;
+  late RectTween _boundsTween;
+  late T _elevatedEvent;
   OverlayEntry? _eventEntry;
   OverlayEntry? _sizerEntry;
 
@@ -71,19 +71,19 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
 
   OverlayState get _overlay => _overlayKey.currentState!;
 
-  void _elevatedEventListener() {
+  void _setElevatedEvent() {
     if (widget.event.value == null) return;
-    _elevatedEvent = widget.event.value;
-    _elevate(_elevatedEvent!);
+    _elevatedEvent = widget.event.value!;
+    _elevate(_elevatedEvent);
   }
 
-  void _animationListener() =>
-      widget.bounds.value = _rectTween.transform(_animation.value)!;
+  void _animationBounds() =>
+      widget.bounds.value = _boundsTween.transform(_animation.value)!;
 
   void _initAnimationController() => _animationController = AnimationController(
         duration: widget.animationDuration,
         vsync: this,
-      )..addListener(_animationListener);
+      )..addListener(_animationBounds);
 
   void _initAnimation() => _animation = CurvedAnimation(
         parent: _animationController,
@@ -96,18 +96,18 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
       _animationController.reset();
     }
 
-    _createEntriesFor(event);
-    _rectTween = RectTween(
+    _boundsTween = RectTween(
       begin: widget.getEventBounds(event),
       end: widget.expandTo(event),
     );
+    _createEntriesFor(event);
     _animationController.forward();
   }
 
   void _drop(T event) {
     if (_animationController.isAnimating) _animationController.stop();
 
-    _rectTween = RectTween(
+    _boundsTween = RectTween(
       end: widget.bounds.value,
       begin: widget.getEventBounds(event),
     );
@@ -121,7 +121,7 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
     _eventEntry = OverlayEntry(builder: _floatingEventBuilder);
     _overlay.insert(_eventEntry!);
 
-    // Non-editable events can't be resized
+    // Non-editable event can't be resized
     if (event is EditableCalendarEvent) {
       _sizerEntry = OverlayEntry(builder: _sizerBuilder);
       _overlay.insert(_sizerEntry!);
@@ -140,7 +140,7 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
     super.initState();
     _initAnimationController();
     _initAnimation();
-    widget.event.addListener(_elevatedEventListener);
+    widget.event.addListener(_setElevatedEvent);
   }
 
   @override
@@ -172,13 +172,13 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
 
   @override
   void dispose() {
-    widget.event.removeListener(_elevatedEventListener);
+    widget.event.removeListener(_setElevatedEvent);
     _animationController.dispose();
     super.dispose();
   }
 
   Widget _eventView() => EventView(
-        _elevatedEvent!,
+        _elevatedEvent,
         key: DraggableEventViewKeys.elevatedEvent,
         elevation: widget.elevation,
         onTap: () {},
