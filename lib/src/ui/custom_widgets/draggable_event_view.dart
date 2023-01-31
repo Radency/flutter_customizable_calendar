@@ -200,7 +200,10 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
         child: Draggable(
           data: _elevatedEvent,
           onDragStarted: widget.onDragStart,
-          onDragUpdate: widget.onDragUpdate,
+          onDragUpdate: (details) {
+            widget.bounds.origin += details.delta;
+            widget.onDragUpdate?.call(details);
+          },
           onDragEnd: widget.onDragEnd,
           onDraggableCanceled: widget.onDraggableCanceled,
           feedback: Builder(builder: _feedbackBuilder),
@@ -248,7 +251,10 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
           child: GestureDetectorHitTestWithoutSizeLimit(
             onVerticalDragDown: widget.onDragDown,
             onVerticalDragStart: widget.onResizingStart,
-            onVerticalDragUpdate: widget.onSizeUpdate,
+            onVerticalDragUpdate: (details) {
+              widget.bounds.size += details.delta;
+              widget.onSizeUpdate?.call(details);
+            },
             onVerticalDragEnd: widget.onResizingEnd,
             onVerticalDragCancel: widget.onResizingCancel,
             extraHitTestArea: const EdgeInsets.all(4),

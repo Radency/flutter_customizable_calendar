@@ -77,13 +77,16 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   final _elevatedEventBounds = RectNotifier();
   late final PageController _monthPickerController;
   late final ScrollController _timelineController;
+  var _displayedDay = _today;
   var _fingerPosition = Offset.zero;
   var _scrolling = false;
   var _dragging = false;
   var _resizing = false;
   ScrollController? _daysListController;
 
-  DateTime get _now => clock.now();
+  static DateTime get _now => clock.now();
+  static DateTime get _today => DateUtils.dateOnly(_now);
+
   DateTime get _initialDate => widget.controller.initialDate;
   DateTime? get _endDate => widget.controller.endDate;
   DateTime get _displayedDate => widget.controller.state.displayedDate;
@@ -109,43 +112,38 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
       _timelineController.jumpTo(_timelineController.offset);
 
   Future<void> _scrollIfNecessary() async {
-    return;
-
     _scrolling = true;
 
-    // final overlayBox =
-    //     _overlayKey.currentContext!.findRenderObject()! as RenderBox;
-    // final overlayPosition = overlayBox.localToGlobal(Offset.zero);
-    // final top = overlayPosition.dy;
-    // final bottom = top + overlayBox.size.height;
-    //
-    // const detectionArea = 25;
-    // const moveDistance = 25;
-    // final timelineScrollPosition = _timelineController.position;
-    // var timelineScrollOffset = timelineScrollPosition.pixels;
-    //
-    // if (bottom - _fingerPosition.dy < detectionArea &&
-    //     timelineScrollOffset < timelineScrollPosition.maxScrollExtent) {
-    //   timelineScrollOffset = min(
-    //     timelineScrollOffset + moveDistance,
-    //     timelineScrollPosition.maxScrollExtent,
-    //   );
-    // } else if (_fingerPosition.dy - top < detectionArea &&
-    //     timelineScrollOffset > timelineScrollPosition.minScrollExtent) {
-    //   timelineScrollOffset = max(
-    //     timelineScrollOffset - moveDistance,
-    //     timelineScrollPosition.minScrollExtent,
-    //   );
-    // } else {
-    //   _scrolling = false;
-    //   return;
-    // }
-    //
-    // await timelineScrollPosition.animateTo(
-    //   timelineScrollOffset,
-    //   duration: const Duration(milliseconds: 100),
-    //   curve: Curves.linear,
-    // );
+    final timelineBox = _getTimelineBox()!;
+    final fingerLocation = timelineBox.globalToLocal(_fingerPosition);
+    final timelineScrollPosition = _timelineController.position;
+    var timelineScrollOffset = timelineScrollPosition.pixels;
+
+    const detectionArea = 25;
+    const moveDistance = 25;
+
+    if (timelineBox.size.height - fingerLocation.dy < detectionArea &&
+        timelineScrollOffset < timelineScrollPosition.maxScrollExtent) {
+      timelineScrollOffset = min(
+        timelineScrollOffset + moveDistance,
+        timelineScrollPosition.maxScrollExtent,
+      );
+    } else if (fingerLocation.dy < detectionArea &&
+        timelineScrollOffset > timelineScrollPosition.minScrollExtent) {
+      timelineScrollOffset = max(
+        timelineScrollOffset - moveDistance,
+        timelineScrollPosition.minScrollExtent,
+      );
+    } else {
+      _scrolling = false;
+      return;
+    }
+
+    await timelineScrollPosition.animateTo(
+      timelineScrollOffset,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.linear,
+    );
 
     if (_scrolling) unawaited(_scrollIfNecessary());
   }
@@ -170,9 +168,8 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
       max(_elevatedEventBounds.height, _minuteExtent * _cellExtent);
 
   void _updateElevatedEventStart() {
-    final displayedDay = DateUtils.dateOnly(_displayedDate);
     final timelineBox = _getTimelineBox()!;
-    final layoutBox = _getLayoutBox(displayedDay)!;
+    final layoutBox = _getLayoutBox(_displayedDay)!;
     final eventPosition = layoutBox.globalToLocal(
       _elevatedEventBounds.origin,
       ancestor: timelineBox,
@@ -181,7 +178,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     final startOffsetInMinutes = eventPosition.dy / _minuteExtent;
     final roundedOffset =
         (startOffsetInMinutes / _cellExtent).round() * _cellExtent;
-    final newStart = displayedDay.addMinutesToDayDate(roundedOffset);
+    final newStart = _displayedDay.addMinutesToDayDate(roundedOffset);
 
     _elevatedEvent.value = _elevatedEvent.value!.copyWith(
       start: newStart.isBefore(_initialDate) ? _initialDate : newStart,
@@ -194,12 +191,10 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   }
 
   void _updateElevatedEventDuration() {
-    final displayedDay = DateUtils.dateOnly(_displayedDate);
-    final timelineBox = _getTimelineBox()!;
-    final layoutBox = _getLayoutBox(displayedDay)!;
+    final layoutBox = _getLayoutBox(_displayedDay)!;
     final eventPosition = layoutBox.globalToLocal(
       _elevatedEventBounds.origin,
-      ancestor: timelineBox,
+      ancestor: _getTimelineBox(),
     );
 
     final endOffsetInMinutes =
@@ -491,25 +486,28 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               final dayDate = DateUtils.addDaysToDate(_initialDate, index);
               final isToday = DateUtils.isSameDay(dayDate, _now);
 
-              return Padding(
-                padding: EdgeInsets.only(
-                  left: theme.padding.left,
-                  right: theme.padding.right,
-                ),
-                child: TimeScale(
-                  showCurrentTimeMark: isToday,
-                  theme: theme.timeScaleTheme,
-                  child: EventsLayout(
-                    dayDate: dayDate,
-                    layoutsKeys: DaysViewKeys.layouts,
-                    eventsKeys: DaysViewKeys.events,
-                    cellExtent: _cellExtent,
-                    breaks: widget.breaks,
-                    events: widget.events,
-                    elevatedEvent: _elevatedEvent,
-                    onEventTap: widget.onEventTap,
-                    onEventLongPress: (event) => _elevatedEvent.value = event,
-                    onLayoutLongPress: widget.onDateLongPress,
+              return DragTarget(
+                onMove: (details) => _displayedDay = dayDate,
+                builder: (context, candidates, rejects) => Padding(
+                  padding: EdgeInsets.only(
+                    left: theme.padding.left,
+                    right: theme.padding.right,
+                  ),
+                  child: TimeScale(
+                    showCurrentTimeMark: isToday,
+                    theme: theme.timeScaleTheme,
+                    child: EventsLayout(
+                      dayDate: dayDate,
+                      layoutsKeys: DaysViewKeys.layouts,
+                      eventsKeys: DaysViewKeys.events,
+                      cellExtent: _cellExtent,
+                      breaks: widget.breaks,
+                      events: widget.events,
+                      elevatedEvent: _elevatedEvent,
+                      onEventTap: widget.onEventTap,
+                      onEventLongPress: (event) => _elevatedEvent.value = event,
+                      onLayoutLongPress: widget.onDateLongPress,
+                    ),
                   ),
                 ),
               );
@@ -532,10 +530,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         expandTo: _getExpandedEventBounds,
         onDragDown: (details) => _stopTimelineScrolling(),
         onDragStart: () => _dragging = true,
-        onDragUpdate: (details) {
-          _elevatedEventBounds.origin += details.delta;
-          _autoScrolling(details);
-        },
+        onDragUpdate: _autoScrolling,
         onDragEnd: (details) {
           _stopAutoScrolling();
           _updateElevatedEventStart();
@@ -543,10 +538,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         },
         onDraggableCanceled: (velocity, offset) => _dragging = false,
         onResizingStart: (details) => _resizing = true,
-        onSizeUpdate: (details) {
-          _elevatedEventBounds.size += details.delta;
-          _autoScrolling(details);
-        },
+        onSizeUpdate: _autoScrolling,
         onResizingEnd: (details) {
           _stopAutoScrolling();
           _updateElevatedEventDuration();

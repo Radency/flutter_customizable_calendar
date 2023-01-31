@@ -77,9 +77,9 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
 class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     with SingleTickerProviderStateMixin {
-  final _displayedDay = ValueNotifier(DateUtils.dateOnly(clock.now()));
   final _elevatedEvent = ValueNotifier<T?>(null);
   final _elevatedEventBounds = RectNotifier();
+  final _displayedDay = ValueNotifier(_today);
   late final PageController _weekPickerController;
   var _fingerPosition = Offset.zero;
   var _scrolling = false;
@@ -87,7 +87,9 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   var _resizing = false;
   ScrollController? _timelineController;
 
-  DateTime get _now => clock.now();
+  static DateTime get _now => clock.now();
+  static DateTime get _today => DateUtils.dateOnly(_now);
+
   DateTime get _initialDate => widget.controller.initialDate;
   DateTime? get _endDate => widget.controller.endDate;
   DateTime get _focusedDate => widget.controller.state.focusedDate;
@@ -115,58 +117,51 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
       _timelineController?.jumpTo(_timelineController!.offset);
 
   Future<void> _scrollIfNecessary() async {
-    return;
-
     _scrolling = true;
 
-    // final overlayBox =
-    //     _overlayKey.currentContext!.findRenderObject()! as RenderBox;
-    // final overlayPosition = overlayBox.localToGlobal(Offset.zero);
-    // final top = overlayPosition.dy;
-    // final bottom = top + overlayBox.size.height;
-    // final left = overlayPosition.dx;
-    // final right = left + overlayBox.size.width;
-    //
-    // const detectionArea = 25;
-    // const moveDistance = 25;
-    // final timelineScrollPosition = _timelineController!.position;
-    // var timelineScrollOffset = timelineScrollPosition.pixels;
-    //
-    // if (bottom - _fingerPosition.dy < detectionArea &&
-    //     timelineScrollOffset < timelineScrollPosition.maxScrollExtent) {
-    //   timelineScrollOffset = min(
-    //     timelineScrollOffset + moveDistance,
-    //     timelineScrollPosition.maxScrollExtent,
-    //   );
-    // } else if (_fingerPosition.dy - top < detectionArea &&
-    //     timelineScrollOffset > timelineScrollPosition.minScrollExtent) {
-    //   timelineScrollOffset = max(
-    //     timelineScrollOffset - moveDistance,
-    //     timelineScrollPosition.minScrollExtent,
-    //   );
-    // } else {
-    //   final weekPickerPosition = _weekPickerController.position;
-    //
-    //   // Checking if scroll is finished
-    //   if (!weekPickerPosition.isScrollingNotifier.value) {
-    //     if (right - _fingerPosition.dx < detectionArea &&
-    //         weekPickerPosition.pixels < weekPickerPosition.maxScrollExtent) {
-    //       widget.controller.next();
-    //     } else if (_fingerPosition.dx - left < detectionArea &&
-    //         weekPickerPosition.pixels > weekPickerPosition.minScrollExtent) {
-    //       widget.controller.prev();
-    //     }
-    //   }
-    //
-    //   _scrolling = false;
-    //   return;
-    // }
-    //
-    // await timelineScrollPosition.animateTo(
-    //   timelineScrollOffset,
-    //   duration: const Duration(milliseconds: 100),
-    //   curve: Curves.linear,
-    // );
+    final timelineBox = _getTimelineBox()!;
+    final fingerLocation = timelineBox.globalToLocal(_fingerPosition);
+    final timelineScrollPosition = _timelineController!.position;
+    var timelineScrollOffset = timelineScrollPosition.pixels;
+
+    const detectionArea = 25;
+    const moveDistance = 25;
+
+    if (timelineBox.size.height - fingerLocation.dy < detectionArea &&
+        timelineScrollOffset < timelineScrollPosition.maxScrollExtent) {
+      timelineScrollOffset = min(
+        timelineScrollOffset + moveDistance,
+        timelineScrollPosition.maxScrollExtent,
+      );
+    } else if (fingerLocation.dy < detectionArea &&
+        timelineScrollOffset > timelineScrollPosition.minScrollExtent) {
+      timelineScrollOffset = max(
+        timelineScrollOffset - moveDistance,
+        timelineScrollPosition.minScrollExtent,
+      );
+    } else {
+      final weekPickerPosition = _weekPickerController.position;
+
+      // Checking if scroll is finished
+      if (!weekPickerPosition.isScrollingNotifier.value) {
+        if (timelineBox.size.width - fingerLocation.dx < detectionArea &&
+            weekPickerPosition.pixels < weekPickerPosition.maxScrollExtent) {
+          widget.controller.next();
+        } else if (fingerLocation.dx < detectionArea &&
+            weekPickerPosition.pixels > weekPickerPosition.minScrollExtent) {
+          widget.controller.prev();
+        }
+      }
+
+      _scrolling = false;
+      return;
+    }
+
+    await timelineScrollPosition.animateTo(
+      timelineScrollOffset,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.linear,
+    );
 
     if (_scrolling) unawaited(_scrollIfNecessary());
   }
@@ -205,11 +200,10 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   }
 
   void _updateElevatedEventDuration() {
-    final timelineBox = _getTimelineBox()!;
     final layoutBox = _getLayoutBox(_displayedDay.value)!;
     final eventPosition = layoutBox.globalToLocal(
       _elevatedEventBounds.origin,
-      ancestor: timelineBox,
+      ancestor: _getTimelineBox(),
     );
 
     final endOffsetInMinutes =
@@ -547,10 +541,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         expandTo: _getExpandedEventBounds,
         onDragDown: (details) => _stopTimelineScrolling(),
         onDragStart: () => _dragging = true,
-        onDragUpdate: (details) {
-          _elevatedEventBounds.origin += details.delta;
-          _autoScrolling(details);
-        },
+        onDragUpdate: _autoScrolling,
         onDragEnd: (details) {
           _stopAutoScrolling();
           _updateElevatedEventStart();
@@ -558,10 +549,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         },
         onDraggableCanceled: (velocity, offset) => _dragging = false,
         onResizingStart: (details) => _resizing = true,
-        onSizeUpdate: (details) {
-          _elevatedEventBounds.size += details.delta;
-          _autoScrolling(details);
-        },
+        onSizeUpdate: _autoScrolling,
         onResizingEnd: (details) {
           _stopAutoScrolling();
           _updateElevatedEventDuration();
