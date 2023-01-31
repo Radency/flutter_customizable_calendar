@@ -233,11 +233,11 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
         ],
       );
 
-  Widget _sizerBuilder(BuildContext context) => AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) => Positioned(
-          width: _sizerDimension * _animation.value,
-          height: _sizerDimension * _animation.value,
+  Widget _sizerBuilder(BuildContext context) => ValueListenableBuilder(
+        valueListenable: _animation,
+        builder: (context, scale, child) => Positioned(
+          width: _sizerDimension * scale,
+          height: _sizerDimension * scale,
           child: child!,
         ),
         child: CompositedTransformFollower(

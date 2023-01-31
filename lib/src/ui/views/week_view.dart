@@ -77,9 +77,9 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
 class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     with SingleTickerProviderStateMixin {
+  final _displayedDay = ValueNotifier(DateUtils.dateOnly(clock.now()));
   final _elevatedEvent = ValueNotifier<T?>(null);
   final _elevatedEventBounds = RectNotifier();
-  final _weekdayPosition = ValueNotifier(0);
   late final PageController _weekPickerController;
   var _fingerPosition = Offset.zero;
   var _scrolling = false;
@@ -91,7 +91,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   DateTime get _initialDate => widget.controller.initialDate;
   DateTime? get _endDate => widget.controller.endDate;
   DateTime get _focusedDate => widget.controller.state.focusedDate;
-  DateTime get _displayedDate => _displayedWeek.days[_weekdayPosition.value];
   DateTimeRange get _displayedWeek => widget.controller.state.displayedWeek;
   DateTimeRange get _initialWeek => _initialDate.weekRange;
 
@@ -179,18 +178,12 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     if (!_scrolling) _scrollIfNecessary();
   }
 
-  void _setElevatedEvent(T event) {
-    final dayDate = DateUtils.dateOnly(event.start);
-    _weekdayPosition.value = _displayedWeek.days.indexOf(dayDate);
-    _elevatedEvent.value = event;
-  }
-
   void _elevatedEventHeightLimiter() => _elevatedEventBounds.height =
       max(_elevatedEventBounds.height, _minuteExtent * _cellExtent);
 
   void _updateElevatedEventStart() {
     final timelineBox = _getTimelineBox()!;
-    final layoutBox = _getLayoutBox(_displayedDate)!;
+    final layoutBox = _getLayoutBox(_displayedDay.value)!;
     final eventPosition = layoutBox.globalToLocal(
       _elevatedEventBounds.origin,
       ancestor: timelineBox,
@@ -199,7 +192,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     final startOffsetInMinutes = eventPosition.dy / _minuteExtent;
     final roundedOffset =
         (startOffsetInMinutes / _cellExtent).round() * _cellExtent;
-    final newStart = _displayedDate.addMinutesToDayDate(roundedOffset);
+    final newStart = _displayedDay.value.addMinutesToDayDate(roundedOffset);
 
     _elevatedEvent.value = _elevatedEvent.value!.copyWith(
       start: newStart.isBefore(_initialDate) ? _initialDate : newStart,
@@ -213,7 +206,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
   void _updateElevatedEventDuration() {
     final timelineBox = _getTimelineBox()!;
-    final layoutBox = _getLayoutBox(_displayedDate)!;
+    final layoutBox = _getLayoutBox(_displayedDay.value)!;
     final eventPosition = layoutBox.globalToLocal(
       _elevatedEventBounds.origin,
       ancestor: timelineBox,
@@ -332,7 +325,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   void dispose() {
     _elevatedEventBounds.dispose();
     _elevatedEvent.dispose();
-    _weekdayPosition.dispose();
+    _displayedDay.dispose();
     _weekPickerController.dispose();
     _timelineController?.dispose();
     super.dispose();
@@ -362,7 +355,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   Widget _weekTimeline() {
     final theme = widget.timelineTheme;
     final timeScaleWidth = theme.timeScaleTheme.width;
-    const daysInWeek = 7;
 
     return Stack(
       children: [
@@ -389,12 +381,12 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                       children: [
                         Positioned.fill(
                           left: timeScaleWidth,
-                          child: _stripesRow(daysInWeek),
+                          child: _stripesRow(weekdays),
                         ),
                         _timeline(weekdays),
                         Positioned.fill(
                           left: timeScaleWidth,
-                          child: _dragTargetsRow(daysInWeek),
+                          child: _dragTargetsRow(weekdays),
                         ),
                       ],
                     ),
@@ -445,9 +437,9 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     );
   }
 
-  Widget _stripesRow(int length) => Row(
+  Widget _stripesRow(List<DateTime> days) => Row(
         children: List.generate(
-          length,
+          days.length,
           (index) => Expanded(
             child: ColoredBox(
               color: index.isOdd
@@ -460,18 +452,18 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         ),
       );
 
-  Widget _dragTargetsRow(int length) => Row(
-        children: List.generate(
-          length,
-          (index) => Expanded(
-            child: DragTarget<T>(
-              onMove: (details) => _weekdayPosition.value = index,
-              builder: (context, candidates, rejects) =>
-                  const SizedBox.expand(),
-            ),
-          ),
-          growable: false,
-        ),
+  Widget _dragTargetsRow(List<DateTime> days) => Row(
+        children: days
+            .map(
+              (dayDate) => Expanded(
+                child: DragTarget<T>(
+                  onMove: (details) => _displayedDay.value = dayDate,
+                  builder: (context, candidates, rejects) =>
+                      const SizedBox.expand(),
+                ),
+              ),
+            )
+            .toList(growable: false),
       );
 
   Widget _timeline(List<DateTime> days) {
@@ -527,7 +519,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                             events: widget.events,
                             elevatedEvent: _elevatedEvent,
                             onEventTap: widget.onEventTap,
-                            onEventLongPress: _setElevatedEvent,
+                            onEventLongPress: (event) {
+                              _displayedDay.value =
+                                  DateUtils.dateOnly(event.start);
+                              _elevatedEvent.value = event;
+                            },
                             onLayoutLongPress: widget.onDateLongPress,
                           ),
                         ),
