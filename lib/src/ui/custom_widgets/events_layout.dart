@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
-import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
 class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   const EventsLayout({
@@ -17,7 +16,6 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     required this.elevatedEvent,
     this.onEventTap,
     this.onEventLongPress,
-    this.onLayoutLongPress,
   });
 
   final DateTime dayDate;
@@ -29,7 +27,6 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   final ValueNotifier<T?> elevatedEvent;
   final void Function(T)? onEventTap;
   final void Function(T)? onEventLongPress;
-  final void Function(DateTime)? onLayoutLongPress;
 
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) => list
       .where((event) => DateUtils.isSameDay(event.start, dayDate))
@@ -46,39 +43,28 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
         ignoring: elevatedEvent != null,
         child: child,
       ),
-      child: GestureDetector(
-        onLongPressStart: (details) {
-          final minuteExtent = context.size!.height / Duration.minutesPerDay;
-          final offsetInMinutes = details.localPosition.dy ~/ minuteExtent;
-          final roundedMinutes =
-              (offsetInMinutes / cellExtent).round() * cellExtent;
-          final timestamp = dayDate.addMinutesToDayDate(roundedMinutes);
-          onLayoutLongPress?.call(timestamp);
-        },
-        behavior: HitTestBehavior.opaque,
-        child: CustomMultiChildLayout(
-          key: layoutsKeys[dayDate] ??= GlobalKey(),
-          delegate: _EventsLayoutDelegate(
-            date: dayDate,
-            breaks: breaksToDisplay,
-            events: eventsToDisplay,
-            cellExtent: cellExtent,
-          ),
-          children: [
-            ...breaksToDisplay.map(
-              (event) => LayoutId(
-                id: event,
-                child: BreakView(event),
-              ),
-            ),
-            ...eventsToDisplay.map(
-              (event) => LayoutId(
-                id: event,
-                child: _eventView(event),
-              ),
-            ),
-          ],
+      child: CustomMultiChildLayout(
+        key: layoutsKeys[dayDate] ??= GlobalKey(),
+        delegate: _EventsLayoutDelegate(
+          date: dayDate,
+          breaks: breaksToDisplay,
+          events: eventsToDisplay,
+          cellExtent: cellExtent,
         ),
+        children: [
+          ...breaksToDisplay.map(
+            (event) => LayoutId(
+              id: event,
+              child: BreakView(event),
+            ),
+          ),
+          ...eventsToDisplay.map(
+            (event) => LayoutId(
+              id: event,
+              child: _eventView(event),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -77,7 +77,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   final _elevatedEventBounds = RectNotifier();
   late final PageController _monthPickerController;
   late final ScrollController _timelineController;
-  var _displayedDay = _today;
+  var _displayedDay = DateUtils.dateOnly(_now);
   var _fingerPosition = Offset.zero;
   var _scrolling = false;
   var _dragging = false;
@@ -85,7 +85,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   ScrollController? _daysListController;
 
   static DateTime get _now => clock.now();
-  static DateTime get _today => DateUtils.dateOnly(_now);
 
   DateTime get _initialDate => widget.controller.initialDate;
   DateTime? get _endDate => widget.controller.endDate;
@@ -163,9 +162,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     final displayedDate = displayedDay.addMinutesToDayDate(offsetInMinutes);
     widget.controller.setFocusedDate(displayedDate);
   }
-
-  void _elevatedEventHeightLimiter() => _elevatedEventBounds.height =
-      max(_elevatedEventBounds.height, _minuteExtent * _cellExtent);
 
   void _updateElevatedEventStart() {
     final timelineBox = _getTimelineBox()!;
@@ -269,7 +265,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     _timelineController = ScrollController(
       initialScrollOffset: _getTimelineOffsetForDate(_displayedDate),
     )..addListener(_updateFocusedDate);
-    _elevatedEventBounds.addListener(_elevatedEventHeightLimiter);
   }
 
   @override
@@ -486,27 +481,38 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               final dayDate = DateUtils.addDaysToDate(_initialDate, index);
               final isToday = DateUtils.isSameDay(dayDate, _now);
 
-              return DragTarget(
+              return DragTarget<T>(
                 onMove: (details) => _displayedDay = dayDate,
-                builder: (context, candidates, rejects) => Padding(
-                  padding: EdgeInsets.only(
-                    left: theme.padding.left,
-                    right: theme.padding.right,
-                  ),
-                  child: TimeScale(
-                    showCurrentTimeMark: isToday,
-                    theme: theme.timeScaleTheme,
-                    child: EventsLayout(
-                      dayDate: dayDate,
-                      layoutsKeys: DaysViewKeys.layouts,
-                      eventsKeys: DaysViewKeys.events,
-                      cellExtent: _cellExtent,
-                      breaks: widget.breaks,
-                      events: widget.events,
-                      elevatedEvent: _elevatedEvent,
-                      onEventTap: widget.onEventTap,
-                      onEventLongPress: (event) => _elevatedEvent.value = event,
-                      onLayoutLongPress: widget.onDateLongPress,
+                builder: (context, candidates, rejects) => GestureDetector(
+                  onLongPressStart: (details) {
+                    final minutes = details.localPosition.dy ~/ _minuteExtent;
+                    final roundedMinutes =
+                        (minutes / _cellExtent).round() * _cellExtent;
+                    final timestamp =
+                        dayDate.addMinutesToDayDate(roundedMinutes);
+                    widget.onDateLongPress?.call(timestamp);
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: theme.padding.left,
+                      right: theme.padding.right,
+                    ),
+                    child: TimeScale(
+                      showCurrentTimeMark: isToday,
+                      theme: theme.timeScaleTheme,
+                      child: EventsLayout(
+                        dayDate: dayDate,
+                        layoutsKeys: DaysViewKeys.layouts,
+                        eventsKeys: DaysViewKeys.events,
+                        cellExtent: _cellExtent,
+                        breaks: widget.breaks,
+                        events: widget.events,
+                        elevatedEvent: _elevatedEvent,
+                        onEventTap: widget.onEventTap,
+                        onEventLongPress: (event) =>
+                            _elevatedEvent.value = event,
+                      ),
                     ),
                   ),
                 ),
@@ -525,6 +531,8 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         _elevatedEvent,
         elevation: 5,
         bounds: _elevatedEventBounds,
+        minuteExtent: _minuteExtent,
+        cellExtent: _cellExtent,
         curve: Curves.fastOutSlowIn,
         getEventBounds: _getEventBoundsOnTimeline,
         expandTo: _getExpandedEventBounds,
@@ -545,6 +553,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
           _resizing = false;
         },
         onResizingCancel: () => _resizing = false,
-        onDropped: () => _elevatedEvent.value = null,
+        onDropped: (event) => _elevatedEvent.value = null,
       );
 }

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:extra_hittest_area/extra_hittest_area.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
@@ -18,6 +20,8 @@ class DraggableEventView<T extends FloatingCalendarEvent>
     super.key,
     this.elevation,
     required this.bounds,
+    required this.minuteExtent,
+    required this.cellExtent,
     this.animationDuration = const Duration(milliseconds: 200),
     this.curve = Curves.linear,
     required this.getEventBounds,
@@ -37,6 +41,8 @@ class DraggableEventView<T extends FloatingCalendarEvent>
   final ValueNotifier<T?> event;
   final double? elevation;
   final RectNotifier bounds;
+  final double minuteExtent;
+  final int cellExtent;
   final Duration animationDuration;
   final Curve curve;
   final Rect? Function(T) getEventBounds;
@@ -50,7 +56,7 @@ class DraggableEventView<T extends FloatingCalendarEvent>
   final void Function(DragUpdateDetails)? onSizeUpdate;
   final void Function(DragEndDetails)? onResizingEnd;
   final void Function()? onResizingCancel;
-  final void Function()? onDropped;
+  final void Function(T)? onDropped;
 
   @override
   State<DraggableEventView<T>> createState() => _DraggableEventViewState<T>();
@@ -113,7 +119,7 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
     );
     _animationController.reverse().whenComplete(() {
       _removeEntries();
-      widget.onDropped?.call();
+      widget.onDropped?.call(event);
     });
   }
 
@@ -135,12 +141,16 @@ class _DraggableEventViewState<T extends FloatingCalendarEvent>
     _sizerEntry = null;
   }
 
+  void _eventHeightLimiter() => widget.bounds.height =
+      max(widget.bounds.height, widget.minuteExtent * widget.cellExtent);
+
   @override
   void initState() {
     super.initState();
     _initAnimationController();
     _initAnimation();
     widget.event.addListener(_setElevatedEvent);
+    widget.bounds.addListener(_eventHeightLimiter);
   }
 
   @override

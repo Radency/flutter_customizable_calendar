@@ -79,8 +79,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     with SingleTickerProviderStateMixin {
   final _elevatedEvent = ValueNotifier<T?>(null);
   final _elevatedEventBounds = RectNotifier();
-  final _displayedDay = ValueNotifier(_today);
   late final PageController _weekPickerController;
+  var _displayedDay = DateUtils.dateOnly(_now);
   var _fingerPosition = Offset.zero;
   var _scrolling = false;
   var _dragging = false;
@@ -88,7 +88,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   ScrollController? _timelineController;
 
   static DateTime get _now => clock.now();
-  static DateTime get _today => DateUtils.dateOnly(_now);
 
   DateTime get _initialDate => widget.controller.initialDate;
   DateTime? get _endDate => widget.controller.endDate;
@@ -173,12 +172,9 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     if (!_scrolling) _scrollIfNecessary();
   }
 
-  void _elevatedEventHeightLimiter() => _elevatedEventBounds.height =
-      max(_elevatedEventBounds.height, _minuteExtent * _cellExtent);
-
   void _updateElevatedEventStart() {
     final timelineBox = _getTimelineBox()!;
-    final layoutBox = _getLayoutBox(_displayedDay.value)!;
+    final layoutBox = _getLayoutBox(_displayedDay)!;
     final eventPosition = layoutBox.globalToLocal(
       _elevatedEventBounds.origin,
       ancestor: timelineBox,
@@ -187,7 +183,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     final startOffsetInMinutes = eventPosition.dy / _minuteExtent;
     final roundedOffset =
         (startOffsetInMinutes / _cellExtent).round() * _cellExtent;
-    final newStart = _displayedDay.value.addMinutesToDayDate(roundedOffset);
+    final newStart = _displayedDay.addMinutesToDayDate(roundedOffset);
 
     _elevatedEvent.value = _elevatedEvent.value!.copyWith(
       start: newStart.isBefore(_initialDate) ? _initialDate : newStart,
@@ -200,7 +196,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   }
 
   void _updateElevatedEventDuration() {
-    final layoutBox = _getLayoutBox(_displayedDay.value)!;
+    final layoutBox = _getLayoutBox(_displayedDay)!;
     final eventPosition = layoutBox.globalToLocal(
       _elevatedEventBounds.origin,
       ancestor: _getTimelineBox(),
@@ -261,7 +257,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     _weekPickerController = PageController(
       initialPage: _displayedWeek.start.difference(_initialWeek.start).inWeeks,
     );
-    _elevatedEventBounds.addListener(_elevatedEventHeightLimiter);
   }
 
   @override
@@ -319,7 +314,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   void dispose() {
     _elevatedEventBounds.dispose();
     _elevatedEvent.dispose();
-    _displayedDay.dispose();
     _weekPickerController.dispose();
     _timelineController?.dispose();
     super.dispose();
@@ -451,7 +445,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             .map(
               (dayDate) => Expanded(
                 child: DragTarget<T>(
-                  onMove: (details) => _displayedDay.value = dayDate,
+                  onMove: (details) => _displayedDay = dayDate,
                   builder: (context, candidates, rejects) =>
                       const SizedBox.expand(),
                 ),
@@ -504,21 +498,31 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                   children: days
                       .map(
                         (dayDate) => Expanded(
-                          child: EventsLayout(
-                            dayDate: dayDate,
-                            layoutsKeys: WeekViewKeys.layouts,
-                            eventsKeys: WeekViewKeys.events,
-                            cellExtent: _cellExtent,
-                            breaks: widget.breaks,
-                            events: widget.events,
-                            elevatedEvent: _elevatedEvent,
-                            onEventTap: widget.onEventTap,
-                            onEventLongPress: (event) {
-                              _displayedDay.value =
-                                  DateUtils.dateOnly(event.start);
-                              _elevatedEvent.value = event;
+                          child: GestureDetector(
+                            onLongPressStart: (details) {
+                              final minutes =
+                                  details.localPosition.dy ~/ _minuteExtent;
+                              final roundedMinutes =
+                                  (minutes / _cellExtent).round() * _cellExtent;
+                              final timestamp =
+                                  dayDate.addMinutesToDayDate(roundedMinutes);
+                              widget.onDateLongPress?.call(timestamp);
                             },
-                            onLayoutLongPress: widget.onDateLongPress,
+                            behavior: HitTestBehavior.opaque,
+                            child: EventsLayout(
+                              dayDate: dayDate,
+                              layoutsKeys: WeekViewKeys.layouts,
+                              eventsKeys: WeekViewKeys.events,
+                              cellExtent: _cellExtent,
+                              breaks: widget.breaks,
+                              events: widget.events,
+                              elevatedEvent: _elevatedEvent,
+                              onEventTap: widget.onEventTap,
+                              onEventLongPress: (event) {
+                                _displayedDay = DateUtils.dateOnly(event.start);
+                                _elevatedEvent.value = event;
+                              },
+                            ),
                           ),
                         ),
                       )
@@ -536,6 +540,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         _elevatedEvent,
         elevation: 5,
         bounds: _elevatedEventBounds,
+        minuteExtent: _minuteExtent,
+        cellExtent: _cellExtent,
         curve: Curves.fastOutSlowIn,
         getEventBounds: _getEventBoundsOnTimeline,
         expandTo: _getExpandedEventBounds,
@@ -556,6 +562,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
           _resizing = false;
         },
         onResizingCancel: () => _resizing = false,
-        onDropped: () => _elevatedEvent.value = null,
+        onDropped: (event) => _elevatedEvent.value = null,
       );
 }
