@@ -352,7 +352,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
           child: child!,
         ),
         child: Draggable<T>(
-          data: widget.event.value,
+          data: _elevatedEvent,
           onDragStarted: () => _dragging = true,
           onDragUpdate: (details) {
             _eventBounds.origin += details.delta;

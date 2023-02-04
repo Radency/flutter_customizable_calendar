@@ -9,9 +9,10 @@ class MonthViewController extends Cubit<MonthViewState>
     with CalendarController {
   /// Creates MonthView controller instance.
   MonthViewController({
-    required this.initialDate,
+    DateTime? initialDate,
     this.endDate,
-  }) : super(MonthViewInitial());
+  })  : initialDate = initialDate ?? DateTime(1970),
+        super(MonthViewInitial());
 
   @override
   final DateTime initialDate;

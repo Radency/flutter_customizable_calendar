@@ -409,6 +409,9 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                 (minutes / _cellExtent).round() * _cellExtent;
             final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
 
+            if (timestamp.isBefore(_initialDate)) return;
+            if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+
             widget.onDateLongPress?.call(timestamp);
           },
           behavior: HitTestBehavior.opaque,
@@ -421,8 +424,13 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                   (minutes / _cellExtent).round() * _cellExtent;
               final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
 
-              _elevatedEvent.value =
-                  details.data.copyWith(start: timestamp) as T;
+              _elevatedEvent.value = details.data.copyWith(
+                start: timestamp.isBefore(_initialDate)
+                    ? _initialDate
+                    : (_endDate?.isAfter(timestamp) ?? true)
+                        ? timestamp
+                        : _endDate,
+              ) as T;
             },
             builder: (context, candidates, rejects) => Padding(
               padding: EdgeInsets.only(

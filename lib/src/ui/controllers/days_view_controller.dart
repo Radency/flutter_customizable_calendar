@@ -10,9 +10,10 @@ part 'days_view_state.dart';
 class DaysViewController extends Cubit<DaysViewState> with CalendarController {
   /// Creates DaysView controller instance.
   DaysViewController({
-    required this.initialDate,
+    DateTime? initialDate,
     this.endDate,
-  }) : super(DaysViewInitial());
+  })  : initialDate = initialDate ?? DateTime(1970),
+        super(DaysViewInitial());
 
   @override
   final DateTime initialDate;
