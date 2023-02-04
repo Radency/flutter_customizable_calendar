@@ -179,14 +179,14 @@ void main() {
           final eventKey = DaysViewKeys.events[event]!;
 
           expect(
-            find.byKey(DraggableEventViewKeys.elevatedEvent),
+            find.byKey(DraggableEventOverlayKeys.elevatedEvent),
             findsNothing,
           );
 
           await widgetTester.longPress(find.byKey(eventKey));
 
           expect(
-            find.byKey(DraggableEventViewKeys.elevatedEvent),
+            find.byKey(DraggableEventOverlayKeys.elevatedEvent),
             findsOneWidget,
           );
         },
@@ -221,7 +221,7 @@ void main() {
           final layoutFinder = find.byKey(layoutKey);
           final layoutRect = widgetTester.getRect(layoutFinder);
           final elevatedEventFinder =
-              find.byKey(DraggableEventViewKeys.elevatedEvent);
+              find.byKey(DraggableEventOverlayKeys.elevatedEvent);
 
           await widgetTester.longPress(eventFinder);
 
@@ -270,7 +270,7 @@ void main() {
           await widgetTester.pumpAndSettle();
 
           final elevatedEventFinder =
-              find.byKey(DraggableEventViewKeys.elevatedEvent);
+              find.byKey(DraggableEventOverlayKeys.elevatedEvent);
 
           expect(elevatedEventFinder, findsOneWidget);
 

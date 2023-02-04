@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/events/events.dart';
+import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 
+/// Wrapper for all [FloatingCalendarEvent] views. It needs to unify
+/// their main views parameters (like elevation, shape, margin).
 class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
+  /// Creates a view of given [event].
   const EventView(
     this.event, {
     super.key,
-    this.elevation,
+    required this.theme,
     this.onTap,
     this.onLongPress,
   });
@@ -14,8 +18,8 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
   /// Calendar event
   final T event;
 
-  /// If shadow is needed
-  final double? elevation;
+  /// Customization parameters of the view
+  final FloatingEventsTheme theme;
 
   /// On event view tap callback
   final VoidCallback? onTap;
@@ -27,13 +31,10 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       color: event.color,
-      elevation: elevation,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.grey.withOpacity(0.1)),
-        borderRadius: const BorderRadius.all(Radius.circular(4)),
-      ),
+      elevation: theme.elevation,
+      shape: theme.shape,
       borderOnForeground: false,
-      margin: const EdgeInsets.all(1),
+      margin: theme.margin,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

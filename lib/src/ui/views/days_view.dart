@@ -33,11 +33,12 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.monthPickerTheme = const DisplayedPeriodPickerTheme(),
     this.daysListTheme = const DaysListTheme(),
     this.timelineTheme = const TimelineTheme(),
-    this.floatingEventTheme = const FloatingEventTheme(),
+    this.floatingEventTheme = const FloatingEventsTheme(),
     this.breaks = const [],
     this.events = const [],
-    this.onEventTap,
     this.onDateLongPress,
+    this.onEventTap,
+    this.onEventUpdated,
   });
 
   /// Controller which allows to control the view
@@ -53,7 +54,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final TimelineTheme timelineTheme;
 
   /// Floating events customization params
-  final FloatingEventTheme floatingEventTheme;
+  final FloatingEventsTheme floatingEventTheme;
 
   /// Breaks list to display
   final List<Break> breaks;
@@ -61,27 +62,25 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Events list to display
   final List<T> events;
 
-  /// Returns the tapped event
-  final void Function(T)? onEventTap;
-
   /// Returns selected timestamp (to the minute)
   final void Function(DateTime)? onDateLongPress;
 
+  /// Returns the tapped event
+  final void Function(T)? onEventTap;
+
+  /// Is called after an event is modified by user
+  final void Function(T)? onEventUpdated;
   @override
   State<DaysView<T>> createState() => _DaysViewState<T>();
 }
 
 class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     with SingleTickerProviderStateMixin {
-  final _elevatedEvent = ValueNotifier<T?>(null);
-  final _elevatedEventBounds = RectNotifier();
+  final _elevatedEvent = FloatingEventNotifier<T>();
   late final PageController _monthPickerController;
   late final ScrollController _timelineController;
-  var _displayedDay = DateUtils.dateOnly(_now);
-  var _fingerPosition = Offset.zero;
+  var _pointerLocation = Offset.zero;
   var _scrolling = false;
-  var _dragging = false;
-  var _resizing = false;
   ScrollController? _daysListController;
 
   static DateTime get _now => clock.now();
@@ -114,20 +113,20 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     _scrolling = true;
 
     final timelineBox = _getTimelineBox()!;
-    final fingerLocation = timelineBox.globalToLocal(_fingerPosition);
+    final fingerPosition = timelineBox.globalToLocal(_pointerLocation);
     final timelineScrollPosition = _timelineController.position;
     var timelineScrollOffset = timelineScrollPosition.pixels;
 
     const detectionArea = 25;
     const moveDistance = 25;
 
-    if (timelineBox.size.height - fingerLocation.dy < detectionArea &&
+    if (timelineBox.size.height - fingerPosition.dy < detectionArea &&
         timelineScrollOffset < timelineScrollPosition.maxScrollExtent) {
       timelineScrollOffset = min(
         timelineScrollOffset + moveDistance,
         timelineScrollPosition.maxScrollExtent,
       );
-    } else if (fingerLocation.dy < detectionArea &&
+    } else if (fingerPosition.dy < detectionArea &&
         timelineScrollOffset > timelineScrollPosition.minScrollExtent) {
       timelineScrollOffset = max(
         timelineScrollOffset - moveDistance,
@@ -150,7 +149,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   void _stopAutoScrolling() => _scrolling = false;
 
   void _autoScrolling(DragUpdateDetails details) {
-    _fingerPosition = details.globalPosition;
+    _pointerLocation = details.globalPosition;
     if (!_scrolling) _scrollIfNecessary();
   }
 
@@ -159,88 +158,13 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     final displayedDay = DateUtils.addDaysToDate(_initialDate, daysOffset);
     final offsetInMinutes =
         (_timelineController.offset % _minuteExtent).truncate();
-    final displayedDate = displayedDay.addMinutesToDayDate(offsetInMinutes);
+    final displayedDate = displayedDay.add(Duration(minutes: offsetInMinutes));
+
     widget.controller.setFocusedDate(displayedDate);
   }
 
-  void _updateElevatedEventStart() {
-    final timelineBox = _getTimelineBox()!;
-    final layoutBox = _getLayoutBox(_displayedDay)!;
-    final eventPosition = layoutBox.globalToLocal(
-      _elevatedEventBounds.origin,
-      ancestor: timelineBox,
-    );
-
-    final startOffsetInMinutes = eventPosition.dy / _minuteExtent;
-    final roundedOffset =
-        (startOffsetInMinutes / _cellExtent).round() * _cellExtent;
-    final newStart = _displayedDay.addMinutesToDayDate(roundedOffset);
-
-    _elevatedEvent.value = _elevatedEvent.value!.copyWith(
-      start: newStart.isBefore(_initialDate) ? _initialDate : newStart,
-    ) as T;
-
-    // Event position correction
-    _elevatedEventBounds.origin = timelineBox.globalToLocal(
-      layoutBox.localToGlobal(Offset(0, roundedOffset * _minuteExtent)),
-    );
-  }
-
-  void _updateElevatedEventDuration() {
-    final layoutBox = _getLayoutBox(_displayedDay)!;
-    final eventPosition = layoutBox.globalToLocal(
-      _elevatedEventBounds.origin,
-      ancestor: _getTimelineBox(),
-    );
-
-    final endOffsetInMinutes =
-        _elevatedEventBounds.size.bottomRight(eventPosition).dy / _minuteExtent;
-    final roundedOffset =
-        (endOffsetInMinutes / _cellExtent).round() * _cellExtent;
-    final newHeight = roundedOffset * _minuteExtent - eventPosition.dy;
-
-    _elevatedEvent.value =
-        (_elevatedEvent.value! as EditableCalendarEvent).copyWith(
-      duration: Duration(minutes: newHeight ~/ _minuteExtent),
-    ) as T;
-
-    // Event height correction
-    _elevatedEventBounds.height = newHeight;
-  }
-
-  Rect? _getEventBoundsOnTimeline(T event) {
-    final eventBox = _getEventBox(event);
-
-    if (eventBox == null) return null;
-
-    final eventPosition = eventBox.localToGlobal(
-      Offset.zero,
-      ancestor: _getTimelineBox(),
-    );
-
-    return eventPosition & eventBox.size;
-  }
-
-  Rect _getExpandedEventBounds(T event) {
-    final dayDate = DateUtils.dateOnly(event.start);
-    final layoutBox = _getLayoutBox(dayDate)!;
-    final layoutPosition = layoutBox.localToGlobal(
-      Offset.zero,
-      ancestor: _getTimelineBox(),
-    );
-    final eventBox = _getEventBox(event)!;
-    final eventPosition = eventBox.localToGlobal(
-      layoutPosition,
-      ancestor: layoutBox,
-    );
-
-    return Rect.fromLTWH(
-      layoutPosition.dx,
-      eventPosition.dy,
-      layoutBox.size.width,
-      eventBox.size.height,
-    );
-  }
+  int _getDaysInMonth(DateTime monthDate) =>
+      DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
 
   int _getMonthsDeltaForDate(DateTime date) =>
       DateUtils.monthDelta(_initialDate, date);
@@ -346,7 +270,20 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
           _monthPicker(),
           _daysList(),
           Expanded(
-            child: _timeline(),
+            child: DraggableEventOverlay<T>(
+              _elevatedEvent,
+              timelineTheme: widget.timelineTheme,
+              onDragDown: _stopTimelineScrolling,
+              onDragUpdate: _autoScrolling,
+              onDragEnd: _stopAutoScrolling,
+              onSizeUpdate: _autoScrolling,
+              onResizingEnd: _stopAutoScrolling,
+              onDropped: widget.onEventUpdated,
+              getTimelineBox: _getTimelineBox,
+              getLayoutBox: _getLayoutBox,
+              getEventBox: _getEventBox,
+              child: _timeline(),
+            ),
           ),
         ],
       ),
@@ -355,7 +292,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
   @override
   void dispose() {
-    _elevatedEventBounds.dispose();
     _elevatedEvent.dispose();
     _monthPickerController.dispose();
     _daysListController?.dispose();
@@ -395,10 +331,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         itemBuilder: (context, pageIndex) {
           final monthDate =
               DateUtils.addMonthsToMonthDate(_initialDate, pageIndex);
-          final daysInMonth = DateUtils.getDaysInMonth(
-            _displayedDate.year,
-            _displayedDate.month,
-          );
+          final daysInMonth = _getDaysInMonth(_displayedDate);
 
           return LayoutBuilder(
             builder: (context, constraints) {
@@ -454,105 +387,66 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   Widget _timeline() {
     final theme = widget.timelineTheme;
 
-    return Stack(
-      children: [
-        NotificationListener<ScrollUpdateNotification>(
-          onNotification: (event) {
-            final delta = Offset(0, event.scrollDelta ?? 0);
-            // Update nothing if user drags the event by himself/herself
-            if (!_dragging && delta != Offset.zero) {
-              _elevatedEventBounds.origin -= delta;
-              if (_resizing) _elevatedEventBounds.size += delta;
-            }
-            return true;
-          },
-          child: ListView.builder(
-            key: DaysViewKeys.timeline,
-            controller: _timelineController,
-            padding: EdgeInsets.only(
-              top: theme.padding.top,
-              bottom: theme.padding.bottom,
-            ),
-            itemExtent: _dayExtent,
-            itemCount: (_endDate != null)
-                ? _endDate!.difference(_initialDate).inDays + 1
-                : null,
-            itemBuilder: (context, index) {
-              final dayDate = DateUtils.addDaysToDate(_initialDate, index);
-              final isToday = DateUtils.isSameDay(dayDate, _now);
+    return ListView.builder(
+      key: DaysViewKeys.timeline,
+      controller: _timelineController,
+      padding: EdgeInsets.only(
+        top: theme.padding.top,
+        bottom: theme.padding.bottom,
+      ),
+      itemExtent: _dayExtent,
+      itemCount: (_endDate != null)
+          ? _endDate!.difference(_initialDate).inDays + 1
+          : null,
+      itemBuilder: (context, index) {
+        final dayDate = DateUtils.addDaysToDate(_initialDate, index);
+        final isToday = DateUtils.isSameDay(dayDate, _now);
 
-              return DragTarget<T>(
-                onMove: (details) => _displayedDay = dayDate,
-                builder: (context, candidates, rejects) => GestureDetector(
-                  onLongPressStart: (details) {
-                    final minutes = details.localPosition.dy ~/ _minuteExtent;
-                    final roundedMinutes =
-                        (minutes / _cellExtent).round() * _cellExtent;
-                    final timestamp =
-                        dayDate.addMinutesToDayDate(roundedMinutes);
-                    widget.onDateLongPress?.call(timestamp);
-                  },
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left: theme.padding.left,
-                      right: theme.padding.right,
-                    ),
-                    child: TimeScale(
-                      showCurrentTimeMark: isToday,
-                      theme: theme.timeScaleTheme,
-                      child: EventsLayout(
-                        dayDate: dayDate,
-                        layoutsKeys: DaysViewKeys.layouts,
-                        eventsKeys: DaysViewKeys.events,
-                        cellExtent: _cellExtent,
-                        breaks: widget.breaks,
-                        events: widget.events,
-                        elevatedEvent: _elevatedEvent,
-                        onEventTap: widget.onEventTap,
-                        onEventLongPress: (event) =>
-                            _elevatedEvent.value = event,
-                      ),
-                    ),
-                  ),
-                ),
-              );
+        return GestureDetector(
+          onLongPressStart: (details) {
+            final minutes = details.localPosition.dy ~/ _minuteExtent;
+            final roundedMinutes =
+                (minutes / _cellExtent).round() * _cellExtent;
+            final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
+
+            widget.onDateLongPress?.call(timestamp);
+          },
+          behavior: HitTestBehavior.opaque,
+          child: DragTarget<T>(
+            onMove: (details) {
+              final layoutBox = _getLayoutBox(dayDate)!;
+              final minutes =
+                  layoutBox.globalToLocal(details.offset).dy ~/ _minuteExtent;
+              final roundedMinutes =
+                  (minutes / _cellExtent).round() * _cellExtent;
+              final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
+
+              _elevatedEvent.value =
+                  details.data.copyWith(start: timestamp) as T;
             },
+            builder: (context, candidates, rejects) => Padding(
+              padding: EdgeInsets.only(
+                left: theme.padding.left,
+                right: theme.padding.right,
+              ),
+              child: TimeScale(
+                showCurrentTimeMark: isToday,
+                theme: theme.timeScaleTheme,
+                child: EventsLayout<T>(
+                  dayDate: dayDate,
+                  layoutsKeys: DaysViewKeys.layouts,
+                  eventsKeys: DaysViewKeys.events,
+                  timelineTheme: widget.timelineTheme,
+                  breaks: widget.breaks,
+                  events: widget.events,
+                  elevatedEvent: _elevatedEvent,
+                  onEventTap: widget.onEventTap,
+                ),
+              ),
+            ),
           ),
-        ),
-        Positioned.fill(
-          child: _elevatedEventView(),
-        ),
-      ],
+        );
+      },
     );
   }
-
-  Widget _elevatedEventView() => DraggableEventView(
-        _elevatedEvent,
-        elevation: 5,
-        bounds: _elevatedEventBounds,
-        minuteExtent: _minuteExtent,
-        cellExtent: _cellExtent,
-        curve: Curves.fastOutSlowIn,
-        getEventBounds: _getEventBoundsOnTimeline,
-        expandTo: _getExpandedEventBounds,
-        onDragDown: (details) => _stopTimelineScrolling(),
-        onDragStart: () => _dragging = true,
-        onDragUpdate: _autoScrolling,
-        onDragEnd: (details) {
-          _stopAutoScrolling();
-          _updateElevatedEventStart();
-          _dragging = false;
-        },
-        onDraggableCanceled: (velocity, offset) => _dragging = false,
-        onResizingStart: (details) => _resizing = true,
-        onSizeUpdate: _autoScrolling,
-        onResizingEnd: (details) {
-          _stopAutoScrolling();
-          _updateElevatedEventDuration();
-          _resizing = false;
-        },
-        onResizingCancel: () => _resizing = false,
-        onDropped: (event) => _elevatedEvent.value = null,
-      );
 }

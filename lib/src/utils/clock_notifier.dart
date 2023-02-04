@@ -4,8 +4,9 @@ import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 
 /// Helper class which is needed to update the UI periodically.
-class Clock extends ChangeNotifier implements ValueListenable<DateTime> {
-  Clock._create() {
+class ClockNotifier extends ChangeNotifier
+    implements ValueListenable<DateTime> {
+  ClockNotifier._create() {
     _timer = Timer.periodic(
       const Duration(seconds: 1),
       (_) => notifyListeners(),
@@ -14,13 +15,13 @@ class Clock extends ChangeNotifier implements ValueListenable<DateTime> {
 
   /// Creates a [ValueNotifier] which provides current time and notifies it's
   /// listeners every second. Don't forget to [dispose] it.
-  factory Clock.instance() {
-    if (_counter == 0) _instance = Clock._create();
+  factory ClockNotifier.instance() {
+    if (_counter == 0) _instance = ClockNotifier._create();
     _counter++;
     return _instance;
   }
 
-  static late Clock _instance;
+  static late ClockNotifier _instance;
   static var _counter = 0;
   Timer? _timer;
 

@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
+/// The view is shown to the left of it's [child] widget.
+/// It displays a time scale of a day view (with hours and minutes marks).
 class TimeScale extends StatefulWidget {
+  /// Creates view of a time scale.
   const TimeScale({
     super.key,
     this.showCurrentTimeMark = true,
@@ -11,10 +14,13 @@ class TimeScale extends StatefulWidget {
     required this.child,
   });
 
+  /// Whether current time mark needs to be shown
   final bool showCurrentTimeMark;
 
+  /// Customization params for the view
   final TimeScaleTheme theme;
 
+  /// A day view widget
   final Widget child;
 
   @override
@@ -22,7 +28,7 @@ class TimeScale extends StatefulWidget {
 }
 
 class _TimeScaleState extends State<TimeScale> {
-  final _clock = Clock.instance();
+  final _clock = ClockNotifier.instance();
 
   @override
   Widget build(BuildContext context) {

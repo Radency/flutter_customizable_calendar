@@ -1,9 +1,14 @@
 part of 'timeline_theme.dart';
 
-/// How marks on the time scale should be aligned
+/// How marks should be aligned on the time scale
 enum MarksAlign {
+  /// Marks are centered
   center,
+
+  /// Marks are aligned on the left side
   left,
+
+  /// Marks are aligned on the right side
   right,
 }
 

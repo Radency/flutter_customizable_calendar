@@ -7,7 +7,9 @@ import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
 part 'week_view_state.dart';
 
+/// A specific controller which controls the WeekView state.
 class WeekViewController extends Cubit<WeekViewState> with CalendarController {
+  /// Creates WeekView controller instance.
   WeekViewController({
     required this.initialDate,
     this.endDate,

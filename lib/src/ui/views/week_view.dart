@@ -33,11 +33,12 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.divider,
     this.daysRowTheme = const DaysRowTheme(),
     this.timelineTheme = const TimelineTheme(),
-    this.floatingEventTheme = const FloatingEventTheme(),
+    this.floatingEventTheme = const FloatingEventsTheme(),
     this.breaks = const [],
     this.events = const [],
-    this.onEventTap,
     this.onDateLongPress,
+    this.onEventTap,
+    this.onEventUpdated,
   });
 
   /// Controller which allows to control the view
@@ -57,7 +58,7 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final TimelineTheme timelineTheme;
 
   /// Floating events customization params
-  final FloatingEventTheme floatingEventTheme;
+  final FloatingEventsTheme floatingEventTheme;
 
   /// Breaks list to display
   final List<Break> breaks;
@@ -65,11 +66,14 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Events list to display
   final List<T> events;
 
+  /// Returns selected timestamp (to the minute)
+  final void Function(DateTime)? onDateLongPress;
+
   /// Returns the tapped event
   final void Function(T)? onEventTap;
 
-  /// Returns selected timestamp (to the minute)
-  final void Function(DateTime)? onDateLongPress;
+  /// Is called after an event is modified by user
+  final void Function(T)? onEventUpdated;
 
   @override
   State<WeekView<T>> createState() => _WeekViewState<T>();
@@ -77,14 +81,10 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
 class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     with SingleTickerProviderStateMixin {
-  final _elevatedEvent = ValueNotifier<T?>(null);
-  final _elevatedEventBounds = RectNotifier();
+  final _elevatedEvent = FloatingEventNotifier<T>();
   late final PageController _weekPickerController;
-  var _displayedDay = DateUtils.dateOnly(_now);
-  var _fingerPosition = Offset.zero;
+  var _pointerLocation = Offset.zero;
   var _scrolling = false;
-  var _dragging = false;
-  var _resizing = false;
   ScrollController? _timelineController;
 
   static DateTime get _now => clock.now();
@@ -119,20 +119,20 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     _scrolling = true;
 
     final timelineBox = _getTimelineBox()!;
-    final fingerLocation = timelineBox.globalToLocal(_fingerPosition);
+    final fingerPosition = timelineBox.globalToLocal(_pointerLocation);
     final timelineScrollPosition = _timelineController!.position;
     var timelineScrollOffset = timelineScrollPosition.pixels;
 
     const detectionArea = 25;
     const moveDistance = 25;
 
-    if (timelineBox.size.height - fingerLocation.dy < detectionArea &&
+    if (timelineBox.size.height - fingerPosition.dy < detectionArea &&
         timelineScrollOffset < timelineScrollPosition.maxScrollExtent) {
       timelineScrollOffset = min(
         timelineScrollOffset + moveDistance,
         timelineScrollPosition.maxScrollExtent,
       );
-    } else if (fingerLocation.dy < detectionArea &&
+    } else if (fingerPosition.dy < detectionArea &&
         timelineScrollOffset > timelineScrollPosition.minScrollExtent) {
       timelineScrollOffset = max(
         timelineScrollOffset - moveDistance,
@@ -143,10 +143,10 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
       // Checking if scroll is finished
       if (!weekPickerPosition.isScrollingNotifier.value) {
-        if (timelineBox.size.width - fingerLocation.dx < detectionArea &&
+        if (timelineBox.size.width - fingerPosition.dx < detectionArea &&
             weekPickerPosition.pixels < weekPickerPosition.maxScrollExtent) {
           widget.controller.next();
-        } else if (fingerLocation.dx < detectionArea &&
+        } else if (fingerPosition.dx < detectionArea &&
             weekPickerPosition.pixels > weekPickerPosition.minScrollExtent) {
           widget.controller.prev();
         }
@@ -168,87 +168,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   void _stopAutoScrolling() => _scrolling = false;
 
   void _autoScrolling(DragUpdateDetails details) {
-    _fingerPosition = details.globalPosition;
+    _pointerLocation = details.globalPosition;
     if (!_scrolling) _scrollIfNecessary();
-  }
-
-  void _updateElevatedEventStart() {
-    final timelineBox = _getTimelineBox()!;
-    final layoutBox = _getLayoutBox(_displayedDay)!;
-    final eventPosition = layoutBox.globalToLocal(
-      _elevatedEventBounds.origin,
-      ancestor: timelineBox,
-    );
-
-    final startOffsetInMinutes = eventPosition.dy / _minuteExtent;
-    final roundedOffset =
-        (startOffsetInMinutes / _cellExtent).round() * _cellExtent;
-    final newStart = _displayedDay.addMinutesToDayDate(roundedOffset);
-
-    _elevatedEvent.value = _elevatedEvent.value!.copyWith(
-      start: newStart.isBefore(_initialDate) ? _initialDate : newStart,
-    ) as T;
-
-    // Event position correction
-    _elevatedEventBounds.origin = timelineBox.globalToLocal(
-      layoutBox.localToGlobal(Offset(0, roundedOffset * _minuteExtent)),
-    );
-  }
-
-  void _updateElevatedEventDuration() {
-    final layoutBox = _getLayoutBox(_displayedDay)!;
-    final eventPosition = layoutBox.globalToLocal(
-      _elevatedEventBounds.origin,
-      ancestor: _getTimelineBox(),
-    );
-
-    final endOffsetInMinutes =
-        _elevatedEventBounds.size.bottomRight(eventPosition).dy / _minuteExtent;
-    final roundedOffset =
-        (endOffsetInMinutes / _cellExtent).round() * _cellExtent;
-    final newHeight = roundedOffset * _minuteExtent - eventPosition.dy;
-
-    _elevatedEvent.value =
-        (_elevatedEvent.value! as EditableCalendarEvent).copyWith(
-      duration: Duration(minutes: newHeight ~/ _minuteExtent),
-    ) as T;
-
-    // Event height correction
-    _elevatedEventBounds.height = newHeight;
-  }
-
-  Rect? _getEventBoundsOnTimeline(T event) {
-    final eventBox = _getEventBox(event);
-
-    if (eventBox == null) return null;
-
-    final eventPosition = eventBox.localToGlobal(
-      Offset.zero,
-      ancestor: _getTimelineBox(),
-    );
-
-    return eventPosition & eventBox.size;
-  }
-
-  Rect _getExpandedEventBounds(T event) {
-    final dayDate = DateUtils.dateOnly(event.start);
-    final layoutBox = _getLayoutBox(dayDate)!;
-    final layoutPosition = layoutBox.localToGlobal(
-      Offset.zero,
-      ancestor: _getTimelineBox(),
-    );
-    final eventBox = _getEventBox(event)!;
-    final eventPosition = eventBox.localToGlobal(
-      layoutPosition,
-      ancestor: layoutBox,
-    );
-
-    return Rect.fromLTWH(
-      layoutPosition.dx,
-      eventPosition.dy,
-      layoutBox.size.width,
-      eventBox.size.height,
-    );
   }
 
   @override
@@ -303,7 +224,23 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         children: [
           _weekPicker(),
           Expanded(
-            child: _weekTimeline(),
+            child: DraggableEventOverlay<T>(
+              _elevatedEvent,
+              padding: EdgeInsets.only(
+                top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
+              ),
+              timelineTheme: widget.timelineTheme,
+              onDragDown: _stopTimelineScrolling,
+              onDragUpdate: _autoScrolling,
+              onDragEnd: _stopAutoScrolling,
+              onSizeUpdate: _autoScrolling,
+              onResizingEnd: _stopAutoScrolling,
+              onDropped: widget.onEventUpdated,
+              getTimelineBox: _getTimelineBox,
+              getLayoutBox: _getLayoutBox,
+              getEventBox: _getEventBox,
+              child: _weekTimeline(),
+            ),
           ),
         ],
       ),
@@ -312,7 +249,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
   @override
   void dispose() {
-    _elevatedEventBounds.dispose();
     _elevatedEvent.dispose();
     _weekPickerController.dispose();
     _timelineController?.dispose();
@@ -344,51 +280,46 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     final theme = widget.timelineTheme;
     final timeScaleWidth = theme.timeScaleTheme.width;
 
-    return Stack(
-      children: [
-        PageView.builder(
-          controller: _weekPickerController,
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, pageIndex) {
-            final weekdays = widget.controller.state.displayedWeek.days;
+    return PageView.builder(
+      controller: _weekPickerController,
+      physics: const NeverScrollableScrollPhysics(),
+      itemBuilder: (context, pageIndex) {
+        final weekdays = widget.controller.state.displayedWeek.days;
 
-            return Padding(
-              padding: EdgeInsets.only(
-                left: theme.padding.left,
-                right: theme.padding.right,
+        return Padding(
+          padding: EdgeInsets.only(
+            left: theme.padding.left,
+            right: theme.padding.right,
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.only(left: timeScaleWidth),
+                child: _daysRow(weekdays),
               ),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(left: timeScaleWidth),
-                    child: _daysRow(weekdays),
-                  ),
-                  widget.divider ?? const SizedBox.shrink(),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          left: timeScaleWidth,
-                          child: _stripesRow(weekdays),
-                        ),
-                        _timeline(weekdays),
-                        Positioned.fill(
-                          left: timeScaleWidth,
-                          child: _dragTargetsRow(weekdays),
-                        ),
-                      ],
+              widget.divider ?? const SizedBox.shrink(),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      left: timeScaleWidth,
+                      child: _stripesRow(weekdays),
                     ),
-                  ),
-                ],
+                    _timeline(
+                      weekIndex: pageIndex,
+                      days: weekdays,
+                    ),
+                    Positioned.fill(
+                      left: timeScaleWidth,
+                      child: _dragTargetsRow(weekdays),
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
-        ),
-        Positioned.fill(
-          top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
-          child: _elevatedEventView(),
-        ),
-      ],
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -445,7 +376,20 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             .map(
               (dayDate) => Expanded(
                 child: DragTarget<T>(
-                  onMove: (details) => _displayedDay = dayDate,
+                  onMove: (details) {
+                    final layoutBox = _getLayoutBox(dayDate)!;
+                    final dy = layoutBox.globalToLocal(details.offset).dy;
+                    final offset =
+                        dy.isNegative ? 0 : min(dy, layoutBox.size.height);
+                    final minutes = offset ~/ _minuteExtent;
+                    final roundedMinutes =
+                        (minutes / _cellExtent).round() * _cellExtent;
+                    final timestamp =
+                        dayDate.add(Duration(minutes: roundedMinutes));
+
+                    _elevatedEvent.value =
+                        details.data.copyWith(start: timestamp) as T;
+                  },
                   builder: (context, candidates, rejects) =>
                       const SizedBox.expand(),
                 ),
@@ -454,114 +398,74 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             .toList(growable: false),
       );
 
-  Widget _timeline(List<DateTime> days) {
+  Widget _timeline({
+    required int weekIndex,
+    required List<DateTime> days,
+  }) {
     final theme = widget.timelineTheme;
     final isCurrentWeek = days.first.isSameWeekAs(_now);
 
-    return NotificationListener<ScrollUpdateNotification>(
-      onNotification: (event) {
-        final delta = Offset(0, event.scrollDelta ?? 0);
-        // Update nothing if user drags the event by himself/herself
-        if (!_dragging && delta != Offset.zero) {
-          _elevatedEventBounds.origin -= delta;
-          if (_resizing) _elevatedEventBounds.size += delta;
-        }
-        return true;
-      },
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final scrollOffset = _timelineController?.offset ??
-              min(
-                _focusedDate.hour * _hourExtent,
-                _dayExtent + theme.padding.vertical - constraints.maxHeight,
-              );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scrollOffset = _timelineController?.offset ??
+            min(
+              _focusedDate.hour * _hourExtent,
+              _dayExtent + theme.padding.vertical - constraints.maxHeight,
+            );
 
-          // Dispose the previous week timeline controller
-          _timelineController?.dispose();
-          _timelineController = ScrollController(
-            initialScrollOffset: scrollOffset,
-          );
+        // Dispose the previous week timeline controller
+        _timelineController?.dispose();
+        _timelineController = ScrollController(
+          initialScrollOffset: scrollOffset,
+        );
 
-          return SingleChildScrollView(
-            key: WeekViewKeys.timeline = GlobalKey(),
-            controller: _timelineController,
-            padding: EdgeInsets.only(
-              top: theme.padding.top,
-              bottom: theme.padding.bottom,
-            ),
-            child: SizedBox(
-              height: _dayExtent,
-              child: TimeScale(
-                showCurrentTimeMark: isCurrentWeek,
-                theme: theme.timeScaleTheme,
-                child: Row(
-                  children: days
-                      .map(
-                        (dayDate) => Expanded(
-                          child: GestureDetector(
-                            onLongPressStart: (details) {
-                              final minutes =
-                                  details.localPosition.dy ~/ _minuteExtent;
-                              final roundedMinutes =
-                                  (minutes / _cellExtent).round() * _cellExtent;
-                              final timestamp =
-                                  dayDate.addMinutesToDayDate(roundedMinutes);
-                              widget.onDateLongPress?.call(timestamp);
-                            },
-                            behavior: HitTestBehavior.opaque,
-                            child: EventsLayout(
-                              dayDate: dayDate,
-                              layoutsKeys: WeekViewKeys.layouts,
-                              eventsKeys: WeekViewKeys.events,
-                              cellExtent: _cellExtent,
-                              breaks: widget.breaks,
-                              events: widget.events,
-                              elevatedEvent: _elevatedEvent,
-                              onEventTap: widget.onEventTap,
-                              onEventLongPress: (event) {
-                                _displayedDay = DateUtils.dateOnly(event.start);
-                                _elevatedEvent.value = event;
-                              },
-                            ),
+        return SingleChildScrollView(
+          key: WeekViewKeys.timeline = GlobalKey(),
+          controller: _timelineController,
+          padding: EdgeInsets.only(
+            top: theme.padding.top,
+            bottom: theme.padding.bottom,
+          ),
+          child: SizedBox(
+            height: _dayExtent,
+            child: TimeScale(
+              showCurrentTimeMark: isCurrentWeek,
+              theme: theme.timeScaleTheme,
+              child: Row(
+                children: days
+                    .map(
+                      (dayDate) => Expanded(
+                        child: GestureDetector(
+                          onLongPressStart: (details) {
+                            final minutes =
+                                details.localPosition.dy ~/ _minuteExtent;
+                            final roundedMinutes =
+                                (minutes / _cellExtent).round() * _cellExtent;
+                            final timestamp =
+                                dayDate.add(Duration(minutes: roundedMinutes));
+
+                            widget.onDateLongPress?.call(timestamp);
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: EventsLayout<T>(
+                            dayDate: dayDate,
+                            layoutsKeys: WeekViewKeys.layouts,
+                            eventsKeys: WeekViewKeys.events,
+                            timelineTheme: widget.timelineTheme,
+                            breaks: widget.breaks,
+                            events: widget.events,
+                            elevatedEvent: _elevatedEvent,
+                            onEventTap: widget.onEventTap,
                           ),
                         ),
-                      )
-                      .toList(growable: false),
-                ),
+                      ),
+                    )
+                    .toList(growable: false),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
-
-  Widget _elevatedEventView() => DraggableEventView(
-        _elevatedEvent,
-        elevation: 5,
-        bounds: _elevatedEventBounds,
-        minuteExtent: _minuteExtent,
-        cellExtent: _cellExtent,
-        curve: Curves.fastOutSlowIn,
-        getEventBounds: _getEventBoundsOnTimeline,
-        expandTo: _getExpandedEventBounds,
-        onDragDown: (details) => _stopTimelineScrolling(),
-        onDragStart: () => _dragging = true,
-        onDragUpdate: _autoScrolling,
-        onDragEnd: (details) {
-          _stopAutoScrolling();
-          _updateElevatedEventStart();
-          _dragging = false;
-        },
-        onDraggableCanceled: (velocity, offset) => _dragging = false,
-        onResizingStart: (details) => _resizing = true,
-        onSizeUpdate: _autoScrolling,
-        onResizingEnd: (details) {
-          _stopAutoScrolling();
-          _updateElevatedEventDuration();
-          _resizing = false;
-        },
-        onResizingCancel: () => _resizing = false,
-        onDropped: (event) => _elevatedEvent.value = null,
-      );
 }

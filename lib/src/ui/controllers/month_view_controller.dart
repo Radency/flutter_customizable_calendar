@@ -4,8 +4,10 @@ import 'package:flutter_customizable_calendar/src/ui/controllers/calendar_contro
 
 part 'month_view_state.dart';
 
+/// A specific controller which controls the MonthView state.
 class MonthViewController extends Cubit<MonthViewState>
     with CalendarController {
+  /// Creates MonthView controller instance.
   MonthViewController({
     required this.initialDate,
     this.endDate,
