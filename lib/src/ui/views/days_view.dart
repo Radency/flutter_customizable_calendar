@@ -120,14 +120,12 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     const detectionArea = 25;
     const moveDistance = 25;
 
-    if (timelineBox.size.height - fingerPosition.dy < detectionArea &&
-        timelineScrollOffset < timelineScrollPosition.maxScrollExtent) {
+    if (timelineBox.size.height - fingerPosition.dy < detectionArea) {
       timelineScrollOffset = min(
         timelineScrollOffset + moveDistance,
         timelineScrollPosition.maxScrollExtent,
       );
-    } else if (fingerPosition.dy < detectionArea &&
-        timelineScrollOffset > timelineScrollPosition.minScrollExtent) {
+    } else if (fingerPosition.dy < detectionArea) {
       timelineScrollOffset = max(
         timelineScrollOffset - moveDistance,
         timelineScrollPosition.minScrollExtent,
@@ -137,11 +135,13 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
       return;
     }
 
-    await timelineScrollPosition.animateTo(
-      timelineScrollOffset,
-      duration: const Duration(milliseconds: 100),
-      curve: Curves.linear,
-    );
+    if (timelineScrollPosition.pixels != timelineScrollOffset) {
+      await timelineScrollPosition.animateTo(
+        timelineScrollOffset,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.linear,
+      );
+    }
 
     if (_scrolling) unawaited(_scrollIfNecessary());
   }

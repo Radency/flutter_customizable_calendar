@@ -138,7 +138,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
   }
 
-  void _setElevatedEvent() {
+  void _resetElevatedEvent() {
     if (widget.event.value == null) return;
     _elevatedEvent = widget.event.value!;
     _elevate(_elevatedEvent);
@@ -240,7 +240,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   @override
   void initState() {
     super.initState();
-    widget.event.addListener(_setElevatedEvent);
+    widget.event.addListener(_resetElevatedEvent);
     _initAnimationController();
     _initAnimation();
     _eventBounds.addListener(_eventHeightLimiter);
@@ -299,7 +299,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   @override
   void dispose() {
-    widget.event.removeListener(_setElevatedEvent);
+    widget.event.removeListener(_resetElevatedEvent);
     _animationController.dispose();
     _eventBounds.dispose();
     super.dispose();
