@@ -6,13 +6,14 @@ import 'package:flutter_customizable_calendar/src/ui/controllers/calendar_contro
 
 part 'days_view_state.dart';
 
-/// A specific controller which controls the Day view state
+/// A specific controller which controls the DaysView state.
 class DaysViewController extends Cubit<DaysViewState> with CalendarController {
-  /// Creates Days view controller instance
+  /// Creates DaysView controller instance.
   DaysViewController({
-    required this.initialDate,
+    DateTime? initialDate,
     this.endDate,
-  }) : super(DaysViewInitial());
+  })  : initialDate = initialDate ?? DateTime(1970),
+        super(DaysViewInitial());
 
   @override
   final DateTime initialDate;

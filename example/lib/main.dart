@@ -52,6 +52,12 @@ class App extends StatelessWidget {
             duration: const Duration(minutes: 40),
             title: 'Event 1',
           ),
+          SimpleEvent(
+            id: 'Event 3',
+            start: today.add(const Duration(days: 2, hours: 10, minutes: 59)),
+            duration: const Duration(minutes: 45),
+            title: 'Event 3',
+          ),
         ],
       ),
     );
@@ -190,83 +196,118 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         ),
       );
 
-  Widget _calendarViews() {
-    final textStyle = TextStyle(
-      fontSize: 12,
-      color: Colors.grey.shade700,
-    );
-    final periodPickerTheme = DisplayedPeriodPickerTheme(
-      height: 40,
-      foregroundColor: _theme.primaryColor,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: _theme.primaryColor),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      textStyle: TextStyle(
-        color: _theme.primaryColor,
-        fontWeight: FontWeight.w600,
-      ),
-    );
+  Widget _calendarViews() => TabBarView(
+        controller: _tabController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          _daysView(),
+          _weekView(),
+          _monthView(),
+        ],
+      );
 
-    return TabBarView(
-      controller: _tabController,
-      physics: const NeverScrollableScrollPhysics(),
-      children: [
-        DaysView(
-          controller: _daysViewController,
-          monthPickerTheme: periodPickerTheme,
-          daysListTheme: DaysListTheme(
-            itemTheme: DaysListItemTheme(
-              foreground: _theme.primaryColor,
-              shape: RoundedRectangleBorder(
-                side: BorderSide(color: _theme.primaryColor),
-                borderRadius: BorderRadius.circular(12),
-              ),
+  Widget _daysView() => DaysView<T>(
+        controller: _daysViewController,
+        monthPickerTheme: _periodPickerTheme,
+        daysListTheme: DaysListTheme(
+          itemTheme: DaysListItemTheme(
+            foreground: _theme.primaryColor,
+            shape: RoundedRectangleBorder(
+              side: BorderSide(color: _theme.primaryColor),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-          timelineTheme: TimelineTheme(
-            padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
-            timeScaleTheme: TimeScaleTheme(textStyle: textStyle),
-          ),
-          breaks: widget.breaks,
-          events: widget.events,
-          onEventTap: print,
-          onDateLongPress: print,
         ),
-        WeekView(
-          controller: _weekViewController,
-          weekPickerTheme: periodPickerTheme,
-          divider: Divider(
-            height: 2,
-            thickness: 2,
-            color: Colors.grey.withOpacity(0.33),
+        timelineTheme: TimelineTheme(
+          padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+          timeScaleTheme: TimeScaleTheme(
+            textStyle: _textStyle,
+            currentTimeMarkTheme: _currentTimeMarkTheme,
           ),
-          daysRowTheme: DaysRowTheme(
-            weekdayStyle: textStyle,
-            numberStyle: textStyle.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: _theme.primaryColor,
-            ),
-          ),
-          timelineTheme: TimelineTheme(
-            padding: const EdgeInsets.symmetric(vertical: 32),
-            timeScaleTheme: TimeScaleTheme(
-              width: 48,
-              drawHalfHourMarks: false,
-              drawQuarterHourMarks: false,
-              hourFormatter: (time) => time.hour.toString(),
-              textStyle: textStyle,
-              marksAlign: MarksAlign.center,
-            ),
-          ),
-          breaks: widget.breaks,
-          events: widget.events,
-          onEventTap: print,
-          onDateLongPress: print,
+          floatingEventsTheme: _floatingEventsTheme,
+          draggableEventTheme: _draggableEventTheme,
         ),
-        const MonthView(),
-      ],
-    );
-  }
+        breaks: widget.breaks,
+        events: widget.events,
+        onDateLongPress: print,
+        onEventTap: print,
+        onEventUpdated: print,
+      );
+
+  Widget _weekView() => WeekView<T>(
+        controller: _weekViewController,
+        weekPickerTheme: _periodPickerTheme,
+        divider: Divider(
+          height: 2,
+          thickness: 2,
+          color: Colors.grey.withOpacity(0.33),
+        ),
+        daysRowTheme: DaysRowTheme(
+          weekdayStyle: _textStyle,
+          numberStyle: _textStyle.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: _theme.primaryColor,
+          ),
+        ),
+        timelineTheme: TimelineTheme(
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          timeScaleTheme: TimeScaleTheme(
+            width: 48,
+            currentTimeMarkTheme: _currentTimeMarkTheme,
+            drawHalfHourMarks: false,
+            drawQuarterHourMarks: false,
+            hourFormatter: (time) => time.hour.toString(),
+            textStyle: _textStyle,
+            marksAlign: MarksAlign.center,
+          ),
+          floatingEventsTheme: _floatingEventsTheme,
+          draggableEventTheme: _draggableEventTheme,
+        ),
+        breaks: widget.breaks,
+        events: widget.events,
+        onDateLongPress: print,
+        onEventTap: print,
+        onEventUpdated: print,
+      );
+
+  Widget _monthView() => MonthView<T>();
+
+  TextStyle get _textStyle => TextStyle(
+        fontSize: 12,
+        color: Colors.grey.shade700,
+      );
+
+  DisplayedPeriodPickerTheme get _periodPickerTheme =>
+      DisplayedPeriodPickerTheme(
+        height: 40,
+        foregroundColor: _theme.primaryColor,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: _theme.primaryColor),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        textStyle: TextStyle(
+          color: _theme.primaryColor,
+          fontWeight: FontWeight.w600,
+        ),
+      );
+
+  TimeMarkTheme get _currentTimeMarkTheme => TimeMarkTheme(
+        length: 48,
+        color: _theme.colorScheme.error,
+      );
+
+  FloatingEventsTheme get _floatingEventsTheme => FloatingEventsTheme(
+        elevation: 1,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          borderRadius: const BorderRadius.all(Radius.circular(4)),
+        ),
+        margin: const EdgeInsets.all(1),
+      );
+
+  DraggableEventTheme get _draggableEventTheme => DraggableEventTheme(
+        elevation: 5,
+        sizerColor: _theme.colorScheme.error,
+      );
 }

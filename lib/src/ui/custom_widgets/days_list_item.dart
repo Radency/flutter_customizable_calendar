@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 
+/// An item view of the days list (is used in DaysView).
 class DaysListItem extends StatefulWidget {
   /// Creates view of a days list's item.
   const DaysListItem({

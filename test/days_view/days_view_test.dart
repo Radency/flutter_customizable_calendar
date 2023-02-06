@@ -98,6 +98,7 @@ void main() {
         'Long press a time point on the timeline returns the time point',
         (widgetTester) async {
           DateTime? pressedDate;
+
           final view = DaysView(
             controller: controller,
             onDateLongPress: (date) => pressedDate = date,
@@ -108,6 +109,7 @@ void main() {
           when(() => controller.state).thenReturn(initialStateWithDate(now));
 
           await widgetTester.pumpWidget(runTestApp(view));
+
 
           final padding = view.timelineTheme.padding;
           final currentHourOrigin = Offset(padding.left, padding.top);
@@ -126,6 +128,7 @@ void main() {
         'Tap on an event view returns the event',
         (widgetTester) async {
           FloatingCalendarEvent? tappedEvent;
+
           final event = SimpleEvent(
             id: 'SimpleEvent1',
             start: now,
@@ -177,11 +180,17 @@ void main() {
 
           final eventKey = DaysViewKeys.events[event]!;
 
-          expect(find.byKey(DaysViewKeys.elevatedEventView), findsNothing);
+          expect(
+            find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+            findsNothing,
+          );
 
           await widgetTester.longPress(find.byKey(eventKey));
 
-          expect(find.byKey(DaysViewKeys.elevatedEventView), findsOneWidget);
+          expect(
+            find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+            findsOneWidget,
+          );
         },
         skip: false,
       );
@@ -214,7 +223,7 @@ void main() {
           final layoutFinder = find.byKey(layoutKey);
           final layoutRect = widgetTester.getRect(layoutFinder);
           final elevatedEventFinder =
-              find.byKey(DaysViewKeys.elevatedEventView);
+              find.byKey(DraggableEventOverlayKeys.elevatedEvent);
 
           await widgetTester.longPress(eventFinder);
 
@@ -263,7 +272,7 @@ void main() {
           await widgetTester.pumpAndSettle();
 
           final elevatedEventFinder =
-              find.byKey(DaysViewKeys.elevatedEventView);
+              find.byKey(DraggableEventOverlayKeys.elevatedEvent);
 
           expect(elevatedEventFinder, findsOneWidget);
 

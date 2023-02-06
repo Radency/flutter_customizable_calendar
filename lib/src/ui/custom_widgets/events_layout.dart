@@ -3,33 +3,48 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
+import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
+/// A day view which automatically creates views of given [breaks] and [events]
+/// and sets their positions on it.
 class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
+  /// Creates a layout for all [breaks] and [events] of given [dayDate].
   const EventsLayout({
     super.key,
     required this.dayDate,
     required this.layoutsKeys,
     required this.eventsKeys,
-    required this.cellExtent,
+    required this.timelineTheme,
     this.breaks = const [],
     this.events = const [],
     required this.elevatedEvent,
     this.onEventTap,
-    this.onEventLongPress,
-    this.onLayoutLongPress,
   });
 
+  /// A day which needs to be displayed
   final DateTime dayDate;
+
+  /// A keys collection for all layouts views
   final Map<DateTime, GlobalKey> layoutsKeys;
+
+  /// A keys collection for all events views
   final Map<CalendarEvent, GlobalKey> eventsKeys;
-  final int cellExtent;
+
+  /// The timeline customization params
+  final TimelineTheme timelineTheme;
+
+  /// All breaks list
   final List<Break> breaks;
+
+  /// All events list
   final List<T> events;
-  final ValueNotifier<T?> elevatedEvent;
+
+  /// A notifier which needs to set an event as elevated
+  final FloatingEventNotifier<T> elevatedEvent;
+
+  /// Callback which returns a tapped event value
   final void Function(T)? onEventTap;
-  final void Function(T)? onEventLongPress;
-  final void Function(DateTime)? onLayoutLongPress;
 
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) => list
       .where((event) => DateUtils.isSameDay(event.start, dayDate))
@@ -40,51 +55,35 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     final breaksToDisplay = _getEventsOnDay(breaks);
     final eventsToDisplay = _getEventsOnDay(events);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final minuteExtent = constraints.maxHeight / Duration.minutesPerDay;
-
-        return ValueListenableBuilder(
-          valueListenable: elevatedEvent,
-          builder: (context, elevatedEvent, child) => IgnorePointer(
-            ignoring: elevatedEvent != null,
-            child: child,
-          ),
-          child: GestureDetector(
-            onLongPressStart: (details) {
-              final offsetInMinutes = details.localPosition.dy ~/ minuteExtent;
-              final roundedMinutes =
-                  (offsetInMinutes / cellExtent).round() * cellExtent;
-              final timestamp = dayDate.addMinutesToDayDate(roundedMinutes);
-              onLayoutLongPress?.call(timestamp);
-            },
-            behavior: HitTestBehavior.opaque,
-            child: CustomMultiChildLayout(
-              key: layoutsKeys[dayDate] ??= GlobalKey(),
-              delegate: _EventsLayoutDelegate(
-                date: dayDate,
-                breaks: breaksToDisplay,
-                events: eventsToDisplay,
-                cellExtent: cellExtent,
-              ),
-              children: [
-                ...breaksToDisplay.map(
-                  (event) => LayoutId(
-                    id: event,
-                    child: BreakView(event),
-                  ),
-                ),
-                ...eventsToDisplay.map(
-                  (event) => LayoutId(
-                    id: event,
-                    child: _eventView(event),
-                  ),
-                ),
-              ],
+    return ValueListenableBuilder(
+      valueListenable: elevatedEvent,
+      builder: (context, elevatedEvent, child) => AbsorbPointer(
+        absorbing: elevatedEvent != null,
+        child: child,
+      ),
+      child: CustomMultiChildLayout(
+        key: layoutsKeys[dayDate] ??= GlobalKey(),
+        delegate: _EventsLayoutDelegate<T>(
+          date: dayDate,
+          breaks: breaksToDisplay,
+          events: eventsToDisplay,
+          cellExtent: timelineTheme.cellExtent,
+        ),
+        children: [
+          ...breaksToDisplay.map(
+            (event) => LayoutId(
+              id: event,
+              child: BreakView(event),
             ),
           ),
-        );
-      },
+          ...eventsToDisplay.map(
+            (event) => LayoutId(
+              id: event,
+              child: _eventView(event),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -94,11 +93,12 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
           opacity: (elevatedEvent == event) ? 0.5 : 1,
           child: child,
         ),
-        child: EventView(
+        child: EventView<T>(
           key: eventsKeys[event] ??= GlobalKey(),
           event,
+          theme: timelineTheme.floatingEventsTheme,
           onTap: () => onEventTap?.call(event),
-          onLongPress: () => onEventLongPress?.call(event),
+          onLongPress: () => elevatedEvent.value = event,
         ),
       );
 }
@@ -229,7 +229,7 @@ class _EventsLayoutDelegate<T extends FloatingCalendarEvent>
   }
 
   @override
-  bool shouldRelayout(covariant _EventsLayoutDelegate oldDelegate) {
+  bool shouldRelayout(covariant _EventsLayoutDelegate<T> oldDelegate) {
     if (events.length != oldDelegate.events.length) return true;
 
     for (var index = 0; index < events.length; index++) {
