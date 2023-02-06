@@ -260,13 +260,11 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
       valueListenable: widget.event,
-      builder: (context, event, child) => (event == null)
-          ? child!
-          : GestureDetector(
-              onTap: () => _drop(event),
-              behavior: HitTestBehavior.translucent,
-              child: child,
-            ),
+      builder: (context, event, child) => GestureDetector(
+        onTap: (event != null) ? () => _drop(event) : null,
+        behavior: HitTestBehavior.translucent,
+        child: child,
+      ),
       child: Stack(
         children: [
           NotificationListener<ScrollUpdateNotification>(

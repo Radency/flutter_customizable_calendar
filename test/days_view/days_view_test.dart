@@ -98,6 +98,7 @@ void main() {
         'Long press a time point on the timeline returns the time point',
         (widgetTester) async {
           DateTime? pressedDate;
+
           final view = DaysView(
             controller: controller,
             onDateLongPress: (date) => pressedDate = date,
@@ -127,6 +128,7 @@ void main() {
         'Tap on an event view returns the event',
         (widgetTester) async {
           FloatingCalendarEvent? tappedEvent;
+
           final event = SimpleEvent(
             id: 'SimpleEvent1',
             start: now,

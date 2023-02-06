@@ -57,8 +57,8 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
 
     return ValueListenableBuilder(
       valueListenable: elevatedEvent,
-      builder: (context, elevatedEvent, child) => IgnorePointer(
-        ignoring: elevatedEvent != null,
+      builder: (context, elevatedEvent, child) => AbsorbPointer(
+        absorbing: elevatedEvent != null,
         child: child,
       ),
       child: CustomMultiChildLayout(
