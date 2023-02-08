@@ -149,7 +149,10 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     if (_scrolling) unawaited(_scrollIfNecessary());
   }
 
-  void _stopAutoScrolling() => _scrolling = false;
+  void _stopAutoScrolling() {
+    _stopTimelineScrolling();
+    _scrolling = false;
+  }
 
   void _autoScrolling(DragUpdateDetails details) {
     _pointerLocation = details.globalPosition;

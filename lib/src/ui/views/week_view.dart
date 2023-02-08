@@ -168,7 +168,10 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     if (_scrolling) unawaited(_scrollIfNecessary());
   }
 
-  void _stopAutoScrolling() => _scrolling = false;
+  void _stopAutoScrolling() {
+    _stopTimelineScrolling();
+    _scrolling = false;
+  }
 
   void _autoScrolling(DragUpdateDetails details) {
     _pointerLocation = details.globalPosition;

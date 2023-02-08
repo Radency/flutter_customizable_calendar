@@ -375,13 +375,13 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
           data: _elevatedEvent,
           onDragStarted: () => _dragging = true,
           onDragUpdate: (details) {
-            _eventBounds.origin += details.delta;
             widget.onDragUpdate?.call(details);
+            _eventBounds.origin += details.delta;
           },
           onDragEnd: (details) {
+            widget.onDragEnd?.call();
             _dragging = false;
             _updateEventOrigin();
-            widget.onDragEnd?.call();
           },
           onDraggableCanceled: (velocity, offset) => _dragging = false,
           feedback: _feedback(),
@@ -412,13 +412,13 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
             onVerticalDragDown: (details) => widget.onDragDown?.call(),
             onVerticalDragStart: (details) => _resizing = true,
             onVerticalDragUpdate: (details) {
-              _eventBounds.size += details.delta;
               widget.onSizeUpdate?.call(details);
+              _eventBounds.size += details.delta;
             },
             onVerticalDragEnd: (details) {
+              widget.onResizingEnd?.call();
               _resizing = false;
               _updateEventHeightAndDuration();
-              widget.onResizingEnd?.call();
             },
             onVerticalDragCancel: () => _resizing = false,
             extraHitTestArea: const EdgeInsets.all(4),
