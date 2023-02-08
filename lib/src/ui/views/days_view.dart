@@ -110,10 +110,13 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
       _timelineController.jumpTo(_timelineController.offset);
 
   Future<void> _scrollIfNecessary() async {
-    _scrolling = true;
+    final timelineBox = _getTimelineBox();
 
-    final timelineBox = _getTimelineBox()!;
-    final fingerPosition = timelineBox.globalToLocal(_pointerLocation);
+    _scrolling = timelineBox != null;
+
+    if (!_scrolling) return;
+
+    final fingerPosition = timelineBox!.globalToLocal(_pointerLocation);
     final timelineScrollPosition = _timelineController.position;
     var timelineScrollOffset = timelineScrollPosition.pixels;
 
