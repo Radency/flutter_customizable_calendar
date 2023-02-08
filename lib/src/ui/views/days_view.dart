@@ -405,53 +405,61 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         final dayDate = DateUtils.addDaysToDate(_initialDate, index);
         final isToday = DateUtils.isSameDay(dayDate, _now);
 
-        return GestureDetector(
-          onLongPressStart: (details) {
-            final minutes = details.localPosition.dy ~/ _minuteExtent;
+        return DragTarget<T>(
+          onMove: (details) {
+            final layoutBox = _getLayoutBox(dayDate)!;
+            final minutes =
+                layoutBox.globalToLocal(details.offset).dy ~/ _minuteExtent;
             final roundedMinutes =
                 (minutes / _cellExtent).round() * _cellExtent;
             final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
 
-            if (timestamp.isBefore(_initialDate)) return;
-            if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
-
-            widget.onDateLongPress?.call(timestamp);
+            _elevatedEvent.value = details.data.copyWith(
+              start: timestamp.isBefore(_initialDate)
+                  ? _initialDate
+                  : (_endDate?.isAfter(timestamp) ?? true)
+                      ? timestamp
+                      : _endDate,
+            ) as T;
           },
-          behavior: HitTestBehavior.opaque,
-          child: DragTarget<T>(
-            onMove: (details) {
-              final layoutBox = _getLayoutBox(dayDate)!;
-              final minutes =
-                  layoutBox.globalToLocal(details.offset).dy ~/ _minuteExtent;
-              final roundedMinutes =
-                  (minutes / _cellExtent).round() * _cellExtent;
-              final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
+          builder: (context, candidates, rejects) => ValueListenableBuilder(
+            valueListenable: _elevatedEvent,
+            builder: (context, elevatedEvent, child) => AbsorbPointer(
+              absorbing: elevatedEvent != null,
+              child: child,
+            ),
+            child: GestureDetector(
+              onLongPressStart: (details) {
+                final minutes = details.localPosition.dy ~/ _minuteExtent;
+                final roundedMinutes =
+                    (minutes / _cellExtent).round() * _cellExtent;
+                final timestamp =
+                    dayDate.add(Duration(minutes: roundedMinutes));
 
-              _elevatedEvent.value = details.data.copyWith(
-                start: timestamp.isBefore(_initialDate)
-                    ? _initialDate
-                    : (_endDate?.isAfter(timestamp) ?? true)
-                        ? timestamp
-                        : _endDate,
-              ) as T;
-            },
-            builder: (context, candidates, rejects) => Padding(
-              padding: EdgeInsets.only(
-                left: theme.padding.left,
-                right: theme.padding.right,
-              ),
-              child: TimeScale(
-                showCurrentTimeMark: isToday,
-                theme: theme.timeScaleTheme,
-                child: EventsLayout<T>(
-                  dayDate: dayDate,
-                  layoutsKeys: DaysViewKeys.layouts,
-                  eventsKeys: DaysViewKeys.events,
-                  timelineTheme: widget.timelineTheme,
-                  breaks: widget.breaks,
-                  events: widget.events,
-                  elevatedEvent: _elevatedEvent,
-                  onEventTap: widget.onEventTap,
+                if (timestamp.isBefore(_initialDate)) return;
+                if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+
+                widget.onDateLongPress?.call(timestamp);
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: theme.padding.left,
+                  right: theme.padding.right,
+                ),
+                child: TimeScale(
+                  showCurrentTimeMark: isToday,
+                  theme: theme.timeScaleTheme,
+                  child: EventsLayout<T>(
+                    dayDate: dayDate,
+                    layoutsKeys: DaysViewKeys.layouts,
+                    eventsKeys: DaysViewKeys.events,
+                    timelineTheme: widget.timelineTheme,
+                    breaks: widget.breaks,
+                    events: widget.events,
+                    elevatedEvent: _elevatedEvent,
+                    onEventTap: widget.onEventTap,
+                  ),
                 ),
               ),
             ),

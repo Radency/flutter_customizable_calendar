@@ -55,51 +55,44 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     final breaksToDisplay = _getEventsOnDay(breaks);
     final eventsToDisplay = _getEventsOnDay(events);
 
-    return ValueListenableBuilder(
-      valueListenable: elevatedEvent,
-      builder: (context, elevatedEvent, child) => AbsorbPointer(
-        absorbing: elevatedEvent != null,
-        child: child,
+    return CustomMultiChildLayout(
+      key: layoutsKeys[dayDate] ??= GlobalKey(),
+      delegate: _EventsLayoutDelegate<T>(
+        date: dayDate,
+        breaks: breaksToDisplay,
+        events: eventsToDisplay,
+        cellExtent: timelineTheme.cellExtent,
       ),
-      child: CustomMultiChildLayout(
-        key: layoutsKeys[dayDate] ??= GlobalKey(),
-        delegate: _EventsLayoutDelegate<T>(
-          date: dayDate,
-          breaks: breaksToDisplay,
-          events: eventsToDisplay,
-          cellExtent: timelineTheme.cellExtent,
-        ),
-        children: [
-          ...breaksToDisplay.map(
-            (event) => LayoutId(
-              id: event,
-              child: BreakView(event),
-            ),
+      children: [
+        ...breaksToDisplay.map(
+          (event) => LayoutId(
+            id: event,
+            child: BreakView(event),
           ),
-          ...eventsToDisplay.map(
-            (event) => LayoutId(
-              id: event,
+        ),
+        ...eventsToDisplay.map(
+          (event) => LayoutId(
+            id: event,
+            child: ValueListenableBuilder(
+              valueListenable: elevatedEvent,
+              builder: (context, elevatedEvent, child) => Opacity(
+                opacity: (elevatedEvent == event) ? 0.5 : 1,
+                child: child,
+              ),
               child: _eventView(event),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _eventView(T event) => ValueListenableBuilder(
-        valueListenable: elevatedEvent,
-        builder: (context, elevatedEvent, child) => Opacity(
-          opacity: (elevatedEvent == event) ? 0.5 : 1,
-          child: child,
-        ),
-        child: EventView<T>(
-          key: eventsKeys[event] ??= GlobalKey(),
-          event,
-          theme: timelineTheme.floatingEventsTheme,
-          onTap: () => onEventTap?.call(event),
-          onLongPress: () => elevatedEvent.value = event,
-        ),
+  Widget _eventView(T event) => EventView<T>(
+        key: eventsKeys[event] ??= GlobalKey(),
+        event,
+        theme: timelineTheme.floatingEventsTheme,
+        onTap: () => onEventTap?.call(event),
+        onLongPress: () => elevatedEvent.value = event,
       );
 }
 

@@ -450,28 +450,35 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   }
 
   Widget _singleDayView(DateTime dayDate) => Expanded(
-        child: GestureDetector(
-          onLongPressStart: (details) {
-            final minutes = details.localPosition.dy ~/ _minuteExtent;
-            final roundedMinutes =
-                (minutes / _cellExtent).round() * _cellExtent;
-            final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
+        child: ValueListenableBuilder(
+          valueListenable: _elevatedEvent,
+          builder: (context, elevatedEvent, child) => AbsorbPointer(
+            absorbing: elevatedEvent != null,
+            child: child,
+          ),
+          child: GestureDetector(
+            onLongPressStart: (details) {
+              final minutes = details.localPosition.dy ~/ _minuteExtent;
+              final roundedMinutes =
+                  (minutes / _cellExtent).round() * _cellExtent;
+              final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
 
-            if (timestamp.isBefore(_initialDate)) return;
-            if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+              if (timestamp.isBefore(_initialDate)) return;
+              if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 
-            widget.onDateLongPress?.call(timestamp);
-          },
-          behavior: HitTestBehavior.opaque,
-          child: EventsLayout<T>(
-            dayDate: dayDate,
-            layoutsKeys: WeekViewKeys.layouts,
-            eventsKeys: WeekViewKeys.events,
-            timelineTheme: widget.timelineTheme,
-            breaks: widget.breaks,
-            events: widget.events,
-            elevatedEvent: _elevatedEvent,
-            onEventTap: widget.onEventTap,
+              widget.onDateLongPress?.call(timestamp);
+            },
+            behavior: HitTestBehavior.opaque,
+            child: EventsLayout<T>(
+              dayDate: dayDate,
+              layoutsKeys: WeekViewKeys.layouts,
+              eventsKeys: WeekViewKeys.events,
+              timelineTheme: widget.timelineTheme,
+              breaks: widget.breaks,
+              events: widget.events,
+              elevatedEvent: _elevatedEvent,
+              onEventTap: widget.onEventTap,
+            ),
           ),
         ),
       );
