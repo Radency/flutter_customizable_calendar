@@ -81,7 +81,8 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
 }
 
 class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
-    extends State<DraggableEventOverlay<T>> with TickerProviderStateMixin {
+    extends State<DraggableEventOverlay<T>>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final _overlayKey = GlobalKey<OverlayState>();
   final _layerLink = LayerLink();
   final _eventBounds = RectNotifier();
@@ -240,10 +241,32 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     widget.event.addListener(_resetElevatedEvent);
     _initAnimationController();
     _initAnimation();
     _eventBounds.addListener(_eventHeightLimiter);
+  }
+
+  @override
+  void didChangeMetrics() {
+    final event = widget.event.value;
+
+    if (event != null) {
+      final dayDate = DateUtils.dateOnly(event.start);
+      final layoutBox = widget.getLayoutBox(dayDate);
+
+      if (layoutBox == null) return;
+
+      final layoutPosition = layoutBox.localToGlobal(
+        Offset.zero,
+        ancestor: widget.getTimelineBox(),
+      );
+
+      _eventBounds
+        ..dx = layoutPosition.dx
+        ..width = layoutBox.size.width;
+    }
   }
 
   @override
@@ -299,6 +322,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.event.removeListener(_resetElevatedEvent);
     _animationController.dispose();
     _eventBounds.dispose();
