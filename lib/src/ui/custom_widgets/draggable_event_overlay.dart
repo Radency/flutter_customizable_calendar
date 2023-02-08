@@ -260,10 +260,8 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   @override
   void didChangeMetrics() {
-    final event = widget.event.value;
-
-    if (event != null) {
-      final dayDate = DateUtils.dateOnly(event.start);
+    if (_eventEntry != null) {
+      final dayDate = DateUtils.dateOnly(_elevatedEvent.start);
       final layoutBox = widget.getLayoutBox(dayDate);
 
       if (layoutBox == null) return;
