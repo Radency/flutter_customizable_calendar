@@ -249,6 +249,16 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   @override
+  void didUpdateWidget(covariant DraggableEventOverlay<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_draggableEventTheme != oldWidget.timelineTheme.draggableEventTheme) {
+      _animationController.dispose();
+      _initAnimationController();
+      _initAnimation();
+    }
+  }
+
+  @override
   void didChangeMetrics() {
     final event = widget.event.value;
 
@@ -266,16 +276,6 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
       _eventBounds
         ..dx = layoutPosition.dx
         ..width = layoutBox.size.width;
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant DraggableEventOverlay<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_draggableEventTheme != oldWidget.timelineTheme.draggableEventTheme) {
-      _animationController.dispose();
-      _initAnimationController();
-      _initAnimation();
     }
   }
 
