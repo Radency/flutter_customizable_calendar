@@ -169,9 +169,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     widget.controller.setFocusedDate(displayedDate);
   }
 
-  int _getDaysInMonth(DateTime monthDate) =>
-      DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
-
   int _getMonthsDeltaForDate(DateTime date) =>
       DateUtils.monthDelta(_initialDate, date);
 
@@ -337,7 +334,8 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         itemBuilder: (context, pageIndex) {
           final monthDate =
               DateUtils.addMonthsToMonthDate(_initialDate, pageIndex);
-          final daysInMonth = _getDaysInMonth(_displayedDate);
+          final daysInMonth =
+              DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
 
           return LayoutBuilder(
             builder: (context, constraints) {
