@@ -405,24 +405,9 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         final dayDate = DateUtils.addDaysToDate(_initialDate, index);
         final isToday = DateUtils.isSameDay(dayDate, _now);
 
-        return DragTarget<T>(
-          onMove: (details) {
-            final layoutBox = _getLayoutBox(dayDate)!;
-            final minutes =
-                layoutBox.globalToLocal(details.offset).dy ~/ _minuteExtent;
-            final roundedMinutes =
-                (minutes / _cellExtent).round() * _cellExtent;
-            final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
-
-            _elevatedEvent.value = details.data.copyWith(
-              start: timestamp.isBefore(_initialDate)
-                  ? _initialDate
-                  : (_endDate?.isAfter(timestamp) ?? true)
-                      ? timestamp
-                      : _endDate,
-            ) as T;
-          },
-          builder: (context, candidates, rejects) => ValueListenableBuilder(
+        return RenderIdProvider(
+          id: dayDate,
+          child: ValueListenableBuilder(
             valueListenable: _elevatedEvent,
             builder: (context, elevatedEvent, child) => AbsorbPointer(
               absorbing: elevatedEvent != null,

@@ -311,10 +311,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                       child: _stripesRow(weekdays),
                     ),
                     _timeline(weekdays),
-                    Positioned.fill(
-                      left: timeScaleWidth,
-                      child: _dragTargetsRow(weekdays),
-                    ),
                   ],
                 ),
               ),
@@ -373,38 +369,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         ),
       );
 
-  Widget _dragTargetsRow(List<DateTime> days) => Row(
-        children: days
-            .map(
-              (dayDate) => Expanded(
-                child: DragTarget<T>(
-                  onMove: (details) {
-                    final layoutBox = _getLayoutBox(dayDate)!;
-                    final dy = layoutBox.globalToLocal(details.offset).dy;
-                    final offset =
-                        dy.isNegative ? 0 : min(dy, layoutBox.size.height);
-                    final minutes = offset ~/ _minuteExtent;
-                    final roundedMinutes =
-                        (minutes / _cellExtent).round() * _cellExtent;
-                    final timestamp =
-                        dayDate.add(Duration(minutes: roundedMinutes));
-
-                    _elevatedEvent.value = details.data.copyWith(
-                      start: timestamp.isBefore(_initialDate)
-                          ? _initialDate
-                          : (_endDate?.isAfter(timestamp) ?? true)
-                              ? timestamp
-                              : _endDate,
-                    ) as T;
-                  },
-                  builder: (context, candidates, rejects) =>
-                      const SizedBox.expand(),
-                ),
-              ),
-            )
-            .toList(growable: false),
-      );
-
   Widget _timeline(List<DateTime> days) {
     final theme = widget.timelineTheme;
     final isCurrentWeek = days.first.isSameWeekAs(_now);
@@ -426,18 +390,38 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         return SingleChildScrollView(
           key: WeekViewKeys.timeline = GlobalKey(),
           controller: _timelineController,
-          padding: EdgeInsets.only(
-            top: theme.padding.top,
-            bottom: theme.padding.bottom,
-          ),
           child: IntrinsicHeight(
             child: Row(
               children: [
-                TimeScale(
-                  showCurrentTimeMark: isCurrentWeek,
-                  theme: theme.timeScaleTheme,
+                RenderIdProvider(
+                  id: days.first, // TimeScale marked as a part of the first day
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: theme.padding.top,
+                      bottom: theme.padding.bottom,
+                    ),
+                    color: Colors.transparent, // Needs for hitTesting
+                    child: TimeScale(
+                      showCurrentTimeMark: isCurrentWeek,
+                      theme: theme.timeScaleTheme,
+                    ),
+                  ),
                 ),
-                ...days.map(_singleDayView),
+                ...days.map(
+                  (dayDate) => Expanded(
+                    child: RenderIdProvider(
+                      id: dayDate,
+                      child: Container(
+                        padding: EdgeInsets.only(
+                          top: theme.padding.top,
+                          bottom: theme.padding.bottom,
+                        ),
+                        color: Colors.transparent, // Needs for hitTesting
+                        child: _singleDayView(dayDate),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -446,36 +430,34 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     );
   }
 
-  Widget _singleDayView(DateTime dayDate) => Expanded(
-        child: ValueListenableBuilder(
-          valueListenable: _elevatedEvent,
-          builder: (context, elevatedEvent, child) => AbsorbPointer(
-            absorbing: elevatedEvent != null,
-            child: child,
-          ),
-          child: GestureDetector(
-            onLongPressStart: (details) {
-              final minutes = details.localPosition.dy ~/ _minuteExtent;
-              final roundedMinutes =
-                  (minutes / _cellExtent).round() * _cellExtent;
-              final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
+  Widget _singleDayView(DateTime dayDate) => ValueListenableBuilder(
+        valueListenable: _elevatedEvent,
+        builder: (context, elevatedEvent, child) => AbsorbPointer(
+          absorbing: elevatedEvent != null,
+          child: child,
+        ),
+        child: GestureDetector(
+          onLongPressStart: (details) {
+            final minutes = details.localPosition.dy ~/ _minuteExtent;
+            final roundedMinutes =
+                (minutes / _cellExtent).round() * _cellExtent;
+            final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
 
-              if (timestamp.isBefore(_initialDate)) return;
-              if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+            if (timestamp.isBefore(_initialDate)) return;
+            if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 
-              widget.onDateLongPress?.call(timestamp);
-            },
-            behavior: HitTestBehavior.opaque,
-            child: EventsLayout<T>(
-              dayDate: dayDate,
-              layoutsKeys: WeekViewKeys.layouts,
-              eventsKeys: WeekViewKeys.events,
-              timelineTheme: widget.timelineTheme,
-              breaks: widget.breaks,
-              events: widget.events,
-              elevatedEvent: _elevatedEvent,
-              onEventTap: widget.onEventTap,
-            ),
+            widget.onDateLongPress?.call(timestamp);
+          },
+          behavior: HitTestBehavior.opaque,
+          child: EventsLayout<T>(
+            dayDate: dayDate,
+            layoutsKeys: WeekViewKeys.layouts,
+            eventsKeys: WeekViewKeys.events,
+            timelineTheme: widget.timelineTheme,
+            breaks: widget.breaks,
+            events: widget.events,
+            elevatedEvent: _elevatedEvent,
+            onEventTap: widget.onEventTap,
           ),
         ),
       );
