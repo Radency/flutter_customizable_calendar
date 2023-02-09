@@ -87,7 +87,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     );
   }
 
-  Widget _eventView(T event) => EventView<T>(
+  Widget _eventView(T event) => EventView(
         key: eventsKeys[event] ??= GlobalKey(),
         event,
         theme: timelineTheme.floatingEventsTheme,

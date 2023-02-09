@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:clock/clock.dart';
@@ -120,7 +119,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
     _scrolling = timelineBox != null;
 
-    if (!_scrolling) return;
+    if (!_scrolling) return; // Scrollable isn't found
 
     final fingerPosition = timelineBox!.globalToLocal(_pointerLocation);
     final timelineScrollPosition = _timelineController!.position;
@@ -129,12 +128,14 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     const detectionArea = 25;
     const moveDistance = 25;
 
-    if (timelineBox.size.height - fingerPosition.dy < detectionArea) {
+    if (fingerPosition.dy > timelineBox.size.height - detectionArea &&
+        timelineScrollOffset < timelineScrollPosition.maxScrollExtent) {
       timelineScrollOffset = min(
         timelineScrollOffset + moveDistance,
         timelineScrollPosition.maxScrollExtent,
       );
-    } else if (fingerPosition.dy < detectionArea) {
+    } else if (fingerPosition.dy < detectionArea &&
+        timelineScrollOffset > timelineScrollPosition.minScrollExtent) {
       timelineScrollOffset = max(
         timelineScrollOffset - moveDistance,
         timelineScrollPosition.minScrollExtent,
@@ -144,7 +145,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
       // Checking if scroll is finished
       if (!weekPickerPosition.isScrollingNotifier.value) {
-        if (timelineBox.size.width - fingerPosition.dx < detectionArea &&
+        if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
             weekPickerPosition.pixels < weekPickerPosition.maxScrollExtent) {
           widget.controller.next();
         } else if (fingerPosition.dx < detectionArea &&
@@ -157,15 +158,13 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
       return;
     }
 
-    if (timelineScrollPosition.pixels != timelineScrollOffset) {
-      await timelineScrollPosition.animateTo(
-        timelineScrollOffset,
-        duration: const Duration(milliseconds: 100),
-        curve: Curves.linear,
-      );
-    }
+    await timelineScrollPosition.animateTo(
+      timelineScrollOffset,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.linear,
+    );
 
-    if (_scrolling) unawaited(_scrollIfNecessary());
+    if (_scrolling) await _scrollIfNecessary();
   }
 
   void _stopAutoScrolling() {

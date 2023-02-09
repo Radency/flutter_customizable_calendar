@@ -328,12 +328,11 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
     super.dispose();
   }
 
-  Widget _eventView() => EventView<T>(
+  Widget _elevatedEventView() => EventView(
         _elevatedEvent,
         key: DraggableEventOverlayKeys.elevatedEvent,
-        theme: widget.timelineTheme.floatingEventsTheme.copyWith(
-          elevation: _draggableEventTheme.elevation,
-        ),
+        theme: widget.timelineTheme.floatingEventsTheme
+            .copyWith(elevation: _draggableEventTheme.elevation),
         onTap: () {},
       );
 
@@ -354,7 +353,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
               size: rect.size,
               child: child,
             ),
-            child: _eventView(),
+            child: _elevatedEventView(),
           ),
           if (_sizerEntry != null)
             Positioned(
@@ -391,7 +390,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
             link: _layerLink,
             child: GestureDetector(
               onPanDown: (details) => widget.onDragDown?.call(),
-              child: _eventView(),
+              child: _elevatedEventView(),
             ),
           ),
         ),
