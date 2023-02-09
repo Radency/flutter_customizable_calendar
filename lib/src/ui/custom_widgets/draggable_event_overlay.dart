@@ -275,9 +275,10 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
       ancestor: widget.getTimelineBox(),
     );
 
-    _eventBounds
-      ..dx = layoutPosition.dx
-      ..width = layoutBox.size.width;
+    _eventBounds.update(
+      dx: layoutPosition.dx,
+      width: layoutBox.size.width,
+    );
   }
 
   @override
@@ -293,16 +294,13 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
         children: [
           NotificationListener<ScrollUpdateNotification>(
             onNotification: (event) {
-              final axis = event.metrics.axis;
               final scrollDelta = event.scrollDelta ?? 0;
 
-              if (axis == Axis.vertical && scrollDelta != 0) {
-                final delta = Offset(0, scrollDelta);
-
-                if (!_dragging) {
-                  _eventBounds.origin -= delta;
-                  if (_resizing) _eventBounds.size += delta;
-                }
+              if (!_dragging && event.metrics.axis == Axis.vertical) {
+                _eventBounds.update(
+                  dy: _eventBounds.dy - scrollDelta,
+                  height: _eventBounds.height + (_resizing ? scrollDelta : 0),
+                );
               }
 
               return true;
