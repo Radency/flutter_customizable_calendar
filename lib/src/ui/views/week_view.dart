@@ -437,14 +437,15 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             top: theme.padding.top,
             bottom: theme.padding.bottom,
           ),
-          child: SizedBox(
-            height: _dayExtent,
-            child: TimeScale(
-              showCurrentTimeMark: isCurrentWeek,
-              theme: theme.timeScaleTheme,
-              child: Row(
-                children: days.map(_singleDayView).toList(growable: false),
-              ),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                TimeScale(
+                  showCurrentTimeMark: isCurrentWeek,
+                  theme: theme.timeScaleTheme,
+                ),
+                ...days.map(_singleDayView),
+              ],
             ),
           ),
         );

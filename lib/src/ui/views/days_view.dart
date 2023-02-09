@@ -448,19 +448,25 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                   left: theme.padding.left,
                   right: theme.padding.right,
                 ),
-                child: TimeScale(
-                  showCurrentTimeMark: isToday,
-                  theme: theme.timeScaleTheme,
-                  child: EventsLayout<T>(
-                    dayDate: dayDate,
-                    layoutsKeys: DaysViewKeys.layouts,
-                    eventsKeys: DaysViewKeys.events,
-                    timelineTheme: widget.timelineTheme,
-                    breaks: widget.breaks,
-                    events: widget.events,
-                    elevatedEvent: _elevatedEvent,
-                    onEventTap: widget.onEventTap,
-                  ),
+                child: Row(
+                  children: [
+                    TimeScale(
+                      showCurrentTimeMark: isToday,
+                      theme: theme.timeScaleTheme,
+                    ),
+                    Expanded(
+                      child: EventsLayout<T>(
+                        dayDate: dayDate,
+                        layoutsKeys: DaysViewKeys.layouts,
+                        eventsKeys: DaysViewKeys.events,
+                        timelineTheme: widget.timelineTheme,
+                        breaks: widget.breaks,
+                        events: widget.events,
+                        elevatedEvent: _elevatedEvent,
+                        onEventTap: widget.onEventTap,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
