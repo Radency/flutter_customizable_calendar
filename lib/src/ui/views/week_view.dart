@@ -311,10 +311,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                       left: timeScaleWidth,
                       child: _stripesRow(weekdays),
                     ),
-                    _timeline(
-                      weekIndex: pageIndex,
-                      days: weekdays,
-                    ),
+                    _timeline(weekdays),
                     Positioned.fill(
                       left: timeScaleWidth,
                       child: _dragTargetsRow(weekdays),
@@ -409,10 +406,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             .toList(growable: false),
       );
 
-  Widget _timeline({
-    required int weekIndex,
-    required List<DateTime> days,
-  }) {
+  Widget _timeline(List<DateTime> days) {
     final theme = widget.timelineTheme;
     final isCurrentWeek = days.first.isSameWeekAs(_now);
 
