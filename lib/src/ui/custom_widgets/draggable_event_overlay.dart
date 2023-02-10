@@ -456,14 +456,17 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
       );
 
   Widget _sizerView() => ClipOval(
-        child: ColoredBox(
-          color: Colors.transparent, // Needs for hitTesting
-          child: Padding(
-            padding: const EdgeInsets.all(_sizerExtraPadding),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: _draggableEventTheme.sizerColor,
-                shape: BoxShape.circle,
+        child: GestureDetector(
+          onTap: () {}, // Needs to avoid unnecessary event drops
+          child: ColoredBox(
+            color: Colors.transparent, // Needs for hitTesting
+            child: Padding(
+              padding: const EdgeInsets.all(_sizerExtraPadding),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _draggableEventTheme.sizerColor,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
           ),
