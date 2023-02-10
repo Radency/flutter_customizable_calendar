@@ -179,6 +179,24 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
   }
 
+  bool _resetPointerLocation(Offset globalPosition) {
+    final timelineBox = widget.getTimelineBox();
+
+    if (timelineBox == null) return false;
+
+    final origin = timelineBox.localToGlobal(Offset.zero);
+    final bounds = origin & timelineBox.size;
+
+    // Update _pointerLocation if it's position is within the timeline bounds
+    if (bounds.contains(globalPosition)) {
+      _pointerLocation = globalPosition;
+
+      return true;
+    }
+
+    return false;
+  }
+
   void _resetElevatedEvent() {
     if (widget.event.value == null) return;
     _elevatedEvent = widget.event.value!;
@@ -282,17 +300,6 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
         .copyWith(duration: eventDuration) as T;
 
     widget.event.value = _elevatedEvent;
-  }
-
-  void _updatePointerLocation(Offset globalPosition) {
-    final timelineBox = widget.getTimelineBox();
-
-    if (timelineBox == null) return;
-
-    final origin = timelineBox.localToGlobal(Offset.zero);
-    final bounds = origin & timelineBox.size;
-
-    if (bounds.contains(globalPosition)) _pointerLocation = globalPosition;
   }
 
   void _eventHeightLimiter() => _eventBounds.height =
@@ -441,7 +448,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
           onDragUpdate: (details) {
             widget.onDragUpdate?.call(details);
             _eventBounds.origin += details.delta;
-            _updatePointerLocation(details.globalPosition);
+            if (!_resetPointerLocation(details.globalPosition)) return;
             _pointerTimePoint = _getCurrentTimePoint() ?? _pointerTimePoint;
           },
           onDragEnd: (details) {
