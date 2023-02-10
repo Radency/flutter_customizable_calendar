@@ -231,10 +231,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
           Expanded(
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
+              viewType: CalendarView.week,
+              timelineTheme: widget.timelineTheme,
               padding: EdgeInsets.only(
                 top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
               ),
-              timelineTheme: widget.timelineTheme,
               onDragDown: _stopTimelineScrolling,
               onDragUpdate: _autoScrolling,
               onDragEnd: _stopAutoScrolling,

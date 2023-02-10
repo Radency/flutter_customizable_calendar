@@ -23,8 +23,9 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
   const DraggableEventOverlay(
     this.event, {
     super.key,
-    this.padding = EdgeInsets.zero,
+    required this.viewType,
     required this.timelineTheme,
+    this.padding = EdgeInsets.zero,
     this.onDragDown,
     this.onDragUpdate,
     this.onDragEnd,
@@ -35,16 +36,22 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     required this.getLayoutBox,
     required this.getEventBox,
     required this.child,
-  });
+  }) : assert(
+          viewType != CalendarView.month,
+          "MonthView isn't supported",
+        );
 
   /// A notifier which needs to control elevated event
   final FloatingEventNotifier<T> event;
 
-  /// Offset for the overlay
-  final EdgeInsets padding;
+  /// Which [CalendarView]'s timeline is wrapped
+  final CalendarView viewType;
 
   /// The timeline customization params
   final TimelineTheme timelineTheme;
+
+  /// Offset for the overlay
+  final EdgeInsets padding;
 
   /// Is called just after user start to interact with the event view
   final void Function()? onDragDown;
@@ -238,7 +245,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   void _updateEventOriginAndStart() {
-    final dayDate = _getCurrentTargetDay()!;
+    final dayDate = _getCurrentTargetDay()!; // <- temporary
     final layoutBox = widget.getLayoutBox(dayDate)!;
     final layoutPosition = layoutBox.localToGlobal(
       Offset.zero,
@@ -282,16 +289,10 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     if (timelineBox == null) return;
 
-    final localPosition = timelineBox.globalToLocal(globalPosition);
+    final origin = timelineBox.localToGlobal(Offset.zero);
+    final bounds = origin & timelineBox.size;
 
-    if (localPosition.dx.isNegative ||
-        localPosition.dx > timelineBox.size.width ||
-        localPosition.dy.isNegative ||
-        localPosition.dy > timelineBox.size.height) {
-      return;
-    }
-
-    _pointerLocation = globalPosition;
+    if (bounds.contains(globalPosition)) _pointerLocation = globalPosition;
   }
 
   void _eventHeightLimiter() => _eventBounds.height =

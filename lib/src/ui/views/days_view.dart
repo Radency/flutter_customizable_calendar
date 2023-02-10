@@ -274,6 +274,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
           Expanded(
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
+              viewType: CalendarView.days,
               timelineTheme: widget.timelineTheme,
               onDragDown: _stopTimelineScrolling,
               onDragUpdate: _autoScrolling,
