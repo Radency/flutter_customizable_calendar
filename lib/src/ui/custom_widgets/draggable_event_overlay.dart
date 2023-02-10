@@ -190,18 +190,17 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
     final origin = timelineBox.localToGlobal(Offset.zero);
     final bounds = origin & timelineBox.size;
 
-    // Update _pointerLocation if it's position is within the timeline bounds
-    if (bounds.contains(globalPosition)) {
-      _pointerLocation = globalPosition;
+    if (!bounds.contains(globalPosition)) return false;
 
-      return true;
-    }
+    // Update _pointerLocation if it's position is within the timeline rect
+    _pointerLocation = globalPosition;
 
-    return false;
+    return true;
   }
 
   void _resetElevatedEvent() {
     if (widget.event.value == null) return;
+
     _elevatedEvent = widget.event.value!;
     _elevate(_elevatedEvent);
   }
