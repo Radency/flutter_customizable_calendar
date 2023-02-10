@@ -100,6 +100,18 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
   static DateTime get _initialDate => DateTime(1970);
   static DateTime? get _endDate => null;
 
+  Map<int, CalendarController> get _controllers => {
+        0: _daysViewController,
+        1: _weekViewController,
+        2: _monthViewController,
+      };
+
+  Map<int, String> get _segmentLabels => {
+        0: CalendarView.days.name,
+        1: CalendarView.week.name,
+        2: CalendarView.month.name,
+      };
+
   @override
   void initState() {
     super.initState();
@@ -155,18 +167,6 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     super.dispose();
   }
 
-  Map<int, CalendarController> get _controllers => {
-        0: _daysViewController,
-        1: _weekViewController,
-        2: _monthViewController,
-      };
-
-  Map<int, String> get _segmentLabels => {
-        0: 'Days',
-        1: 'Week',
-        2: 'Month',
-      };
-
   Widget _calendarViewPicker() => StatefulBuilder(
         builder: (context, setState) => CupertinoSegmentedControl<int>(
           children: Map.fromEntries(
@@ -189,7 +189,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
           horizontal: 20,
         ),
         child: Text(
-          _segmentLabels[index] ?? '???',
+          _segmentLabels[index]?.capitalized() ?? '???',
           style: const TextStyle(
             fontWeight: FontWeight.w500,
           ),
