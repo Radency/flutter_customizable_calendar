@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:extra_hittest_area/extra_hittest_area.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
@@ -105,6 +104,10 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   var _resizing = false;
   OverlayEntry? _eventEntry;
   OverlayEntry? _sizerEntry;
+
+  static const _sizerExtraPadding = 4.0; // Needs to increase tappable area
+  static const _elevatedEventId = 'elevatedEventEntry';
+  static const _sizerId = 'sizerEntry';
 
   OverlayState get _overlay => _overlayKey.currentState!;
 
@@ -350,13 +353,62 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: widget.event,
-      builder: (context, event, child) => GestureDetector(
-        onTap: (event != null) ? () => _drop(event) : null,
-        behavior: HitTestBehavior.translucent,
-        child: child,
-      ),
+    return GestureDetector(
+      onTap: () {
+        final elevatedEvent = widget.event.value;
+        if (elevatedEvent != null) _drop(elevatedEvent);
+      },
+      onPanDown: (details) {
+        final result = HitTestResult();
+
+        WidgetsBinding.instance.hitTest(result, details.globalPosition);
+
+        final ids = result.path
+            .map((entry) => entry.target)
+            .whereType<RenderId<String>>()
+            .map((renderId) => renderId.id);
+
+        if (ids.contains(_sizerId)) {
+          _resizing = true;
+          widget.onDragDown?.call();
+        } else if (ids.contains(_elevatedEventId)) {
+          _dragging = true;
+          widget.onDragDown?.call();
+        }
+      },
+      onPanStart: (details) {
+        if (!_dragging) return;
+        _pointerLocation = details.globalPosition;
+        _pointerTimePoint = _getCurrentTimePoint()!;
+        _startDiff = _pointerTimePoint.difference(_elevatedEvent.start);
+      },
+      onPanUpdate: (details) {
+        if (_resizing) {
+          widget.onSizeUpdate?.call(details);
+          _eventBounds.height += details.delta.dy;
+        } else if (_dragging) {
+          widget.onDragUpdate?.call(details);
+          _eventBounds.origin += details.delta;
+          if (!_resetPointerLocation(details.globalPosition)) return;
+          _pointerTimePoint = _getCurrentTimePoint() ?? _pointerTimePoint;
+        }
+      },
+      onPanEnd: (details) {
+        if (_resizing) {
+          _resizing = false;
+          widget.onResizingEnd?.call();
+          _updateEventHeightAndDuration();
+        } else if (_dragging) {
+          _dragging = false;
+          widget.onDragEnd?.call();
+          _pointerTimePoint = _getCurrentTimePoint() ?? _pointerTimePoint;
+          _updateEventOriginAndStart();
+        }
+      },
+      onPanCancel: () {
+        _resizing = false;
+        _dragging = false;
+      },
       child: Stack(
         children: [
           NotificationListener<ScrollUpdateNotification>(
@@ -403,33 +455,19 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
         onTap: () {},
       );
 
-  Widget _sizerView() => DecoratedBox(
-        decoration: BoxDecoration(
-          color: _draggableEventTheme.sizerColor,
-          shape: BoxShape.circle,
-        ),
-      );
-
-  Widget _feedback() => Stack(
-        alignment: Alignment.bottomCenter,
-        clipBehavior: Clip.none,
-        children: [
-          ValueListenableBuilder(
-            valueListenable: _eventBounds,
-            builder: (context, rect, child) => SizedBox.fromSize(
-              size: rect.size,
-              child: child,
+  Widget _sizerView() => ClipOval(
+        child: ColoredBox(
+          color: Colors.transparent, // Needs for hitTesting
+          child: Padding(
+            padding: const EdgeInsets.all(_sizerExtraPadding),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: _draggableEventTheme.sizerColor,
+                shape: BoxShape.circle,
+              ),
             ),
-            child: _elevatedEventView(),
           ),
-          if (_sizerEntry != null)
-            Positioned(
-              bottom: -(_draggableEventTheme.sizerDimension / 2),
-              width: _draggableEventTheme.sizerDimension,
-              height: _draggableEventTheme.sizerDimension,
-              child: _sizerView(),
-            ),
-        ],
+        ),
       );
 
   Widget _floatingEventBuilder(BuildContext context) => ValueListenableBuilder(
@@ -438,67 +476,34 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
           rect: rect,
           child: child!,
         ),
-        child: Draggable<T>(
-          data: _elevatedEvent,
-          onDragStarted: () {
-            _dragging = true;
-            _pointerTimePoint = _getCurrentTimePoint()!;
-            _startDiff = _pointerTimePoint.difference(_elevatedEvent.start);
-          },
-          onDragUpdate: (details) {
-            widget.onDragUpdate?.call(details);
-            _eventBounds.origin += details.delta;
-            if (!_resetPointerLocation(details.globalPosition)) return;
-            _pointerTimePoint = _getCurrentTimePoint() ?? _pointerTimePoint;
-          },
-          onDragEnd: (details) {
-            widget.onDragEnd?.call();
-            _dragging = false;
-            _pointerTimePoint = _getCurrentTimePoint() ?? _pointerTimePoint;
-            _updateEventOriginAndStart();
-          },
-          onDraggableCanceled: (velocity, offset) => _dragging = false,
-          feedback: _feedback(),
-          childWhenDragging: const SizedBox.shrink(),
-          child: CompositedTransformTarget(
-            link: _layerLink,
-            child: GestureDetector(
-              onPanDown: (details) {
-                widget.onDragDown?.call();
-                _pointerLocation = details.globalPosition;
-              },
-              child: _elevatedEventView(),
-            ),
+        child: CompositedTransformTarget(
+          link: _layerLink,
+          child: RenderIdProvider(
+            id: _elevatedEventId,
+            child: _elevatedEventView(),
           ),
         ),
       );
 
   Widget _sizerBuilder(BuildContext context) => ValueListenableBuilder(
         valueListenable: _animation,
-        builder: (context, scale, child) => Positioned(
-          width: _draggableEventTheme.sizerDimension * scale,
-          height: _draggableEventTheme.sizerDimension * scale,
-          child: child!,
-        ),
+        builder: (context, scale, child) {
+          final sizerDimension = _draggableEventTheme.sizerDimension * scale;
+          const extraSpace = _sizerExtraPadding * 2;
+
+          return Positioned(
+            width: sizerDimension + extraSpace,
+            height: sizerDimension + extraSpace,
+            child: child!,
+          );
+        },
         child: CompositedTransformFollower(
           link: _layerLink,
           showWhenUnlinked: false,
           targetAnchor: Alignment.bottomCenter,
           followerAnchor: Alignment.center,
-          child: GestureDetectorHitTestWithoutSizeLimit(
-            onVerticalDragDown: (details) => widget.onDragDown?.call(),
-            onVerticalDragStart: (details) => _resizing = true,
-            onVerticalDragUpdate: (details) {
-              widget.onSizeUpdate?.call(details);
-              _eventBounds.size += details.delta;
-            },
-            onVerticalDragEnd: (details) {
-              widget.onResizingEnd?.call();
-              _resizing = false;
-              _updateEventHeightAndDuration();
-            },
-            onVerticalDragCancel: () => _resizing = false,
-            extraHitTestArea: const EdgeInsets.all(4),
+          child: RenderIdProvider(
+            id: _sizerId,
             child: _sizerView(),
           ),
         ),
