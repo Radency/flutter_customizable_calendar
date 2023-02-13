@@ -12,7 +12,6 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
     super.key,
     required this.theme,
     this.onTap,
-    this.onLongPress,
   });
 
   /// Calendar event
@@ -23,9 +22,6 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
 
   /// On event view tap callback
   final VoidCallback? onTap;
-
-  /// On event view long press callback
-  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +34,6 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        onLongPress: onLongPress,
         child: Builder(
           builder: _createBody[event.runtimeType] ??
               (context) => const SizedBox.shrink(),

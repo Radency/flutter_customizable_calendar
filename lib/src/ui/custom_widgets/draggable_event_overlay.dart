@@ -84,10 +84,12 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
 
   @override
   State<DraggableEventOverlay<T>> createState() =>
-      _DraggableEventOverlayState<T>();
+      DraggableEventOverlayState<T>();
 }
 
-class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
+/// State of [DraggableEventOverlay] which allows to set a floating event
+/// and create it's draggable [OverlayEntry].
+class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     extends State<DraggableEventOverlay<T>>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   final _overlayKey = GlobalKey<OverlayState>();
@@ -96,7 +98,6 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   late AnimationController _animationController;
   late Animation<double> _animation;
   late RectTween _boundsTween;
-  late T _elevatedEvent;
   late DateTime _pointerTimePoint;
   late Duration _startDiff;
   var _pointerLocation = Offset.zero;
@@ -105,9 +106,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   OverlayEntry? _eventEntry;
   OverlayEntry? _sizerEntry;
 
-  static const _sizerExtraPadding = 4.0; // Needs to increase tappable area
-  static const _elevatedEventId = 'elevatedEventEntry';
-  static const _sizerId = 'sizerEntry';
+  static const _sizerExtraPadding = 4.0; // Needs to increase the tappable area
 
   OverlayState get _overlay => _overlayKey.currentState!;
 
@@ -119,33 +118,36 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   DraggableEventTheme get _draggableEventTheme =>
       widget.timelineTheme.draggableEventTheme;
 
-  DateTime? _getCurrentTargetDay() {
+  /// This method needs to set an [event] as elevated event and create it's
+  /// [OverlayEntry], [RenderBox]es need to calculate it's bounds.
+  void elevateEvent(
+    T event, {
+    required RenderBox eventBox,
+    required RenderBox layoutBox,
+  }) {
+    if (_animationController.isAnimating) {
+      _removeEntries();
+      _animationController.reset();
+    }
+
     final timelineBox = widget.getTimelineBox();
+    final eventPosition =
+        eventBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+    final layoutPosition =
+        layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
 
-    if (timelineBox == null) return null;
-
-    final result = BoxHitTestResult();
-    final localPosition = timelineBox.globalToLocal(_pointerLocation);
-
-    timelineBox.hitTest(result, position: localPosition);
-
-    final targets = result.path
-        .map((entry) => entry.target)
-        .whereType<RenderId<DateTime>>();
-
-    return targets.isNotEmpty ? targets.first.id : null;
-  }
-
-  DateTime? _getCurrentTimePoint() {
-    final dayDate = _getCurrentTargetDay();
-
-    if (dayDate == null) return null;
-
-    final layoutBox = widget.getLayoutBox(dayDate)!;
-    final minutes =
-        layoutBox.globalToLocal(_pointerLocation).dy ~/ _minuteExtent;
-
-    return dayDate.add(Duration(minutes: minutes));
+    widget.event.value = event;
+    _boundsTween = RectTween(
+      begin: eventPosition & eventBox.size,
+      end: Rect.fromLTWH(
+        layoutPosition.dx,
+        eventPosition.dy,
+        layoutBox.size.width,
+        eventBox.size.height,
+      ),
+    );
+    _createEntriesFor(event);
+    _animationController.forward();
   }
 
   Rect _getEventBounds(T event) {
@@ -153,33 +155,54 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     if (eventBox == null) return Rect.zero;
 
-    final eventPosition = eventBox.localToGlobal(
-      Offset.zero,
-      ancestor: widget.getTimelineBox(),
-    );
+    final timelineBox = widget.getTimelineBox();
+    final eventPosition =
+        eventBox.localToGlobal(Offset.zero, ancestor: timelineBox);
 
     return eventPosition & eventBox.size;
   }
 
-  Rect _getExpandedEventBounds(T event) {
-    final dayDate = DateUtils.dateOnly(event.start);
-    final layoutBox = widget.getLayoutBox(dayDate)!;
-    final layoutPosition = layoutBox.localToGlobal(
-      Offset.zero,
-      ancestor: widget.getTimelineBox(),
-    );
-    final eventBox = widget.getEventBox(event)!;
-    final eventPosition = eventBox.localToGlobal(
-      layoutPosition,
-      ancestor: layoutBox,
-    );
+  DateTime? _getTargetDayAt(Offset globalPosition) {
+    final renderIds = _timelineHitTest(globalPosition);
+    final targets = renderIds.whereType<RenderId<DateTime>>();
 
-    return Rect.fromLTWH(
-      layoutPosition.dx,
-      eventPosition.dy,
-      layoutBox.size.width,
-      eventBox.size.height,
-    );
+    return targets.isNotEmpty ? targets.first.id : null;
+  }
+
+  DateTime? _getTimePointAt(Offset globalPosition) {
+    final dayDate = _getTargetDayAt(globalPosition);
+
+    if (dayDate == null) return null;
+
+    final layoutBox = widget.getLayoutBox(dayDate)!;
+    final minutes = layoutBox.globalToLocal(globalPosition).dy ~/ _minuteExtent;
+
+    return dayDate.add(Duration(minutes: minutes));
+  }
+
+  Iterable<RenderId<dynamic>> _globalHitTest(Offset globalPosition) {
+    final result = HitTestResult();
+
+    WidgetsBinding.instance.hitTest(result, globalPosition);
+
+    return result.path
+        .map((entry) => entry.target)
+        .whereType<RenderId<dynamic>>();
+  }
+
+  Iterable<RenderId<dynamic>> _timelineHitTest(Offset globalPosition) {
+    final timelineBox = widget.getTimelineBox();
+
+    if (timelineBox == null) return const Iterable.empty();
+
+    final result = BoxHitTestResult();
+    final localPosition = timelineBox.globalToLocal(globalPosition);
+
+    timelineBox.hitTest(result, position: localPosition);
+
+    return result.path
+        .map((entry) => entry.target)
+        .whereType<RenderId<dynamic>>();
   }
 
   bool _resetPointerLocation(Offset globalPosition) {
@@ -196,54 +219,6 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _pointerLocation = globalPosition;
 
     return true;
-  }
-
-  void _resetElevatedEvent() {
-    if (widget.event.value == null) return;
-
-    _elevatedEvent = widget.event.value!;
-    _elevate(_elevatedEvent);
-  }
-
-  void _animateBounds() =>
-      _eventBounds.value = _boundsTween.transform(_animation.value)!;
-
-  void _initAnimationController() => _animationController = AnimationController(
-        duration: _draggableEventTheme.animationDuration,
-        vsync: this,
-      )..addListener(_animateBounds);
-
-  void _initAnimation() => _animation = CurvedAnimation(
-        parent: _animationController,
-        curve: _draggableEventTheme.animationCurve,
-      );
-
-  void _elevate(T event) {
-    if (_animationController.isAnimating) {
-      _removeEntries();
-      _animationController.reset();
-    }
-
-    _boundsTween = RectTween(
-      begin: _getEventBounds(event),
-      end: _getExpandedEventBounds(event),
-    );
-    _createEntriesFor(event);
-    _animationController.forward();
-  }
-
-  void _drop(T event) {
-    if (_animationController.isAnimating) _animationController.stop();
-
-    _boundsTween = RectTween(
-      end: _eventBounds.value,
-      begin: _getEventBounds(event),
-    );
-    _animationController.reverse().whenComplete(() {
-      widget.event.value = null;
-      _removeEntries();
-      widget.onDropped?.call(event);
-    });
   }
 
   void _createEntriesFor(T event) {
@@ -264,13 +239,26 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _sizerEntry = null;
   }
 
-  void _updateEventOriginAndStart() {
-    final dayDate = _getCurrentTargetDay()!; // <- temporary
-    final layoutBox = widget.getLayoutBox(dayDate)!;
-    final layoutPosition = layoutBox.localToGlobal(
-      Offset.zero,
-      ancestor: widget.getTimelineBox(),
+  void _dropEvent(T event) {
+    if (_animationController.isAnimating) _animationController.stop();
+
+    _boundsTween = RectTween(
+      end: _eventBounds.value,
+      begin: _getEventBounds(event),
     );
+    _animationController.reverse().whenComplete(() {
+      widget.event.value = null;
+      _removeEntries();
+      widget.onDropped?.call(event);
+    });
+  }
+
+  void _updateEventOriginAndStart() {
+    final dayDate = _getTargetDayAt(_pointerLocation)!; // <- temporary
+    final layoutBox = widget.getLayoutBox(dayDate)!;
+    final timelineBox = widget.getTimelineBox();
+    final layoutPosition =
+        layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
     final originTimePoint = _pointerTimePoint.subtract(_startDiff);
     final originDayDate = DateUtils.dateOnly(originTimePoint);
     final minutes = originTimePoint.minute +
@@ -283,26 +271,39 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
       dx: layoutPosition.dx,
       dy: _eventBounds.dy - offset,
     );
-    _elevatedEvent = _elevatedEvent.copyWith(start: eventStartDate) as T;
 
-    widget.event.value = _elevatedEvent;
+    widget.event.value =
+        widget.event.value!.copyWith(start: eventStartDate) as T;
   }
 
   void _updateEventHeightAndDuration() {
-    final dayDate = DateUtils.dateOnly(_elevatedEvent.start);
-    final minutes = _elevatedEvent.start.minute +
-        (_elevatedEvent.start.hour * Duration.minutesPerHour) +
+    final event = widget.event.value!;
+    final dayDate = DateUtils.dateOnly(event.start);
+    final minutes = event.start.minute +
+        (event.start.hour * Duration.minutesPerHour) +
         (_eventBounds.height ~/ _minuteExtent);
     final roundedMinutes = (minutes / _cellExtent).round() * _cellExtent;
     final eventEndDate = dayDate.add(Duration(minutes: roundedMinutes));
-    final eventDuration = eventEndDate.difference(_elevatedEvent.start);
+    final eventDuration = eventEndDate.difference(event.start);
 
     _eventBounds.height = eventDuration.inMinutes * _minuteExtent;
-    _elevatedEvent = (_elevatedEvent as EditableCalendarEvent)
-        .copyWith(duration: eventDuration) as T;
 
-    widget.event.value = _elevatedEvent;
+    widget.event.value =
+        (event as EditableCalendarEvent).copyWith(duration: eventDuration) as T;
   }
+
+  void _animateBounds() =>
+      _eventBounds.value = _boundsTween.transform(_animation.value)!;
+
+  void _initAnimationController() => _animationController = AnimationController(
+        duration: _draggableEventTheme.animationDuration,
+        vsync: this,
+      )..addListener(_animateBounds);
+
+  void _initAnimation() => _animation = CurvedAnimation(
+        parent: _animationController,
+        curve: _draggableEventTheme.animationCurve,
+      );
 
   void _eventHeightLimiter() => _eventBounds.height =
       max(_eventBounds.height, _minuteExtent * _cellExtent);
@@ -311,7 +312,6 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    widget.event.addListener(_resetElevatedEvent);
     _initAnimationController();
     _initAnimation();
     _eventBounds.addListener(_eventHeightLimiter);
@@ -334,15 +334,15 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     if (_eventEntry == null) return;
 
-    final dayDate = DateUtils.dateOnly(_elevatedEvent.start);
+    final event = widget.event.value!;
+    final dayDate = DateUtils.dateOnly(event.start);
     final layoutBox = widget.getLayoutBox(dayDate);
 
     if (layoutBox == null) return;
 
-    final layoutPosition = layoutBox.localToGlobal(
-      Offset.zero,
-      ancestor: widget.getTimelineBox(),
-    );
+    final timelineBox = widget.getTimelineBox();
+    final layoutPosition =
+        layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
 
     _eventBounds.update(
       dx: layoutPosition.dx,
@@ -352,61 +352,63 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        final elevatedEvent = widget.event.value;
-        if (elevatedEvent != null) _drop(elevatedEvent);
-      },
-      onPanDown: (details) {
-        final result = HitTestResult();
+    return ValueListenableBuilder(
+      valueListenable: widget.event,
+      builder: (context, elevatedEvent, child) {
+        if (elevatedEvent == null) return _regularGestureDetector(child);
 
-        WidgetsBinding.instance.hitTest(result, details.globalPosition);
+        return GestureDetector(
+          onTap: () => _dropEvent(elevatedEvent),
+          onPanDown: (details) {
+            final renderIds = _globalHitTest(details.globalPosition);
+            final ids = renderIds.map((renderId) => renderId.id);
 
-        final ids = result.path
-            .map((entry) => entry.target)
-            .whereType<RenderId<String>>()
-            .map((renderId) => renderId.id);
-
-        if (ids.contains(_sizerId)) {
-          _resizing = true;
-          widget.onDragDown?.call();
-        } else if (ids.contains(_elevatedEventId)) {
-          _dragging = true;
-          widget.onDragDown?.call();
-        }
-      },
-      onPanStart: (details) {
-        if (!_dragging) return;
-        _pointerLocation = details.globalPosition;
-        _pointerTimePoint = _getCurrentTimePoint()!;
-        _startDiff = _pointerTimePoint.difference(_elevatedEvent.start);
-      },
-      onPanUpdate: (details) {
-        if (_resizing) {
-          widget.onSizeUpdate?.call(details);
-          _eventBounds.height += details.delta.dy;
-        } else if (_dragging) {
-          widget.onDragUpdate?.call(details);
-          _eventBounds.origin += details.delta;
-          if (!_resetPointerLocation(details.globalPosition)) return;
-          _pointerTimePoint = _getCurrentTimePoint() ?? _pointerTimePoint;
-        }
-      },
-      onPanEnd: (details) {
-        if (_resizing) {
-          _resizing = false;
-          widget.onResizingEnd?.call();
-          _updateEventHeightAndDuration();
-        } else if (_dragging) {
-          _dragging = false;
-          widget.onDragEnd?.call();
-          _pointerTimePoint = _getCurrentTimePoint() ?? _pointerTimePoint;
-          _updateEventOriginAndStart();
-        }
-      },
-      onPanCancel: () {
-        _resizing = false;
-        _dragging = false;
+            if (ids.contains(Constants.sizerId)) {
+              _resizing = true;
+              widget.onDragDown?.call();
+            } else if (ids.contains(Constants.elevatedEventId)) {
+              _dragging = true;
+              widget.onDragDown?.call();
+            }
+          },
+          onPanStart: (details) {
+            if (!_dragging) return;
+            _pointerLocation = details.globalPosition;
+            _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
+            _startDiff =
+                _pointerTimePoint.difference(widget.event.value!.start);
+          },
+          onPanUpdate: (details) {
+            if (_resizing) {
+              widget.onSizeUpdate?.call(details);
+              _eventBounds.height += details.delta.dy;
+            } else if (_dragging) {
+              widget.onDragUpdate?.call(details);
+              _eventBounds.origin += details.delta;
+              if (!_resetPointerLocation(details.globalPosition)) return;
+              _pointerTimePoint =
+                  _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+            }
+          },
+          onPanEnd: (details) {
+            if (_resizing) {
+              _resizing = false;
+              widget.onResizingEnd?.call();
+              _updateEventHeightAndDuration();
+            } else if (_dragging) {
+              _dragging = false;
+              widget.onDragEnd?.call();
+              _pointerTimePoint =
+                  _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+              _updateEventOriginAndStart();
+            }
+          },
+          onPanCancel: () {
+            _resizing = false;
+            _dragging = false;
+          },
+          child: child,
+        );
       },
       child: Stack(
         children: [
@@ -440,14 +442,38 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    widget.event.removeListener(_resetElevatedEvent);
     _animationController.dispose();
     _eventBounds.dispose();
     super.dispose();
   }
 
+  Widget _regularGestureDetector(Widget? child) => GestureDetector(
+        // onLongPressStart: (details) {
+        //   final renderIds = _timelineHitTest(details.globalPosition);
+        //   final eventBoxes = renderIds.whereType<RenderId<T>>();
+        //
+        //   if (eventBoxes.isNotEmpty) {
+        //     final tappedEventBox = eventBoxes.first;
+        //
+        //     _elevatedEvent = tappedEventBox.id;
+        //     widget.event.value = _elevatedEvent;
+        //     _elevate(
+        //       _elevatedEvent,
+        //       eventBox: tappedEventBox,
+        //       layoutBox: renderIds.singleWhere(
+        //         (renderId) => renderId.id == Constants.layoutId,
+        //       ),
+        //     );
+        //   } else {
+        //     // final timestamp = _getTimePointAt(details.globalPosition)!;
+        //     // widget.onDateLongPress?.call(timestamp);
+        //   }
+        // },
+        child: child,
+      );
+
   Widget _elevatedEventView() => EventView(
-        _elevatedEvent,
+        widget.event.value!,
         key: DraggableEventOverlayKeys.elevatedEvent,
         theme: widget.timelineTheme.floatingEventsTheme
             .copyWith(elevation: _draggableEventTheme.elevation),
@@ -481,7 +507,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
         child: CompositedTransformTarget(
           link: _layerLink,
           child: RenderIdProvider(
-            id: _elevatedEventId,
+            id: Constants.elevatedEventId,
             child: _elevatedEventView(),
           ),
         ),
@@ -505,7 +531,7 @@ class _DraggableEventOverlayState<T extends FloatingCalendarEvent>
           targetAnchor: Alignment.bottomCenter,
           followerAnchor: Alignment.center,
           child: RenderIdProvider(
-            id: _sizerId,
+            id: Constants.sizerId,
             child: _sizerView(),
           ),
         ),

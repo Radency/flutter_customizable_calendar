@@ -65,7 +65,7 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Events list to display
   final List<T> events;
 
-  /// Returns selected timestamp (to the minute)
+  /// Returns selected timestamp
   final void Function(DateTime)? onDateLongPress;
 
   /// Returns the tapped event
@@ -80,6 +80,7 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
 class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     with SingleTickerProviderStateMixin {
+  final _overlayKey = GlobalKey<DraggableEventOverlayState<T>>();
   final _elevatedEvent = FloatingEventNotifier<T>();
   late final PageController _weekPickerController;
   var _pointerLocation = Offset.zero;
@@ -231,6 +232,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
           Expanded(
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
+              key: _overlayKey,
               viewType: CalendarView.week,
               timelineTheme: widget.timelineTheme,
               padding: EdgeInsets.only(
@@ -408,21 +410,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                     ),
                   ),
                 ),
-                ...days.map(
-                  (dayDate) => Expanded(
-                    child: RenderIdProvider(
-                      id: dayDate,
-                      child: Container(
-                        padding: EdgeInsets.only(
-                          top: theme.padding.top,
-                          bottom: theme.padding.bottom,
-                        ),
-                        color: Colors.transparent, // Needs for hitTesting
-                        child: _singleDayView(dayDate),
-                      ),
-                    ),
-                  ),
-                ),
+                ...days.map(_singleDayView),
               ],
             ),
           ),
@@ -431,35 +419,51 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     );
   }
 
-  Widget _singleDayView(DateTime dayDate) => ValueListenableBuilder(
-        valueListenable: _elevatedEvent,
-        builder: (context, elevatedEvent, child) => AbsorbPointer(
-          absorbing: elevatedEvent != null,
-          child: child,
-        ),
-        child: GestureDetector(
-          onLongPressStart: (details) {
-            final minutes = details.localPosition.dy ~/ _minuteExtent;
-            final roundedMinutes =
-                (minutes / _cellExtent).round() * _cellExtent;
-            final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
+  Widget _singleDayView(DateTime dayDate) {
+    final theme = widget.timelineTheme;
 
-            if (timestamp.isBefore(_initialDate)) return;
-            if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+    return Expanded(
+      child: RenderIdProvider(
+        id: dayDate,
+        child: ValueListenableBuilder(
+          valueListenable: _elevatedEvent,
+          builder: (context, elevatedEvent, child) => AbsorbPointer(
+            absorbing: elevatedEvent != null,
+            child: child,
+          ),
+          child: GestureDetector(
+            onLongPressStart: (details) {
+              final minutes = details.localPosition.dy ~/ _minuteExtent;
+              final roundedMinutes =
+                  (minutes / _cellExtent).round() * _cellExtent;
+              final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
 
-            widget.onDateLongPress?.call(timestamp);
-          },
-          behavior: HitTestBehavior.opaque,
-          child: EventsLayout<T>(
-            dayDate: dayDate,
-            layoutsKeys: WeekViewKeys.layouts,
-            eventsKeys: WeekViewKeys.events,
-            timelineTheme: widget.timelineTheme,
-            breaks: widget.breaks,
-            events: widget.events,
-            elevatedEvent: _elevatedEvent,
-            onEventTap: widget.onEventTap,
+              if (timestamp.isBefore(_initialDate)) return;
+              if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+
+              widget.onDateLongPress?.call(timestamp);
+            },
+            child: Container(
+              padding: EdgeInsets.only(
+                top: theme.padding.top,
+                bottom: theme.padding.bottom,
+              ),
+              color: Colors.transparent, // Needs for hitTesting
+              child: EventsLayout<T>(
+                dayDate: dayDate,
+                overlayKey: _overlayKey,
+                layoutsKeys: WeekViewKeys.layouts,
+                eventsKeys: WeekViewKeys.events,
+                timelineTheme: widget.timelineTheme,
+                breaks: widget.breaks,
+                events: widget.events,
+                elevatedEvent: _elevatedEvent,
+                onEventTap: widget.onEventTap,
+              ),
+            ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }

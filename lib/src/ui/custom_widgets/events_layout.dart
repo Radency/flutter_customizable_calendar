@@ -13,6 +13,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   const EventsLayout({
     super.key,
     required this.dayDate,
+    required this.overlayKey,
     required this.layoutsKeys,
     required this.eventsKeys,
     required this.timelineTheme,
@@ -25,10 +26,13 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   /// A day which needs to be displayed
   final DateTime dayDate;
 
-  /// A keys collection for all layouts views
+  /// A [GlobalKey] which contains [DraggableEventOverlayState]
+  final GlobalKey<DraggableEventOverlayState<T>> overlayKey;
+
+  /// A [GlobalKey]s collection for all layouts views
   final Map<DateTime, GlobalKey> layoutsKeys;
 
-  /// A keys collection for all events views
+  /// A [GlobalKey]s collection for all events views
   final Map<CalendarEvent, GlobalKey> eventsKeys;
 
   /// The timeline customization params
@@ -54,46 +58,54 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   Widget build(BuildContext context) {
     final breaksToDisplay = _getEventsOnDay(breaks);
     final eventsToDisplay = _getEventsOnDay(events);
+    final overlay = overlayKey.currentState!;
 
-    return CustomMultiChildLayout(
-      key: layoutsKeys[dayDate] ??= GlobalKey(),
-      delegate: _EventsLayoutDelegate<T>(
-        date: dayDate,
-        breaks: breaksToDisplay,
-        events: eventsToDisplay,
-        cellExtent: timelineTheme.cellExtent,
-      ),
-      children: [
-        ...breaksToDisplay.map(
-          (event) => LayoutId(
-            id: event,
-            child: BreakView(event),
-          ),
+    return RenderIdProvider(
+      id: Constants.layoutId,
+      child: CustomMultiChildLayout(
+        key: layoutsKeys[dayDate] ??= GlobalKey(),
+        delegate: _EventsLayoutDelegate<T>(
+          date: dayDate,
+          breaks: breaksToDisplay,
+          events: eventsToDisplay,
+          cellExtent: timelineTheme.cellExtent,
         ),
-        ...eventsToDisplay.map(
-          (event) => LayoutId(
-            id: event,
-            child: ValueListenableBuilder(
-              valueListenable: elevatedEvent,
-              builder: (context, elevatedEvent, child) => Opacity(
-                opacity: (elevatedEvent == event) ? 0.5 : 1,
-                child: child,
-              ),
-              child: _eventView(event),
+        children: [
+          ...breaksToDisplay.map(
+            (event) => LayoutId(
+              id: event,
+              child: BreakView(event),
             ),
           ),
-        ),
-      ],
+          ...eventsToDisplay.map(
+            (event) => LayoutId(
+              id: event,
+              child: ValueListenableBuilder(
+                valueListenable: elevatedEvent,
+                builder: (eContext, elevatedEvent, child) => GestureDetector(
+                  onLongPress: () => overlay.elevateEvent(
+                    event,
+                    eventBox: eContext.findRenderObject()! as RenderBox,
+                    layoutBox: context.findRenderObject()! as RenderBox,
+                  ),
+                  child: Opacity(
+                    opacity: (elevatedEvent == event) ? 0.5 : 1,
+                    child: child,
+                  ),
+                ),
+                child: EventView(
+                  key: eventsKeys[event] ??= GlobalKey(),
+                  event,
+                  theme: timelineTheme.floatingEventsTheme,
+                  onTap: () => onEventTap?.call(event),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
-
-  Widget _eventView(T event) => EventView(
-        key: eventsKeys[event] ??= GlobalKey(),
-        event,
-        theme: timelineTheme.floatingEventsTheme,
-        onTap: () => onEventTap?.call(event),
-        onLongPress: () => elevatedEvent.value = event,
-      );
 }
 
 class _EventsLayoutDelegate<T extends FloatingCalendarEvent>

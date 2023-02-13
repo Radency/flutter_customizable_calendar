@@ -1,6 +1,7 @@
 library utils;
 
 export 'clock_notifier.dart';
+export 'constants.dart';
 export 'enums.dart';
 export 'extensions.dart';
 export 'floating_event_notifier.dart';

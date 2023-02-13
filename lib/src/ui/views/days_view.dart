@@ -61,7 +61,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Events list to display
   final List<T> events;
 
-  /// Returns selected timestamp (to the minute)
+  /// Returns selected timestamp
   final void Function(DateTime)? onDateLongPress;
 
   /// Returns the tapped event
@@ -75,6 +75,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
 class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     with SingleTickerProviderStateMixin {
+  final _overlayKey = GlobalKey<DraggableEventOverlayState<T>>();
   final _elevatedEvent = FloatingEventNotifier<T>();
   late final PageController _monthPickerController;
   late final ScrollController _timelineController;
@@ -274,6 +275,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
           Expanded(
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
+              key: _overlayKey,
               viewType: CalendarView.days,
               timelineTheme: widget.timelineTheme,
               onDragDown: _stopTimelineScrolling,
@@ -442,6 +444,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                     Expanded(
                       child: EventsLayout<T>(
                         dayDate: dayDate,
+                        overlayKey: _overlayKey,
                         layoutsKeys: DaysViewKeys.layouts,
                         eventsKeys: DaysViewKeys.events,
                         timelineTheme: widget.timelineTheme,
