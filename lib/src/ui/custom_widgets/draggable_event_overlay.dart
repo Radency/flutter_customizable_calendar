@@ -106,8 +106,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   OverlayEntry? _eventEntry;
   OverlayEntry? _sizerEntry;
 
-  static const _sizerExtraPadding = 4.0; // Needs to increase the tappable area
-
   OverlayState get _overlay => _overlayKey.currentState!;
 
   double get _minuteExtent => _hourExtent / Duration.minutesPerHour;
@@ -118,17 +116,24 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   DraggableEventTheme get _draggableEventTheme =>
       widget.timelineTheme.draggableEventTheme;
 
-  /// This method needs to set an [event] as elevated event and create it's
-  /// [OverlayEntry], [RenderBox]es need to calculate it's bounds.
-  void elevateEvent(
-    T event, {
-    required RenderBox eventBox,
-    required RenderBox layoutBox,
-  }) {
+  /// Needs to make interaction between a timeline and the overlay
+  void onEventLongPressStart(LongPressStartDetails details) {
+    _pointerLocation = details.globalPosition;
+
     if (_animationController.isAnimating) {
       _removeEntries();
       _animationController.reset();
     }
+
+    final renderIds = _timelineHitTest(_pointerLocation);
+    final hitTestedEvents = renderIds.whereType<RenderId<T>>();
+
+    if (hitTestedEvents.isEmpty) return;
+
+    final eventBox = hitTestedEvents.first;
+    final event = eventBox.id;
+    final layoutBox =
+        renderIds.singleWhere((renderId) => renderId.id == Constants.layoutId);
 
     final timelineBox = widget.getTimelineBox();
     final eventPosition =
@@ -148,7 +153,36 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
     _createEntriesFor(event);
     _animationController.forward();
+
+    _dragging = true;
+    _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
+    _startDiff = _pointerTimePoint.difference(event.start);
   }
+
+  /// Needs to make interaction between a timeline and the overlay
+  void onEventLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
+    final dragUpdateDetails = DragUpdateDetails(
+      delta: details.globalPosition - _pointerLocation,
+      globalPosition: details.globalPosition,
+      localPosition: details.localPosition,
+    );
+
+    widget.onDragUpdate?.call(dragUpdateDetails);
+    _eventBounds.origin += dragUpdateDetails.delta;
+    if (!_resetPointerLocation(details.globalPosition)) return;
+    _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+  }
+
+  /// Needs to make interaction between a timeline and the overlay
+  void onEventLongPressEnd(LongPressEndDetails details) {
+    _dragging = false;
+    widget.onDragEnd?.call();
+    _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+    _updateEventOriginAndStart();
+  }
+
+  /// Needs to make interaction between a timeline and the overlay
+  void onEventLongPressCancel() => _dragging = false;
 
   Rect _getEventBounds(T event) {
     final eventBox = widget.getEventBox(event);
@@ -332,14 +366,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   void didChangeMetrics() {
     super.didChangeMetrics();
 
-    if (_eventEntry == null) return;
-
-    final event = widget.event.value!;
+    final event = widget.event.value;
+    if (event == null) return;
     final dayDate = DateUtils.dateOnly(event.start);
     final layoutBox = widget.getLayoutBox(dayDate);
-
     if (layoutBox == null) return;
-
     final timelineBox = widget.getTimelineBox();
     final layoutPosition =
         layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
@@ -355,7 +386,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     return ValueListenableBuilder(
       valueListenable: widget.event,
       builder: (context, elevatedEvent, child) {
-        if (elevatedEvent == null) return _regularGestureDetector(child);
+        if (elevatedEvent == null) return child!;
 
         return GestureDetector(
           onTap: () => _dropEvent(elevatedEvent),
@@ -373,10 +404,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
           },
           onPanStart: (details) {
             if (!_dragging) return;
+            final event = widget.event.value!;
             _pointerLocation = details.globalPosition;
             _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
-            _startDiff =
-                _pointerTimePoint.difference(widget.event.value!.start);
+            _startDiff = _pointerTimePoint.difference(event.start);
           },
           onPanUpdate: (details) {
             if (_resizing) {
@@ -447,31 +478,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     super.dispose();
   }
 
-  Widget _regularGestureDetector(Widget? child) => GestureDetector(
-        // onLongPressStart: (details) {
-        //   final renderIds = _timelineHitTest(details.globalPosition);
-        //   final eventBoxes = renderIds.whereType<RenderId<T>>();
-        //
-        //   if (eventBoxes.isNotEmpty) {
-        //     final tappedEventBox = eventBoxes.first;
-        //
-        //     _elevatedEvent = tappedEventBox.id;
-        //     widget.event.value = _elevatedEvent;
-        //     _elevate(
-        //       _elevatedEvent,
-        //       eventBox: tappedEventBox,
-        //       layoutBox: renderIds.singleWhere(
-        //         (renderId) => renderId.id == Constants.layoutId,
-        //       ),
-        //     );
-        //   } else {
-        //     // final timestamp = _getTimePointAt(details.globalPosition)!;
-        //     // widget.onDateLongPress?.call(timestamp);
-        //   }
-        // },
-        child: child,
-      );
-
   Widget _elevatedEventView() => EventView(
         widget.event.value!,
         key: DraggableEventOverlayKeys.elevatedEvent,
@@ -480,23 +486,24 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         onTap: () {},
       );
 
-  Widget _sizerView() => ClipOval(
-        child: GestureDetector(
-          onTap: () {}, // Needs to avoid unnecessary event drops
-          child: ColoredBox(
-            color: Colors.transparent, // Needs for hitTesting
-            child: Padding(
-              padding: const EdgeInsets.all(_sizerExtraPadding),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: _draggableEventTheme.sizerColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
+  Widget _sizerView() {
+    final theme = _draggableEventTheme.sizerTheme;
+
+    return ClipOval(
+      child: GestureDetector(
+        onTap: () {}, // Needs to avoid unnecessary event drops
+        child: ColoredBox(
+          color: Colors.transparent, // Needs for hitTesting
+          child: Padding(
+            padding: EdgeInsets.all(theme.extraSpace),
+            child: DecoratedBox(
+              decoration: theme.decoration,
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 
   Widget _floatingEventBuilder(BuildContext context) => ValueListenableBuilder(
         valueListenable: _eventBounds,
@@ -516,12 +523,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   Widget _sizerBuilder(BuildContext context) => ValueListenableBuilder(
         valueListenable: _animation,
         builder: (context, scale, child) {
-          final sizerDimension = _draggableEventTheme.sizerDimension * scale;
-          const extraSpace = _sizerExtraPadding * 2;
+          final theme = _draggableEventTheme.sizerTheme;
 
           return Positioned(
-            width: sizerDimension + extraSpace,
-            height: sizerDimension + extraSpace,
+            width: theme.size.width * scale + theme.extraSpace * 2,
+            height: theme.size.height * scale + theme.extraSpace * 2,
             child: child!,
           );
         },

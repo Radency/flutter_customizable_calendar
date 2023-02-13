@@ -17,7 +17,7 @@ class RenderIdProvider<T> extends SingleChildRenderObjectWidget {
   RenderId<T> createRenderObject(BuildContext context) => RenderId(id);
 }
 
-/// [RenderId] is a type of [RenderBox] which contains a [id] inside.
+/// [RenderId] is a type of [RenderBox] which contains an [id] inside.
 class RenderId<T> extends RenderProxyBox {
   /// Creates a new instance of [RenderProxyBox] with given [id].
   RenderId(this.id);

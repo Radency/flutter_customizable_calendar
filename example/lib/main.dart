@@ -308,6 +308,11 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
 
   DraggableEventTheme get _draggableEventTheme => DraggableEventTheme(
         elevation: 5,
-        sizerColor: _theme.colorScheme.error,
+        sizerTheme: SizerTheme(
+          decoration: BoxDecoration(
+            color: _theme.colorScheme.error,
+            shape: BoxShape.circle,
+          ),
+        ),
       );
 }

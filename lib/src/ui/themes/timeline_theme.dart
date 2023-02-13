@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 part 'draggable_event_theme.dart';
 part 'floating_events_theme.dart';
+part 'sizer_theme.dart';
 part 'time_mark_theme.dart';
 part 'time_scale_theme.dart';
 

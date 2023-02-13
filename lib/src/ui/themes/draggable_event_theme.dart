@@ -5,8 +5,7 @@ class DraggableEventTheme extends Equatable {
   /// Customize the draggable event view with the parameters
   const DraggableEventTheme({
     this.elevation,
-    this.sizerDimension = 8,
-    this.sizerColor = Colors.red,
+    this.sizerTheme = const SizerTheme(),
     this.animationDuration = const Duration(milliseconds: 200),
     this.animationCurve = Curves.fastOutSlowIn,
   });
@@ -14,11 +13,8 @@ class DraggableEventTheme extends Equatable {
   /// Elevation over a day view
   final double? elevation;
 
-  /// Dimension of the view's sizer dot
-  final double sizerDimension;
-
-  /// Color of the view's sizer dot
-  final Color sizerColor;
+  /// Sizer view's customization parameters
+  final SizerTheme sizerTheme;
 
   /// Duration of the view's animation
   final Duration animationDuration;
@@ -30,8 +26,7 @@ class DraggableEventTheme extends Equatable {
   @override
   List<Object?> get props => [
         elevation,
-        sizerDimension,
-        sizerColor,
+        sizerTheme,
         animationDuration,
         animationCurve,
       ];
@@ -40,15 +35,13 @@ class DraggableEventTheme extends Equatable {
   /// the new values
   DraggableEventTheme copyWith({
     double? elevation,
-    double? sizerDimension,
-    Color? sizerColor,
+    SizerTheme? sizerTheme,
     Duration? animationDuration,
     Curve? animationCurve,
   }) {
     return DraggableEventTheme(
       elevation: elevation ?? this.elevation,
-      sizerDimension: sizerDimension ?? this.sizerDimension,
-      sizerColor: sizerColor ?? this.sizerColor,
+      sizerTheme: sizerTheme ?? this.sizerTheme,
       animationDuration: animationDuration ?? this.animationDuration,
       animationCurve: animationCurve ?? this.animationCurve,
     );

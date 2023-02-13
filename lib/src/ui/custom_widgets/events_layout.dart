@@ -80,24 +80,26 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
           ...eventsToDisplay.map(
             (event) => LayoutId(
               id: event,
-              child: ValueListenableBuilder(
-                valueListenable: elevatedEvent,
-                builder: (eContext, elevatedEvent, child) => GestureDetector(
-                  onLongPress: () => overlay.elevateEvent(
-                    event,
-                    eventBox: eContext.findRenderObject()! as RenderBox,
-                    layoutBox: context.findRenderObject()! as RenderBox,
+              child: GestureDetector(
+                onLongPressStart: overlay.onEventLongPressStart,
+                onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+                onLongPressEnd: overlay.onEventLongPressEnd,
+                onLongPressCancel: overlay.onEventLongPressCancel,
+                child: RenderIdProvider(
+                  id: event,
+                  child: ValueListenableBuilder(
+                    valueListenable: elevatedEvent,
+                    builder: (context, elevatedEvent, child) => Opacity(
+                      opacity: (elevatedEvent == event) ? 0.5 : 1,
+                      child: child,
+                    ),
+                    child: EventView(
+                      key: eventsKeys[event] ??= GlobalKey(),
+                      event,
+                      theme: timelineTheme.floatingEventsTheme,
+                      onTap: () => onEventTap?.call(event),
+                    ),
                   ),
-                  child: Opacity(
-                    opacity: (elevatedEvent == event) ? 0.5 : 1,
-                    child: child,
-                  ),
-                ),
-                child: EventView(
-                  key: eventsKeys[event] ??= GlobalKey(),
-                  event,
-                  theme: timelineTheme.floatingEventsTheme,
-                  onTap: () => onEventTap?.call(event),
                 ),
               ),
             ),
