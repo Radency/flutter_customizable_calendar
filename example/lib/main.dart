@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
+import 'package:flutter_customizable_calendar/src/bloc/list_cubit/list_cubit.dart';
 
 void main() => runApp(const App());
 
@@ -10,55 +12,103 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = DateUtils.dateOnly(DateTime.now());
-
-    return MaterialApp(
-      title: 'Flutter customizable calendar',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.blue.shade50,
-      ),
-      home: CalendarPage(
-        breaks: List.generate(
-          7,
+    final breaks = List.generate(
+      7,
           (index) {
-            final dayDate =
-                DateUtils.addDaysToDate(today, index - today.weekday + 1);
-            final isSunday = dayDate.weekday == DateTime.sunday;
+        final dayDate =
+        DateUtils.addDaysToDate(today, index - today.weekday + 1);
+        final isSunday = dayDate.weekday == DateTime.sunday;
 
-            return Break(
-              id: 'Break $index',
-              start:
-                  isSunday ? dayDate : dayDate.add(const Duration(hours: 13)),
-              duration:
-                  isSunday ? const Duration(days: 1) : const Duration(hours: 1),
-              color: Colors.grey.withOpacity(0.25),
-            );
-          },
+        return Break(
+          id: 'Break $index',
+          start:
+          isSunday ? dayDate : dayDate.add(const Duration(hours: 13)),
+          duration:
+          isSunday ? const Duration(days: 1) : const Duration(hours: 1),
+          color: Colors.grey.withOpacity(0.25),
+        );
+      },
+    );
+    final events = [
+      TaskDue(
+        id: 'TaskDue 1',
+        start: today.add(const Duration(hours: 13)),
+      ),
+      SimpleEvent(
+        id: 'Event 2',
+        start: today.add(const Duration(hours: 11, minutes: 59)),
+        duration: const Duration(minutes: 30),
+        title: 'Event 2',
+      ),
+      SimpleEvent(
+        id: 'Event 1',
+        start: today.add(const Duration(hours: 11, minutes: 59)),
+        duration: const Duration(minutes: 40),
+        title: 'Event 1',
+      ),
+      SimpleEvent(
+        id: 'Event 3',
+        start: today.add(const Duration(days: 2, hours: 10, minutes: 59)),
+        duration: const Duration(minutes: 45),
+        title: 'Event 3',
+      ),
+    ];
+
+    return BlocProvider<ListCubit>(
+      create: (context) => ListCubit()
+        ..addAll(
+          events: events,
+          breaks: breaks,
         ),
-        events: [
-          TaskDue(
-            id: 'TaskDue 1',
-            start: today.add(const Duration(hours: 13)),
+      child: MaterialApp(
+        title: 'Flutter customizable calendar',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          scaffoldBackgroundColor: Colors.blue.shade50,
+        ),
+        home: CalendarPage(
+          breaks: List.generate(
+            7,
+            (index) {
+              final dayDate =
+                  DateUtils.addDaysToDate(today, index - today.weekday + 1);
+              final isSunday = dayDate.weekday == DateTime.sunday;
+
+              return Break(
+                id: 'Break $index',
+                start:
+                    isSunday ? dayDate : dayDate.add(const Duration(hours: 13)),
+                duration:
+                    isSunday ? const Duration(days: 1) : const Duration(hours: 1),
+                color: Colors.grey.withOpacity(0.25),
+              );
+            },
           ),
-          SimpleEvent(
-            id: 'Event 2',
-            start: today.add(const Duration(hours: 11, minutes: 59)),
-            duration: const Duration(minutes: 30),
-            title: 'Event 2',
-          ),
-          SimpleEvent(
-            id: 'Event 1',
-            start: today.add(const Duration(hours: 11, minutes: 59)),
-            duration: const Duration(minutes: 40),
-            title: 'Event 1',
-          ),
-          SimpleEvent(
-            id: 'Event 3',
-            start: today.add(const Duration(days: 2, hours: 10, minutes: 59)),
-            duration: const Duration(minutes: 45),
-            title: 'Event 3',
-          ),
-        ],
+          events: [
+            TaskDue(
+              id: 'TaskDue 1',
+              start: today.add(const Duration(hours: 13)),
+            ),
+            SimpleEvent(
+              id: 'Event 2',
+              start: today.add(const Duration(hours: 11, minutes: 59)),
+              duration: const Duration(minutes: 30),
+              title: 'Event 2',
+            ),
+            SimpleEvent(
+              id: 'Event 1',
+              start: today.add(const Duration(hours: 11, minutes: 59)),
+              duration: const Duration(minutes: 40),
+              title: 'Event 1',
+            ),
+            SimpleEvent(
+              id: 'Event 3',
+              start: today.add(const Duration(days: 2, hours: 10, minutes: 59)),
+              duration: const Duration(minutes: 45),
+              title: 'Event 3',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -208,6 +258,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
 
   Widget _daysView() => DaysView<T>(
         controller: _daysViewController,
+        listCubit: context.read<ListCubit>(),
         monthPickerTheme: _periodPickerTheme,
         daysListTheme: DaysListTheme(
           itemTheme: DaysListItemTheme(
@@ -227,11 +278,15 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
           floatingEventsTheme: _floatingEventsTheme,
           draggableEventTheme: _draggableEventTheme,
         ),
-        breaks: widget.breaks,
-        events: widget.events,
-        onDateLongPress: print,
+        // breaks: widget.breaks,
+        // events: widget.events,
+        onDateLongPress: (obj){
+          print(obj);
+        },
         onEventTap: print,
-        onEventUpdated: print,
+        onEventUpdated: (obj){
+          print(obj);
+        },
       );
 
   Widget _weekView() => WeekView<T>(
