@@ -4,11 +4,13 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_customizable_calendar/src/bloc/list_cubit/list_cubit.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/controllers/controllers.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
+import 'package:uuid/uuid.dart';
 
 /// A key holder of all DaysView keys
 @visibleForTesting
@@ -29,12 +31,13 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   const DaysView({
     super.key,
     required this.controller,
+    required this.listCubit,
     this.monthPickerTheme = const DisplayedPeriodPickerTheme(),
     this.daysListTheme = const DaysListTheme(),
     this.timelineTheme = const TimelineTheme(),
     this.floatingEventTheme = const FloatingEventsTheme(),
-    this.breaks = const [],
-    this.events = const [],
+    // this.breaks = const [],
+    // this.events = const [],
     this.onDateLongPress,
     this.onEventTap,
     this.onEventUpdated,
@@ -42,6 +45,9 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Controller which allows to control the view
   final DaysViewController controller;
+
+  /// Cubit which controls adding new events
+  final ListCubit listCubit;
 
   /// The month picker customization params
   final DisplayedPeriodPickerTheme monthPickerTheme;
@@ -55,11 +61,11 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Floating events customization params
   final FloatingEventsTheme floatingEventTheme;
 
-  /// Breaks list to display
-  final List<Break> breaks;
-
-  /// Events list to display
-  final List<T> events;
+  // /// Breaks list to display
+  // final List<Break> breaks;
+  //
+  // /// Events list to display
+  // final List<T> events;
 
   /// Returns selected timestamp
   final void Function(DateTime)? onDateLongPress;
@@ -417,7 +423,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               child: child,
             ),
             child: GestureDetector(
-              onLongPressStart: (details) {
+              onLongPressStart: (details) async {
                 final minutes = details.localPosition.dy ~/ _minuteExtent;
                 final roundedMinutes =
                     (minutes / _cellExtent).round() * _cellExtent;
@@ -427,6 +433,53 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                 if (timestamp.isBefore(_initialDate)) return;
                 if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 
+                await showModalBottomSheet(
+                  context: context,
+                  builder: (context) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ListTile(
+                        title: Text("Simple Event"),
+                        onTap: (){
+                          widget.listCubit.add(
+                            SimpleEvent(
+                              id: const Uuid().v1(),
+                              start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),
+                              duration: Duration(hours: 1),
+                              title: "Simple event",
+                            ) as T,
+                          );
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      ListTile(
+                        title: Text("Task Due"),
+                        onTap: (){
+                          widget.listCubit.add(
+                            TaskDue(
+                              id: const Uuid().v1(),
+                              start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),
+                            ) as T,
+                          );
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      ListTile(
+                        title: Text("Break"),
+                        onTap: (){
+                          widget.listCubit.add(
+                            Break(
+                              id: const Uuid().v1(),
+                              start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),
+                              duration: Duration(hours: 1),
+                            ),
+                          );
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                );
                 widget.onDateLongPress?.call(timestamp);
               },
               behavior: HitTestBehavior.opaque,
@@ -442,16 +495,20 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                       theme: theme.timeScaleTheme,
                     ),
                     Expanded(
-                      child: EventsLayout<T>(
-                        dayDate: dayDate,
-                        overlayKey: _overlayKey,
-                        layoutsKeys: DaysViewKeys.layouts,
-                        eventsKeys: DaysViewKeys.events,
-                        timelineTheme: widget.timelineTheme,
-                        breaks: widget.breaks,
-                        events: widget.events,
-                        elevatedEvent: _elevatedEvent,
-                        onEventTap: widget.onEventTap,
+                      child: BlocBuilder<ListCubit, ListState>(
+                        builder: (context, state) {
+                          return EventsLayout<T>(
+                            dayDate: dayDate,
+                            overlayKey: _overlayKey,
+                            layoutsKeys: DaysViewKeys.layouts,
+                            eventsKeys: DaysViewKeys.events,
+                            timelineTheme: widget.timelineTheme,
+                            breaks: state.breaks.values.toList(),
+                            events: state.events.values.cast<T>().toList(),
+                            elevatedEvent: _elevatedEvent,
+                            onEventTap: widget.onEventTap,
+                          );
+                        }
                       ),
                     ),
                   ],
