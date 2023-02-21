@@ -67,65 +67,14 @@ class App extends StatelessWidget {
           primarySwatch: Colors.blue,
           scaffoldBackgroundColor: Colors.blue.shade50,
         ),
-        home: CalendarPage(
-          // breaks: List.generate(
-          //   7,
-          //   (index) {
-          //     final dayDate =
-          //         DateUtils.addDaysToDate(today, index - today.weekday + 1);
-          //     final isSunday = dayDate.weekday == DateTime.sunday;
-          //
-          //     return Break(
-          //       id: 'Break $index',
-          //       start:
-          //           isSunday ? dayDate : dayDate.add(const Duration(hours: 13)),
-          //       duration:
-          //           isSunday ? const Duration(days: 1) : const Duration(hours: 1),
-          //       color: Colors.grey.withOpacity(0.25),
-          //     );
-          //   },
-          // ),
-          // events: [
-          //   TaskDue(
-          //     id: 'TaskDue 1',
-          //     start: today.add(const Duration(hours: 13)),
-          //   ),
-          //   SimpleEvent(
-          //     id: 'Event 2',
-          //     start: today.add(const Duration(hours: 11, minutes: 59)),
-          //     duration: const Duration(minutes: 30),
-          //     title: 'Event 2',
-          //   ),
-          //   SimpleEvent(
-          //     id: 'Event 1',
-          //     start: today.add(const Duration(hours: 11, minutes: 59)),
-          //     duration: const Duration(minutes: 40),
-          //     title: 'Event 1',
-          //   ),
-          //   SimpleEvent(
-          //     id: 'Event 3',
-          //     start: today.add(const Duration(days: 2, hours: 10, minutes: 59)),
-          //     duration: const Duration(minutes: 45),
-          //     title: 'Event 3',
-          //   ),
-          // ],
-        ),
+        home: CalendarPage(),
       ),
     );
   }
 }
 
 class CalendarPage<T extends FloatingCalendarEvent> extends StatefulWidget {
-  const CalendarPage({
-    super.key,
-
-    // this.breaks = const [],
-    // this.events = const [],
-  });
-
-  // final List<Break> breaks;
-  //
-  // final List<T> events;
+  const CalendarPage({super.key,});
 
   @override
   State<CalendarPage<T>> createState() => _CalendarPageState<T>();
@@ -290,7 +239,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         events: listCubit.state.events.values.cast<T>().toList(),
         onDateLongPress: (timestamp) async {
           print(timestamp);
-          final _listCubit = context.read<ListCubit>();
+          final _minute = timestamp.minute;
           await showModalBottomSheet(
             context: context,
             builder: (context) => Column(
@@ -299,11 +248,10 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
                 ListTile(
                   title: Text("Simple Event"),
                   onTap: (){
-                    _listCubit.save(
+                    listCubit.save(
                       SimpleEvent(
                         id: const Uuid().v1(),
-                        // start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),
-                        start: timestamp.subtract(Duration(minutes: timestamp.minute)),
+                        start: timestamp.subtract(Duration(minutes: _minute)),
                         duration: Duration(hours: 1),
                         title: "Simple event",
                       ) as T,
@@ -314,11 +262,10 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
                 ListTile(
                   title: Text("Task Due"),
                   onTap: (){
-                    _listCubit.save(
+                    listCubit.save(
                       TaskDue(
                         id: const Uuid().v1(),
-                        // start: obj.subtract(Duration(minutes: roundedMinutes % 60)),
-                        start: timestamp.subtract(Duration(minutes: timestamp.minute)),
+                        start: timestamp.subtract(Duration(minutes: _minute)),
                       ) as T,
                     );
                     Navigator.of(context).pop();
@@ -327,11 +274,10 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
                 ListTile(
                   title: Text("Break"),
                   onTap: (){
-                    _listCubit.save(
+                    listCubit.save(
                       Break(
                         id: const Uuid().v1(),
-                        // start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),
-                        start: timestamp.subtract(Duration(minutes: timestamp.minute)),
+                        start: timestamp.subtract(Duration(minutes: _minute)),
                         duration: Duration(hours: 1),
                       ),
                     );

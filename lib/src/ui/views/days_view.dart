@@ -417,7 +417,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               child: child,
             ),
             child: GestureDetector(
-              onLongPressStart: (details) async {
+              onLongPressStart: (details) {
                 final minutes = details.localPosition.dy ~/ _minuteExtent;
                 final roundedMinutes =
                     (minutes / _cellExtent).round() * _cellExtent;
@@ -427,53 +427,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                 if (timestamp.isBefore(_initialDate)) return;
                 if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 
-                // await showModalBottomSheet(
-                //   context: context,
-                //   builder: (context) => Column(
-                //     crossAxisAlignment: CrossAxisAlignment.stretch,
-                //     children: [
-                //       ListTile(
-                //         title: Text("Simple Event"),
-                //         onTap: (){
-                //           widget.listCubit.save(
-                //             SimpleEvent(
-                //               id: const Uuid().v1(),
-                //               start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),
-                //               duration: Duration(hours: 1),
-                //               title: "Simple event",
-                //             ) as T,
-                //           );
-                //           Navigator.of(context).pop();
-                //         },
-                //       ),
-                //       ListTile(
-                //         title: Text("Task Due"),
-                //         onTap: (){
-                //           widget.listCubit.save(
-                //             TaskDue(
-                //               id: const Uuid().v1(),
-                //               start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),
-                //             ) as T,
-                //           );
-                //           Navigator.of(context).pop();
-                //         },
-                //       ),
-                //       ListTile(
-                //         title: Text("Break"),
-                //         onTap: (){
-                //           widget.listCubit.save(
-                //             Break(
-                //               id: const Uuid().v1(),
-                //               start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),
-                //               duration: Duration(hours: 1),
-                //             ),
-                //           );
-                //           Navigator.of(context).pop();
-                //         },
-                //       ),
-                //     ],
-                //   ),
-                // );
                 widget.onDateLongPress?.call(timestamp);
               },
               behavior: HitTestBehavior.opaque,
