@@ -56,7 +56,7 @@ class App extends StatelessWidget {
 
     return BlocProvider<ListCubit>(
       create: (context) => ListCubit()
-        ..addAll(
+        ..saveAll(
           events: events,
           breaks: breaks,
         ),

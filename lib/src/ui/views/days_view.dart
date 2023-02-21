@@ -441,7 +441,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                       ListTile(
                         title: Text("Simple Event"),
                         onTap: (){
-                          widget.listCubit.add(
+                          widget.listCubit.save(
                             SimpleEvent(
                               id: const Uuid().v1(),
                               start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),
@@ -455,7 +455,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                       ListTile(
                         title: Text("Task Due"),
                         onTap: (){
-                          widget.listCubit.add(
+                          widget.listCubit.save(
                             TaskDue(
                               id: const Uuid().v1(),
                               start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),
@@ -467,7 +467,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                       ListTile(
                         title: Text("Break"),
                         onTap: (){
-                          widget.listCubit.add(
+                          widget.listCubit.save(
                             Break(
                               id: const Uuid().v1(),
                               start: timestamp.subtract(Duration(minutes: roundedMinutes % 60)),

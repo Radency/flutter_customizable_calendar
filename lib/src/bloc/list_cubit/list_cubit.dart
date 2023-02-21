@@ -6,7 +6,7 @@ part 'list_state.dart';
 class ListCubit extends Cubit<ListState> {
   ListCubit() : super(ListState(events: {}, breaks: {}));
 
-  void add(event) {
+  void save(event) {
     if (event is Break) {
       emit(state.copyWith(breaks: state.breaks..[event.id] = event));
     }
@@ -15,7 +15,7 @@ class ListCubit extends Cubit<ListState> {
     }
   }
 
-  void addAll({List<FloatingCalendarEvent>? events, List<Break>? breaks}) {
+  void saveAll({List<FloatingCalendarEvent>? events, List<Break>? breaks}) {
     if (events != null) {
       emit(state.copyWith(events: state.events..addEntries(events.map((e) => MapEntry(e.id, e)))));
     }
