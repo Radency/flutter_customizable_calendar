@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
@@ -115,6 +116,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   DraggableEventTheme get _draggableEventTheme =>
       widget.timelineTheme.draggableEventTheme;
+
+  bool _edited = false;
 
   /// Needs to make interaction between a timeline and the overlay
   void onEventLongPressStart(LongPressStartDetails details) {
@@ -423,10 +426,16 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
           },
           onPanEnd: (details) {
             if (_resizing) {
+              setState((){
+                _edited = true;
+              });
               _resizing = false;
               widget.onResizingEnd?.call();
               _updateEventHeightAndDuration();
             } else if (_dragging) {
+              setState((){
+                _edited = true;
+              });
               _dragging = false;
               widget.onDragEnd?.call();
               _pointerTimePoint =
@@ -465,6 +474,19 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             bottom: widget.padding.bottom,
             child: Overlay(key: _overlayKey),
           ),
+          // if (_edited)
+          //   Align(
+          //     alignment: Alignment.bottomRight,
+          //     child: IconButton(
+          //       icon: Icon(Icons.done),
+          //       onPressed: (){
+          //         context.read<ListCubit>().save(widget.event.value);
+          //         setState((){
+          //           _edited = false;
+          //         });
+          //       },
+          //     ),
+          //   )
         ],
       ),
     );
