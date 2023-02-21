@@ -31,6 +31,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     this.onSizeUpdate,
     this.onResizingEnd,
     this.onDropped,
+    this.onChanged,
     required this.getTimelineBox,
     required this.getLayoutBox,
     required this.getEventBox,
@@ -66,6 +67,9 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
 
   /// Is called just after user stops resizing the event view
   final void Function()? onResizingEnd;
+
+  /// Is called just after the event is changed
+  final void Function(T)? onChanged;
 
   /// Is called just after the event is dropped
   final void Function(T)? onDropped;
@@ -310,6 +314,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     widget.event.value =
         widget.event.value!.copyWith(start: eventStartDate) as T;
+    // widget.onChanged?.call(widget.event.value!);
   }
 
   void _updateEventHeightAndDuration() {
@@ -326,6 +331,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     widget.event.value =
         (event as EditableCalendarEvent).copyWith(duration: eventDuration) as T;
+    // widget.onChanged?.call(widget.event.value!);
   }
 
   void _animateBounds() =>
@@ -441,6 +447,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
               _updateEventOriginAndStart();
             }
+            widget.onChanged?.call(widget.event.value!);
           },
           onPanCancel: () {
             _resizing = false;
@@ -479,7 +486,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
           //     child: IconButton(
           //       icon: Icon(Icons.done),
           //       onPressed: (){
-          //         context.read<ListCubit>().save(widget.event.value);
+          //         // context.read<ListCubit>().save(widget.event.value);
+          //         widget.onChanged?.call(widget.event.value!);
           //         setState((){
           //           _edited = false;
           //         });

@@ -38,6 +38,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onDateLongPress,
     this.onEventTap,
     this.onEventUpdated,
+    this.onDiscardChanges,
   });
 
   /// Controller which allows to control the view
@@ -69,6 +70,10 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Is called after an event is modified by user
   final void Function(T)? onEventUpdated;
+
+  /// Is called after user discards changes for event
+  final void Function(T)? onDiscardChanges;
+
   @override
   State<DaysView<T>> createState() => _DaysViewState<T>();
 }
@@ -283,7 +288,8 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               onDragEnd: _stopAutoScrolling,
               onSizeUpdate: _autoScrolling,
               onResizingEnd: _stopAutoScrolling,
-              onDropped: widget.onEventUpdated,
+              onDropped: widget.onDiscardChanges,
+              onChanged: widget.onEventUpdated,
               getTimelineBox: _getTimelineBox,
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
