@@ -37,19 +37,19 @@ class App extends StatelessWidget {
       ),
       SimpleEvent(
         id: 'Event 2',
-        start: today.add(const Duration(hours: 11, minutes: 59)),
+        start: today.add(const Duration(hours: 12)),
         duration: const Duration(minutes: 30),
         title: 'Event 2',
       ),
       SimpleEvent(
         id: 'Event 1',
-        start: today.add(const Duration(hours: 11, minutes: 59)),
+        start: today.add(const Duration(hours: 12)),
         duration: const Duration(minutes: 40),
         title: 'Event 1',
       ),
       SimpleEvent(
         id: 'Event 3',
-        start: today.add(const Duration(days: 2, hours: 10, minutes: 59)),
+        start: today.add(const Duration(days: 2, hours: 11)),
         duration: const Duration(minutes: 45),
         title: 'Event 3',
       ),
