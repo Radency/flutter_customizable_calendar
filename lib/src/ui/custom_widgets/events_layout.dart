@@ -90,7 +90,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                   child: ValueListenableBuilder(
                     valueListenable: elevatedEvent,
                     builder: (context, elevatedEvent, child) => Opacity(
-                      opacity: (elevatedEvent == event) ? 0.5 : 1,
+                      opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
                       child: child,
                     ),
                     child: EventView(

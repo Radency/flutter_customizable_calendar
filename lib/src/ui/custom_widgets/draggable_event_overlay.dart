@@ -314,7 +314,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     widget.event.value =
         widget.event.value!.copyWith(start: eventStartDate) as T;
-    // widget.onChanged?.call(widget.event.value!);
   }
 
   void _updateEventHeightAndDuration() {
@@ -331,7 +330,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     widget.event.value =
         (event as EditableCalendarEvent).copyWith(duration: eventDuration) as T;
-    // widget.onChanged?.call(widget.event.value!);
   }
 
   void _animateBounds() =>
@@ -397,7 +395,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         if (elevatedEvent == null) return child!;
 
         return GestureDetector(
-          onTap: () => _dropEvent(elevatedEvent),
+          onTap: () {
+            _dropEvent(elevatedEvent);
+          },
           onPanDown: (details) {
             final renderIds = _globalHitTest(details.globalPosition);
             final ids = renderIds.map((renderId) => renderId.id);
@@ -431,23 +431,21 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
           },
           onPanEnd: (details) {
             if (_resizing) {
-              setState((){
-                _edited = true;
-              });
               _resizing = false;
               widget.onResizingEnd?.call();
               _updateEventHeightAndDuration();
             } else if (_dragging) {
-              setState((){
-                _edited = true;
-              });
               _dragging = false;
               widget.onDragEnd?.call();
               _pointerTimePoint =
                   _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
               _updateEventOriginAndStart();
             }
-            widget.onChanged?.call(widget.event.value!);
+            if (!_edited) {
+              setState((){
+                _edited = true;
+              });
+            }
           },
           onPanCancel: () {
             _resizing = false;
@@ -480,20 +478,23 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             bottom: widget.padding.bottom,
             child: Overlay(key: _overlayKey),
           ),
-          // if (_edited)
-          //   Align(
-          //     alignment: Alignment.bottomRight,
-          //     child: IconButton(
-          //       icon: Icon(Icons.done),
-          //       onPressed: (){
-          //         // context.read<ListCubit>().save(widget.event.value);
-          //         widget.onChanged?.call(widget.event.value!);
-          //         setState((){
-          //           _edited = false;
-          //         });
-          //       },
-          //     ),
-          //   )
+          if (_edited)
+            Align(
+              alignment: Alignment.bottomRight,
+              child: IconButton(
+                icon: Icon(Icons.done),
+                onPressed: () {
+                  // context.read<ListCubit>().save(widget.event.value);
+                  widget.onChanged?.call(widget.event.value!);
+                  setState((){
+                    _edited = false;
+                    widget.event.value = null;
+                    _removeEntries();
+
+                  });
+                },
+              ),
+            )
         ],
       ),
     );

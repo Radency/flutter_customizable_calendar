@@ -298,7 +298,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
               setState(() {
                 editedEvent = obj;
               });
-              // context.read<ListCubit>().save(editedEvent);
+              context.read<ListCubit>().save(editedEvent);
             },
             onDiscardChanges: (obj){
               print(obj);
@@ -307,19 +307,19 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
               });
             },
           ),
-      if (editedEvent != null)
-        Align(
-          alignment: Alignment.bottomRight,
-          child: IconButton(
-            icon: Icon(Icons.done),
-            onPressed: (){
-              context.read<ListCubit>().save(editedEvent);
-              setState((){
-                editedEvent = null;
-              });
-            },
-          ),
-        )
+      // if (editedEvent != null)
+      //   Align(
+      //     alignment: Alignment.bottomRight,
+      //     child: IconButton(
+      //       icon: Icon(Icons.done),
+      //       onPressed: (){
+      //         context.read<ListCubit>().save(editedEvent);
+      //         setState((){
+      //           editedEvent = null;
+      //         });
+      //       },
+      //     ),
+      //   )
     ],
   );
 
