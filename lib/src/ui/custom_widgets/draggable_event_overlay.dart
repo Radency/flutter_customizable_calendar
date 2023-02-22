@@ -280,6 +280,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   void _dropEvent(T event) {
+    _edited = false;
+
     if (_animationController.isAnimating) _animationController.stop();
 
     _boundsTween.end = _eventBounds.value;
@@ -287,9 +289,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       widget.event.value = null;
       _removeEntries();
       widget.onDropped?.call(event);
-    });
-    setState(() {
-      _edited = false;
     });
   }
 
@@ -486,11 +485,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                 onPressed: () {
                   // context.read<ListCubit>().save(widget.event.value);
                   widget.onChanged?.call(widget.event.value!);
+                  _dropEvent(widget.event.value!);
                   setState((){
                     _edited = false;
-                    widget.event.value = null;
                     _removeEntries();
-
+                    widget.event.value = null;
+                    _resizing = false;
+                    _dragging = false;
                   });
                 },
               ),
