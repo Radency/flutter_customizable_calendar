@@ -282,10 +282,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   void _dropEvent(T event) {
     if (_animationController.isAnimating) _animationController.stop();
 
-    _boundsTween = RectTween(
-      end: _eventBounds.value,
-      begin: _getEventBounds(event),
-    );
+    _boundsTween.end = _eventBounds.value;
     _animationController.reverse().whenComplete(() {
       widget.event.value = null;
       _removeEntries();
