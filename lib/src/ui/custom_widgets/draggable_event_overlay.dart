@@ -288,6 +288,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       _removeEntries();
       widget.onDropped?.call(event);
     });
+    setState(() {
+      _edited = false;
+    });
   }
 
   void _updateEventOriginAndStart() {
