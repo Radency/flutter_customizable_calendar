@@ -219,6 +219,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
   Widget _daysView() => Stack(
     children: [
       DaysView<T>(
+            saverConfig: _saverConfig(),
             controller: _daysViewController,
             monthPickerTheme: _periodPickerTheme,
             daysListTheme: DaysListTheme(
@@ -307,23 +308,11 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
               });
             },
           ),
-      // if (editedEvent != null)
-      //   Align(
-      //     alignment: Alignment.bottomRight,
-      //     child: IconButton(
-      //       icon: Icon(Icons.done),
-      //       onPressed: (){
-      //         context.read<ListCubit>().save(editedEvent);
-      //         setState((){
-      //           editedEvent = null;
-      //         });
-      //       },
-      //     ),
-      //   )
     ],
   );
 
   Widget _weekView() => WeekView<T>(
+        saverConfig: _saverConfig(),
         controller: _weekViewController,
         weekPickerTheme: _periodPickerTheme,
         divider: Divider(
@@ -361,6 +350,13 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       );
 
   Widget _monthView() => MonthView<T>();
+
+  SaverConfig _saverConfig() => SaverConfig(
+    child: Container(
+      padding: EdgeInsets.all(15),
+      child: Icon(Icons.done)
+    ),
+  );
 
   TextStyle get _textStyle => TextStyle(
         fontSize: 12,

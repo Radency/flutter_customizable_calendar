@@ -39,6 +39,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onEventTap,
     this.onEventUpdated,
     this.onDiscardChanges,
+    required this.saverConfig,
   });
 
   /// Controller which allows to control the view
@@ -73,6 +74,9 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Is called after user discards changes for event
   final void Function(T)? onDiscardChanges;
+
+  /// Properties for widget which is used to save edited event
+  final SaverConfig saverConfig;
 
   @override
   State<DaysView<T>> createState() => _DaysViewState<T>();
@@ -293,6 +297,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               getTimelineBox: _getTimelineBox,
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
+              saverConfig: widget.saverConfig,
               child: _timeline(),
             ),
           ),

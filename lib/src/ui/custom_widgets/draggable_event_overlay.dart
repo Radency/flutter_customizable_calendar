@@ -35,6 +35,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     required this.getTimelineBox,
     required this.getLayoutBox,
     required this.getEventBox,
+    required this.saverConfig,
     required this.child,
   }) : assert(
           viewType != CalendarView.month,
@@ -82,6 +83,9 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
 
   /// Function which allows to find the event view's [RenderBox] in context
   final RenderBox? Function(T) getEventBox;
+
+  /// Properties for widget which is used to save edited event
+  final SaverConfig saverConfig;
 
   /// Scrollable view which needs to be wrapped
   final Widget child;
@@ -478,23 +482,20 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             child: Overlay(key: _overlayKey),
           ),
           if (_edited)
-            Align(
-              alignment: Alignment.bottomRight,
-              child: IconButton(
-                icon: Icon(Icons.done),
-                onPressed: () {
-                  // context.read<ListCubit>().save(widget.event.value);
-                  widget.onChanged?.call(widget.event.value!);
-                  _dropEvent(widget.event.value!);
-                  setState((){
-                    _edited = false;
-                    _removeEntries();
-                    widget.event.value = null;
-                    _resizing = false;
-                    _dragging = false;
-                  });
-                },
-              ),
+            Saver(
+              alignment: widget.saverConfig.alignment,
+              onPressed: () {
+                widget.onChanged?.call(widget.event.value!);
+                _dropEvent(widget.event.value!);
+                setState((){
+                  _edited = false;
+                  _removeEntries();
+                  widget.event.value = null;
+                  _resizing = false;
+                  _dragging = false;
+                });
+              },
+              child: widget.saverConfig.child,
             )
         ],
       ),
