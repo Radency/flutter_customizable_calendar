@@ -115,8 +115,6 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
 
   late final ListCubit listCubit;
 
-  T? editedEvent;
-
   @override
   void initState() {
     super.initState();
@@ -296,16 +294,10 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
             onEventTap: print,
             onEventUpdated: (obj){
               print(obj);
-              setState(() {
-                editedEvent = obj;
-              });
-              context.read<ListCubit>().save(editedEvent);
+              context.read<ListCubit>().save(obj);
             },
             onDiscardChanges: (obj){
               print(obj);
-              setState(() {
-                editedEvent = null;
-              });
             },
           ),
     ],
@@ -344,9 +336,65 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         ),
         breaks: listCubit.state.breaks.values.toList(),
         events: listCubit.state.events.values.cast<T>().toList(),
-        onDateLongPress: print,
+        onDateLongPress: (timestamp) async {
+          print(timestamp);
+          final _minute = timestamp.minute;
+          await showModalBottomSheet(
+            context: context,
+            builder: (context) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ListTile(
+                  title: Text("Simple Event"),
+                  onTap: (){
+                    listCubit.save(
+                      SimpleEvent(
+                        id: const Uuid().v1(),
+                        start: timestamp.subtract(Duration(minutes: _minute)),
+                        duration: Duration(hours: 1),
+                        title: "Simple event",
+                      ) as T,
+                    );
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: Text("Task Due"),
+                  onTap: (){
+                    listCubit.save(
+                      TaskDue(
+                        id: const Uuid().v1(),
+                        start: timestamp.subtract(Duration(minutes: _minute)),
+                      ) as T,
+                    );
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: Text("Break"),
+                  onTap: (){
+                    listCubit.save(
+                      Break(
+                        id: const Uuid().v1(),
+                        start: timestamp.subtract(Duration(minutes: _minute)),
+                        duration: Duration(hours: 1),
+                      ),
+                    );
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+          );
+        },
         onEventTap: print,
-        onEventUpdated: print,
+        onEventUpdated: (obj){
+          print(obj);
+          context.read<ListCubit>().save(obj);
+        },
+        onDiscardChanges: (obj){
+          print(obj);
+        },
       );
 
   Widget _monthView() => MonthView<T>();

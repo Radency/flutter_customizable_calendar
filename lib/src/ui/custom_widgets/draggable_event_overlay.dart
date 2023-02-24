@@ -284,7 +284,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   void _dropEvent(T event) {
-    _edited = false;
+    setState(() {
+      _edited = false;
+    });
 
     if (_animationController.isAnimating) _animationController.stop();
 

@@ -38,6 +38,7 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onDateLongPress,
     this.onEventTap,
     this.onEventUpdated,
+    this.onDiscardChanges,
     required this.saverConfig,
   });
 
@@ -74,6 +75,9 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Is called after an event is modified by user
   final void Function(T)? onEventUpdated;
+
+  /// Is called after user discards changes for event
+  final void Function(T)? onDiscardChanges;
 
   /// Properties for widget which is used to save edited event
   final SaverConfig saverConfig;
@@ -247,7 +251,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               onDragEnd: _stopAutoScrolling,
               onSizeUpdate: _autoScrolling,
               onResizingEnd: _stopAutoScrolling,
-              onDropped: widget.onEventUpdated,
+              onDropped: widget.onDiscardChanges,
+              onChanged: widget.onEventUpdated,
               getTimelineBox: _getTimelineBox,
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
