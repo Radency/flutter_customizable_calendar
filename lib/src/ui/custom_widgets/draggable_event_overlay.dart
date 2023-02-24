@@ -305,7 +305,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     final layoutPosition =
         layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
     final originTimePoint = _pointerTimePoint.subtract(_startDiff);
-    final originDayDate = DateUtils.dateOnly(originTimePoint);
+    // final originDayDate = DateUtils.dateOnly(originTimePoint);
+    final originDayDate = DateUtils.dateOnly(dayDate);
     final minutes = originTimePoint.minute +
         (originTimePoint.hour * Duration.minutesPerHour);
     final roundedMinutes = (minutes / _cellExtent).round() * _cellExtent;
