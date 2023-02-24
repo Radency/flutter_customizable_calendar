@@ -401,6 +401,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
 
   SaverConfig _saverConfig() => SaverConfig(
     child: Container(
+      color: Colors.transparent,
       padding: EdgeInsets.all(15),
       child: Icon(Icons.done)
     ),
