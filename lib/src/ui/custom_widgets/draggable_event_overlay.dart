@@ -31,9 +31,11 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     this.onSizeUpdate,
     this.onResizingEnd,
     this.onDropped,
+    this.onChanged,
     required this.getTimelineBox,
     required this.getLayoutBox,
     required this.getEventBox,
+    required this.saverConfig,
     required this.child,
   }) : assert(
           viewType != CalendarView.month,
@@ -67,6 +69,9 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
   /// Is called just after user stops resizing the event view
   final void Function()? onResizingEnd;
 
+  /// Is called just after the event is changed
+  final void Function(T)? onChanged;
+
   /// Is called just after the event is dropped
   final void Function(T)? onDropped;
 
@@ -78,6 +83,9 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
 
   /// Function which allows to find the event view's [RenderBox] in context
   final RenderBox? Function(T) getEventBox;
+
+  /// Properties for widget which is used to save edited event
+  final SaverConfig saverConfig;
 
   /// Scrollable view which needs to be wrapped
   final Widget child;
@@ -115,6 +123,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   DraggableEventTheme get _draggableEventTheme =>
       widget.timelineTheme.draggableEventTheme;
+
+  bool _edited = false;
 
   /// Needs to make interaction between a timeline and the overlay
   void onEventLongPressStart(LongPressStartDetails details) {
@@ -274,12 +284,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   void _dropEvent(T event) {
+    setState(() {
+      _edited = false;
+    });
+
     if (_animationController.isAnimating) _animationController.stop();
 
-    _boundsTween = RectTween(
-      end: _eventBounds.value,
-      begin: _getEventBounds(event),
-    );
+    _boundsTween.end = _eventBounds.value;
     _animationController.reverse().whenComplete(() {
       widget.event.value = null;
       _removeEntries();
@@ -389,7 +400,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         if (elevatedEvent == null) return child!;
 
         return GestureDetector(
-          onTap: () => _dropEvent(elevatedEvent),
+          onTap: () {
+            _dropEvent(elevatedEvent);
+          },
           onPanDown: (details) {
             final renderIds = _globalHitTest(details.globalPosition);
             final ids = renderIds.map((renderId) => renderId.id);
@@ -433,6 +446,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
               _updateEventOriginAndStart();
             }
+            if (!_edited) {
+              setState((){
+                _edited = true;
+              });
+            }
           },
           onPanCancel: () {
             _resizing = false;
@@ -465,6 +483,22 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             bottom: widget.padding.bottom,
             child: Overlay(key: _overlayKey),
           ),
+          if (_edited)
+            Saver(
+              alignment: widget.saverConfig.alignment,
+              onPressed: () {
+                widget.onChanged?.call(widget.event.value!);
+                _dropEvent(widget.event.value!);
+                setState((){
+                  _edited = false;
+                  _removeEntries();
+                  widget.event.value = null;
+                  _resizing = false;
+                  _dragging = false;
+                });
+              },
+              child: widget.saverConfig.child,
+            )
         ],
       ),
     );

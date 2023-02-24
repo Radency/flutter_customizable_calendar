@@ -9,6 +9,8 @@ dependencies:
     sdk: flutter
   flutter_customizable_calendar:
     path: ../
+  flutter_bloc: ^8.1.1
+  uuid: ^3.0.7
 
 dev_dependencies:
   flutter_test:

@@ -27,7 +27,7 @@ abstract class CalendarEvent extends Equatable with Comparable<CalendarEvent> {
   DateTime get end => start.add(duration);
 
   @override
-  List<Object?> get props => [id];
+  List<Object?> get props => [id, start, duration];
 
   @override
   bool? get stringify => true;
