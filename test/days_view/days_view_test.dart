@@ -50,7 +50,10 @@ void main() {
           const year = 2022;
           const month = DateTime.june;
           final daysInMonth = DateUtils.getDaysInMonth(year, month);
-          final view = DaysView(controller: controller);
+          final view = DaysView(
+            controller: controller,
+            saverConfig: _saverConfig(),
+          );
 
           when(() => controller.initialDate).thenReturn(DateTime(year, month));
           when(() => controller.endDate)
@@ -72,7 +75,10 @@ void main() {
       testWidgets(
         'Current day is focused',
         (widgetTester) async {
-          final view = DaysView(controller: controller);
+          final view = DaysView(
+            controller: controller,
+            saverConfig: _saverConfig(),
+          );
 
           when(() => controller.initialDate).thenReturn(currentMonth);
           when(() => controller.endDate).thenReturn(currentMonthEnd);
@@ -101,6 +107,7 @@ void main() {
 
           final view = DaysView(
             controller: controller,
+            saverConfig: _saverConfig(),
             onDateLongPress: (date) => pressedDate = date,
           );
 
@@ -137,6 +144,7 @@ void main() {
           );
           final view = DaysView<FloatingCalendarEvent>(
             controller: controller,
+            saverConfig: _saverConfig(),
             onEventTap: (event) => tappedEvent = event,
             events: [event],
           );
@@ -168,6 +176,7 @@ void main() {
           );
           final view = DaysView(
             controller: controller,
+            saverConfig: _saverConfig(),
             events: [event],
           );
 
@@ -206,6 +215,7 @@ void main() {
           );
           final view = DaysView(
             controller: controller,
+            saverConfig: _saverConfig(),
             events: [event],
           );
 
@@ -256,6 +266,7 @@ void main() {
           );
           final view = DaysView(
             controller: controller,
+            saverConfig: _saverConfig(),
             events: [event],
           );
 
@@ -290,7 +301,10 @@ void main() {
       testWidgets(
         'Switching to another month changes the days list',
         (widgetTester) async {
-          final view = DaysView(controller: controller);
+          final view = DaysView(
+            controller: controller,
+            saverConfig: _saverConfig(),
+          );
 
           when(() => controller.initialDate).thenReturn(currentMonth);
           when(() => controller.endDate).thenReturn(nextMonthEnd);
@@ -358,6 +372,7 @@ void main() {
           );
           final view = DaysView(
             controller: controller,
+            saverConfig: _saverConfig(),
             events: [oneEvent, otherEvent],
           );
 
@@ -401,3 +416,10 @@ void main() {
     skip: false,
   );
 }
+
+SaverConfig _saverConfig() => SaverConfig(
+  child: Container(
+      padding: EdgeInsets.all(15),
+      child: Icon(Icons.done)
+  ),
+);
