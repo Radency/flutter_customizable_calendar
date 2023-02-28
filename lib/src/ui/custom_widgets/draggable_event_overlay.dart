@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
@@ -305,7 +306,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     final layoutPosition =
         layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
     final originTimePoint = _pointerTimePoint.subtract(_startDiff);
-    final originDayDate = DateUtils.dateOnly(originTimePoint);
+    // final originDayDate = DateUtils.dateOnly(originTimePoint);
+    final originDayDate = DateUtils.dateOnly(dayDate);
     final minutes = originTimePoint.minute +
         (originTimePoint.hour * Duration.minutesPerHour);
     final roundedMinutes = (minutes / _cellExtent).round() * _cellExtent;
@@ -377,19 +379,21 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   void didChangeMetrics() {
     super.didChangeMetrics();
 
-    final event = widget.event.value;
-    if (event == null) return;
-    final dayDate = DateUtils.dateOnly(event.start);
-    final layoutBox = widget.getLayoutBox(dayDate);
-    if (layoutBox == null) return;
-    final timelineBox = widget.getTimelineBox();
-    final layoutPosition =
-        layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+      final event = widget.event.value;
+      if (event == null) return;
+      final dayDate = DateUtils.dateOnly(event.start);
+      final layoutBox = widget.getLayoutBox(dayDate);
+      if (layoutBox == null) return;
+      final timelineBox = widget.getTimelineBox();
+      final layoutPosition =
+      layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
 
-    _eventBounds.update(
-      dx: layoutPosition.dx,
-      width: layoutBox.size.width,
-    );
+      _eventBounds.update(
+        dx: layoutPosition.dx,
+        width: layoutBox.size.width,
+      );
+    });
   }
 
   @override
