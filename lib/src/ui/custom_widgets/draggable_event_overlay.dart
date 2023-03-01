@@ -543,12 +543,74 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
   }
 
+  List<Rect> _rectForDay(List<Rect> result, Rect bounds, DateTime dayDate) {
+    if(widget.event.value == null) {
+      return [];
+    }
+
+    final layoutBox = widget.getLayoutBox(dayDate)!;
+    final timelineBox = widget.getTimelineBox();
+    final layoutPosition =
+        layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+    result.add(Rect.fromLTWH(
+      layoutPosition.dx,
+      bounds.top,
+      bounds.width,
+      bounds.height,
+    ));
+
+    Rect _rectAfter = Rect.fromLTWH(
+      layoutPosition.dx,
+      bounds.top - 24 * _hourExtent,
+      bounds.width,
+      bounds.height,
+    );
+    DateTime _dateAfter = dayDate.add(Duration(days: 1));
+
+    if(widget.event.value!.end.isAfter(_dateAfter)) {
+      result.addAll(_rectForDay(result, _rectAfter, _dateAfter));
+    }
+
+    Rect _rectBefore = Rect.fromLTWH(
+      layoutPosition.dx,
+      bounds.top + 24 * _hourExtent,
+      bounds.width,
+      bounds.height,
+    );
+    DateTime _dateBefore = dayDate.subtract(Duration(days: 1));
+
+    if(widget.event.value!.end.isBefore(_dateBefore)) {
+      result.addAll(_rectForDay(result, _rectBefore, _dateBefore));
+    }
+
+    return result;
+  }
+
   Widget _floatingEventBuilder(BuildContext context) => ValueListenableBuilder(
         valueListenable: _eventBounds,
-        builder: (context, rect, child) => Positioned.fromRect(
-          rect: rect,
-          child: child!,
-        ),
+        builder: (context, rect, child) {
+          List<Rect> _rects = [];
+          DateTime? date = _getTargetDayAt(_pointerLocation);
+          if (mounted && date != null && widget.event.value != null) {
+            // _rects = _rectForDay([], rect, date);
+            _rects = _rectForDay([], rect, date);
+          }
+
+          return Stack(
+            children: [
+              Positioned.fromRect(
+                rect: rect,
+                child: child!,
+              ),
+              if (widget.viewType == CalendarView.week)
+                for (Rect _rect in _rects)
+                  Positioned.fromRect(
+                    rect: _rect,
+                    child: child!,
+                  )
+            ],
+          );
+        },
         child: CompositedTransformTarget(
           link: _layerLink,
           child: RenderIdProvider(
