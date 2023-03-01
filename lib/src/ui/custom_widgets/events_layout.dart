@@ -51,7 +51,8 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   final void Function(T)? onEventTap;
 
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) => list
-      .where((event) => DateUtils.isSameDay(event.start, dayDate))
+      .where((event) => DateUtils.isSameDay(event.start, dayDate) ||
+      (event.start.isBefore(dayDate) && event.end.isAfter(dayDate)))
       .toList(growable: false);
 
   @override
@@ -94,7 +95,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                       child: child,
                     ),
                     child: EventView(
-                      key: eventsKeys[event] ??= GlobalKey(),
+                      // key: eventsKeys[event] ??= GlobalKey(),
                       event,
                       theme: timelineTheme.floatingEventsTheme,
                       onTap: () => onEventTap?.call(event),
