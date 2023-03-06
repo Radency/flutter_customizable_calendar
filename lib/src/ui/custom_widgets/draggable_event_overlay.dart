@@ -424,6 +424,14 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             _pointerLocation = details.globalPosition;
             _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
             _startDiff = _pointerTimePoint.difference(event.start);
+
+            // Prevent accident day addition on WeekView
+            if (widget.viewType == CalendarView.week) {
+              _startDiff -= Duration(days: _startDiff.inDays);
+              if (_startDiff.isNegative) {
+                _startDiff += Duration(days: 1);
+              }
+            }
           },
           onPanUpdate: (details) {
             if (_resizing) {
