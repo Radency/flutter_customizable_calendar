@@ -126,6 +126,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       widget.timelineTheme.draggableEventTheme;
 
   bool _edited = false;
+  List<Rect> _rects = [];
 
   /// Needs to make interaction between a timeline and the overlay
   void onEventLongPressStart(LongPressStartDetails details) {
@@ -182,6 +183,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _eventBounds.origin += dragUpdateDetails.delta;
     if (!_resetPointerLocation(details.globalPosition)) return;
     _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+    _rects = _rectForDay(_eventBounds.value, _pointerTimePoint);
   }
 
   /// Needs to make interaction between a timeline and the overlay
@@ -190,6 +192,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     widget.onDragEnd?.call();
     _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
     _updateEventOriginAndStart();
+    _rects = _rectForDay(_eventBounds.value, _pointerTimePoint);
   }
 
   /// Needs to make interaction between a timeline and the overlay
@@ -443,6 +446,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               if (!_resetPointerLocation(details.globalPosition)) return;
               _pointerTimePoint =
                   _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+              _rects = _rectForDay(_eventBounds.value, _pointerTimePoint);
             }
           },
           onPanEnd: (details) {
@@ -456,6 +460,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               _pointerTimePoint =
                   _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
               _updateEventOriginAndStart();
+              _rects = _rectForDay(_eventBounds.value, _pointerTimePoint);
             }
             if (!_edited) {
               setState((){
@@ -524,11 +529,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   Widget _elevatedEventView() {
-    List<Rect> _rects = [];
-    DateTime? date = _getTargetDayAt(_pointerLocation);
-    if (date != null && widget.event.value != null) {
-      _rects = _rectForDay(_eventBounds.value, date);
-    }
+    // List<Rect> _rects = [];
+    // if (widget.event.value != null) {
+    //   _rects = _rectForDay(_eventBounds.value, _pointerTimePoint);
+    // }
 
     return Stack(
       children: [
@@ -631,20 +635,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     return ValueListenableBuilder(
       valueListenable: widget.event,
       builder: (context, event, child) {
-        // List<Rect> _rects = [];
-        // DateTime? date = _getTargetDayAt(_pointerLocation);
-        // if (mounted && date != null && widget.event.value != null) {
-        //   _rects = _rectForDay(_eventBounds.value, date);
-        // }
 
         return ValueListenableBuilder(
             valueListenable: _eventBounds,
             builder: (context, rect, child) {
-              List<Rect> _rects = [];
-              DateTime? date = _getTargetDayAt(_pointerLocation);
-              if (date != null) {
-                _rects = _rectForDay(rect, date);
-              }
+              // List<Rect> _rects = _rectForDay(rect, _pointerTimePoint);
 
               return Stack(
                 children: [
