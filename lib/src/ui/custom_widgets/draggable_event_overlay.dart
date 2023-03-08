@@ -323,6 +323,16 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     widget.event.value =
         widget.event.value!.copyWith(start: eventStartDate) as T;
+    _eventBounds.update(
+      dx: layoutPosition.dx,
+      dy: _eventBounds.dy - offset,
+    );
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+      // _rects = _rectForDay(_eventBounds.value, dayDate)
+      setState(() {
+
+      });
+    });
   }
 
   void _updateEventHeightAndDuration() {
@@ -545,7 +555,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               onTap: () {},
             ),
         ),
-        if (widget.viewType == CalendarView.week)
+        if (mounted && widget.viewType == CalendarView.week)
           for (Rect _rect in _rects)
             Positioned.fromRect(
               rect: _rect,
@@ -586,8 +596,15 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     }
 
     dayDate = DateUtils.dateOnly(dayDate);
-    List<Rect> result = [];
+    final layoutBox = widget.getLayoutBox(dayDate);
+    if (layoutBox == null) {
+      return [];
+    }
     final timelineBox = widget.getTimelineBox();
+    final _layoutPosition = layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+    final _delta = bounds.topLeft - _layoutPosition;
+
+    List<Rect> result = [];
     // DateTime _dateBefore = dayDate.subtract(Duration(days: 1));
     DateTime _dateBefore = dayDate.copyWith();
     // DateTime _dateAfter = dayDate.copyWith();
@@ -602,7 +619,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       final layoutPosition =
       layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
       result.add(Rect.fromLTWH(
-        layoutPosition.dx,
+        layoutPosition.dx + _delta.dx,
         bounds.top - 24 * i * _hourExtent,
         bounds.width,
         bounds.height,
@@ -634,42 +651,29 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   Widget _floatingEventBuilder(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: widget.event,
-      builder: (context, event, child) {
+      valueListenable: _eventBounds,
+      builder: (context, rect, child) {
+        // List<Rect> _rects = [];
 
-        return ValueListenableBuilder(
-            valueListenable: _eventBounds,
-            builder: (context, rect, child) {
-              // List<Rect> _rects = [];
+        SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+          _rects = _rectForDay(rect, _pointerTimePoint);
+        });
 
-              SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-                _rects = _rectForDay(rect, _pointerTimePoint);
-              });
-
-              return Stack(
-                children: [
-                  // if (widget.viewType == CalendarView.days)
-                  Positioned.fromRect(
-                    rect: rect,
-                    child: child!,
-                  ),
-                  if (widget.viewType == CalendarView.week)
-                    for (Rect _rect in _rects)
-                      Positioned.fromRect(
-                        rect: _rect,
-                        child: child!,
-                      )
-                ],
-              );
-            },
-            child: CompositedTransformTarget(
-              link: _layerLink,
-              child: RenderIdProvider(
-                id: Constants.elevatedEventId,
-                child: _elevatedEventView(),
-              ),
+        return Stack(
+          children: [
+            // if (widget.viewType == CalendarView.days)
+            Positioned.fromRect(
+              rect: rect,
+              child: child!,
             ),
-          );
+            if (widget.viewType == CalendarView.week)
+              for (Rect _rect in _rects)
+                Positioned.fromRect(
+                  rect: _rect,
+                  child: child!,
+                )
+          ],
+        );
       },
       child: CompositedTransformTarget(
         link: _layerLink,
