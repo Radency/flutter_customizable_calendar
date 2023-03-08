@@ -6,7 +6,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
-import 'package:flutter_customizable_calendar/src/utils/multi_rect_notifier.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
 /// A key holder of all DraggableEventView keys
@@ -105,7 +104,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   final _overlayKey = GlobalKey<OverlayState>();
   final _layerLink = LayerLink();
   final _eventBounds = RectNotifier();
-  final _multiBounds = MultiRectNotifier();
   late AnimationController _animationController;
   late Animation<double> _animation;
   late RectTween _boundsTween;
@@ -323,12 +321,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     widget.event.value =
         widget.event.value!.copyWith(start: eventStartDate) as T;
-    _eventBounds.update(
-      dx: layoutPosition.dx,
-      dy: _eventBounds.dy - offset,
-    );
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-      // _rects = _rectForDay(_eventBounds.value, dayDate)
       setState(() {
 
       });
@@ -537,7 +530,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   Widget _elevatedEventView() {
-    // List<Rect> _rects = [];
     if (widget.event.value != null) {
       SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
         _rects = _rectForDay(_eventBounds.value, _pointerTimePoint);
@@ -605,9 +597,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     final _delta = bounds.topLeft - _layoutPosition;
 
     List<Rect> result = [];
-    // DateTime _dateBefore = dayDate.subtract(Duration(days: 1));
     DateTime _dateBefore = dayDate.copyWith();
-    // DateTime _dateAfter = dayDate.copyWith();
     DateTime _dateAfter = dayDate.add(Duration(days: 1));
 
     int i = 1;
@@ -653,20 +643,17 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     return ValueListenableBuilder(
       valueListenable: _eventBounds,
       builder: (context, rect, child) {
-        // List<Rect> _rects = [];
-
         SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
           _rects = _rectForDay(rect, _pointerTimePoint);
         });
 
         return Stack(
           children: [
-            // if (widget.viewType == CalendarView.days)
             Positioned.fromRect(
               rect: rect,
               child: child!,
             ),
-            if (widget.viewType == CalendarView.week)
+            if (mounted && widget.viewType == CalendarView.week)
               for (Rect _rect in _rects)
                 Positioned.fromRect(
                   rect: _rect,

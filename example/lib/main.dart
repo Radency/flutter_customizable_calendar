@@ -47,12 +47,6 @@ class App extends StatelessWidget {
         duration: const Duration(hours: 46),
         title: 'Event 1',
       ),
-      SimpleEvent(
-        id: 'Event 3',
-        start: today.add(const Duration(days: 3, hours: 15)),
-        duration: const Duration(hours: 23),
-        title: 'Event 3',
-      ),
     ];
 
     return BlocProvider<ListCubit>(
