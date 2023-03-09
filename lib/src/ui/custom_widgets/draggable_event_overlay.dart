@@ -530,11 +530,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   Widget _elevatedEventView() {
-    if (widget.event.value != null) {
-      SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-        _rects = _rectForDay(_eventBounds.value, _pointerTimePoint);
-      });
-    }
+    // if (widget.event.value != null) {
+    //   SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+    //     _rects = _rectForDay(_eventBounds.value, _pointerTimePoint);
+    //   });
+    // }
 
     return Stack(
       children: [
@@ -547,18 +547,18 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               onTap: () {},
             ),
         ),
-        if (mounted && widget.viewType == CalendarView.week)
-          for (Rect _rect in _rects)
-            Positioned.fromRect(
-              rect: _rect,
-              child: EventView(
-                widget.event.value!,
-                key: DraggableEventOverlayKeys.elevatedEvent,
-                theme: widget.timelineTheme.floatingEventsTheme
-                    .copyWith(elevation: _draggableEventTheme.elevation),
-                onTap: () {},
-              ),
-            )
+        // if (mounted && widget.viewType == CalendarView.week)
+        //   for (Rect _rect in _rects)
+        //     Positioned.fromRect(
+        //       rect: _rect,
+        //       child: EventView(
+        //         widget.event.value!,
+        //         key: DraggableEventOverlayKeys.elevatedEvent,
+        //         theme: widget.timelineTheme.floatingEventsTheme
+        //             .copyWith(elevation: _draggableEventTheme.elevation),
+        //         onTap: () {},
+        //       ),
+        //     )
       ],
     );
   }
@@ -657,7 +657,20 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               for (Rect _rect in _rects)
                 Positioned.fromRect(
                   rect: _rect,
-                  child: child!,
+                  child: CompositedTransformFollower(
+                    offset: _rect.topLeft - rect.topLeft,
+                    link: _layerLink,
+                    showWhenUnlinked: false,
+                    // targetAnchor: Alignment.center,
+                    // followerAnchor: Alignment.center,
+                    child: EventView(
+                      widget.event.value!,
+                      key: DraggableEventOverlayKeys.elevatedEvent,
+                      theme: widget.timelineTheme.floatingEventsTheme
+                          .copyWith(elevation: _draggableEventTheme.elevation),
+                      onTap: () {},
+                    ),
+                  ),
                 )
           ],
         );
