@@ -577,7 +577,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     DateTime _dateAfter = dayDate.add(Duration(days: 1));
 
     int i = 1;
-    while (_dateAfter.isBefore(widget.event.value!.end)) {
+    while (i <= 7) {
       final layoutBox = widget.getLayoutBox(_dateAfter);
       if (layoutBox == null) {
         break;
@@ -595,7 +595,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     }
 
     i = 1;
-    while (widget.event.value!.start.isBefore(_dateBefore)) {
+    while (i <= 7) {
       _dateBefore = _dateBefore.subtract(Duration(days: 1));
       final layoutBox = widget.getLayoutBox(_dateBefore);
       if (layoutBox == null) {
@@ -604,14 +604,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       final layoutPosition =
       layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
       result.add(Rect.fromLTWH(
-        layoutPosition.dx,
+        layoutPosition.dx + _delta.dx,
         bounds.top + 24 * i * _hourExtent,
         bounds.width,
         bounds.height,
       ));
       i++;
     }
-
     return result;
   }
 
