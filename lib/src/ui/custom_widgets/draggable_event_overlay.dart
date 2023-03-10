@@ -532,7 +532,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         key: DraggableEventOverlayKeys.elevatedEvent,
         theme: widget.timelineTheme.floatingEventsTheme
             .copyWith(elevation: _draggableEventTheme.elevation),
-        // onTap: () {},
+        onTap: () {},
       );
   }
 
