@@ -721,10 +721,31 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         builder: (context, scale, child) {
           final theme = _draggableEventTheme.sizerTheme;
 
-          return Positioned(
-            width: theme.size.width * scale + theme.extraSpace * 2,
-            height: theme.size.height * scale + theme.extraSpace * 2,
-            child: child!,
+          return Stack(
+            children: [
+              Positioned(
+                width: theme.size.width * scale + theme.extraSpace * 2,
+                height: theme.size.height * scale + theme.extraSpace * 2,
+                child: child!,
+              ),
+              if (widget.viewType == CalendarView.week)
+                for (Rect _rect in _rects)
+                  Positioned(
+                    width: theme.size.width * scale + theme.extraSpace * 2,
+                    height: theme.size.height * scale + theme.extraSpace * 2,
+                    child: CompositedTransformFollower(
+                      link: _layerLink,
+                      showWhenUnlinked: false,
+                      targetAnchor: Alignment.bottomCenter,
+                      followerAnchor: Alignment.center,
+                      offset: _rect.bottomCenter - _eventBounds.value.bottomCenter,
+                      child: RenderIdProvider(
+                        id: Constants.sizerId,
+                        child: _sizerView(),
+                      ),
+                    ),
+                  ),
+            ],
           );
         },
         child: CompositedTransformFollower(
