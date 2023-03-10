@@ -171,12 +171,12 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _startDiff = _pointerTimePoint.difference(event.start);
 
     // Prevent accident day addition on WeekView
-    if (widget.viewType == CalendarView.week) {
-      _startDiff -= Duration(days: _startDiff.inDays);
-      if (_startDiff.isNegative) {
-        _startDiff += Duration(days: 1);
-      }
-    }
+    // if (widget.viewType == CalendarView.week) {
+    //   // _startDiff -= Duration(days: _startDiff.inDays);
+    //   if (_startDiff.isNegative) {
+    //     _startDiff += Duration(days: 1);
+    //   }
+    // }
   }
 
   /// Needs to make interaction between a timeline and the overlay
@@ -199,6 +199,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     widget.onDragEnd?.call();
     _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
     _updateEventOriginAndStart();
+    if (!_edited) {
+      setState(() {
+        _edited = true;
+      });
+    }
   }
 
   /// Needs to make interaction between a timeline and the overlay
@@ -440,12 +445,12 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             _startDiff = _pointerTimePoint.difference(event.start);
 
             // Prevent accident day addition on WeekView
-            if (widget.viewType == CalendarView.week) {
-              _startDiff -= Duration(days: _startDiff.inDays);
-              if (_startDiff.isNegative) {
-                _startDiff += Duration(days: 1);
-              }
-            }
+            // if (widget.viewType == CalendarView.week) {
+            //   // _startDiff -= Duration(days: _startDiff.inDays);
+            //   if (_startDiff.isNegative) {
+            //     _startDiff += Duration(days: 1);
+            //   }
+            // }
           },
           onPanUpdate: (details) {
             if (_resizing) {
@@ -661,12 +666,12 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                       _startDiff = _pointerTimePoint.difference(event.start);
 
                       // Prevent accident day addition on WeekView
-                      if (widget.viewType == CalendarView.week) {
-                        _startDiff -= Duration(days: _startDiff.inDays);
-                        if (_startDiff.isNegative) {
-                          _startDiff += Duration(days: 1);
-                        }
-                      }
+                      // if (widget.viewType == CalendarView.week) {
+                      //   // _startDiff -= Duration(days: _startDiff.inDays);
+                      //   if (_startDiff.isNegative) {
+                      //     _startDiff += Duration(days: 1);
+                      //   }
+                      // }
                     },
                     onPanUpdate: (details) {
                       if (_resizing) {
@@ -719,14 +724,12 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                       _startDiff = _pointerTimePoint.difference(widget.event.value!.start);
 
                       // Prevent accident day addition on WeekView
-                      if (widget.viewType == CalendarView.week) {
-                        _startDiff -= Duration(days: _startDiff.inDays);
-                        if (_startDiff.isNegative) {
-                          _startDiff += Duration(days: 1);
-                        }
-                      }
-
-                      print("aaa");
+                      // if (widget.viewType == CalendarView.week) {
+                      //   // _startDiff -= Duration(days: _startDiff.inDays);
+                      //   if (_startDiff.isNegative) {
+                      //     _startDiff += Duration(days: 1);
+                      //   }
+                      // }
                     },
 
                     onLongPressMoveUpdate: onEventLongPressMoveUpdate,
