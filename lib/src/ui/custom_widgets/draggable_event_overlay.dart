@@ -126,6 +126,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       widget.timelineTheme.draggableEventTheme;
 
   bool _edited = false;
+  List<Rect> _rects = [];
 
   /// Needs to make interaction between a timeline and the overlay
   void onEventLongPressStart(LongPressStartDetails details) {
@@ -190,6 +191,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     widget.onDragEnd?.call();
     _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
     _updateEventOriginAndStart();
+    if (!_edited) {
+      setState(() {
+        _edited = true;
+      });
+    }
   }
 
   /// Needs to make interaction between a timeline and the overlay
@@ -269,12 +275,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   void _createEntriesFor(T event) {
     _eventEntry = OverlayEntry(builder: _floatingEventBuilder);
     _overlay.insert(_eventEntry!);
-
-    // Non-editable event can't be resized
-    if (event is EditableCalendarEvent) {
-      _sizerEntry = OverlayEntry(builder: _sizerBuilder);
-      _overlay.insert(_sizerEntry!);
-    }
   }
 
   void _removeEntries() {
@@ -306,8 +306,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     final layoutPosition =
         layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
     final originTimePoint = _pointerTimePoint.subtract(_startDiff);
-    // final originDayDate = DateUtils.dateOnly(originTimePoint);
-    final originDayDate = DateUtils.dateOnly(dayDate);
+    final originDayDate = DateUtils.dateOnly(originTimePoint);
     final minutes = originTimePoint.minute +
         (originTimePoint.hour * Duration.minutesPerHour);
     final roundedMinutes = (minutes / _cellExtent).round() * _cellExtent;
@@ -321,6 +320,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     widget.event.value =
         widget.event.value!.copyWith(start: eventStartDate) as T;
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+      setState(() {
+
+      });
+    });
   }
 
   void _updateEventHeightAndDuration() {
@@ -425,6 +429,14 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             _pointerLocation = details.globalPosition;
             _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
             _startDiff = _pointerTimePoint.difference(event.start);
+
+            // Prevent accident day addition on WeekView
+            if (widget.viewType == CalendarView.week) {
+              _startDiff -= Duration(days: _startDiff.inDays);
+              if (_startDiff.isNegative) {
+                _startDiff += Duration(days: 1);
+              }
+            }
           },
           onPanUpdate: (details) {
             if (_resizing) {
@@ -516,13 +528,15 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     super.dispose();
   }
 
-  Widget _elevatedEventView() => EventView(
+  Widget _elevatedEventView() {
+    return EventView(
         widget.event.value!,
         key: DraggableEventOverlayKeys.elevatedEvent,
         theme: widget.timelineTheme.floatingEventsTheme
             .copyWith(elevation: _draggableEventTheme.elevation),
         onTap: () {},
       );
+  }
 
   Widget _sizerView() {
     final theme = _draggableEventTheme.sizerTheme;
@@ -543,41 +557,127 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
   }
 
-  Widget _floatingEventBuilder(BuildContext context) => ValueListenableBuilder(
-        valueListenable: _eventBounds,
-        builder: (context, rect, child) => Positioned.fromRect(
-          rect: rect,
-          child: child!,
-        ),
-        child: CompositedTransformTarget(
-          link: _layerLink,
-          child: RenderIdProvider(
-            id: Constants.elevatedEventId,
-            child: _elevatedEventView(),
-          ),
-        ),
-      );
+  List<Rect> _rectForDay(Rect bounds, DateTime dayDate) {
+    if(widget.event.value == null) {
+      return [];
+    }
 
-  Widget _sizerBuilder(BuildContext context) => ValueListenableBuilder(
+    dayDate = DateUtils.dateOnly(dayDate);
+    final layoutBox = widget.getLayoutBox(dayDate);
+    if (layoutBox == null) {
+      return [];
+    }
+    final timelineBox = widget.getTimelineBox();
+    final _layoutPosition = layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+    final _delta = bounds.topLeft - _layoutPosition;
+
+    List<Rect> result = [];
+    DateTime _dateBefore = dayDate.copyWith();
+    DateTime _dateAfter = dayDate.add(Duration(days: 1));
+
+    int i = 1;
+    while (i <= 7) {
+      final layoutBox = widget.getLayoutBox(_dateAfter);
+      if (layoutBox == null) {
+        break;
+      }
+      final layoutPosition =
+      layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+      result.add(Rect.fromLTWH(
+        layoutPosition.dx + _delta.dx,
+        bounds.top - 24 * i * _hourExtent,
+        bounds.width,
+        bounds.height,
+      ));
+      i++;
+      _dateAfter = _dateAfter.add(Duration(days: 1));
+    }
+
+    i = 1;
+    while (i <= 7) {
+      _dateBefore = _dateBefore.subtract(Duration(days: 1));
+      final layoutBox = widget.getLayoutBox(_dateBefore);
+      if (layoutBox == null) {
+        break;
+      }
+      final layoutPosition =
+      layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+      result.add(Rect.fromLTWH(
+        layoutPosition.dx + _delta.dx,
+        bounds.top + 24 * i * _hourExtent,
+        bounds.width,
+        bounds.height,
+      ));
+      i++;
+    }
+    return result;
+  }
+
+  Widget _floatingEventBuilder(BuildContext context) {
+    final _event = widget.event.value;
+
+    return ValueListenableBuilder(
+      valueListenable: _eventBounds,
+      builder: (context, rect, child) {
+        SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+          _rects = _rectForDay(rect, _pointerTimePoint);
+        });
+
+        return Stack(
+          children: [
+            Positioned.fromRect(
+              rect: rect,
+              child: child!,
+            ),
+            if (_event is EditableCalendarEvent)
+              _sizerBuilder(context, rect.bottomCenter),
+            if (mounted && widget.viewType == CalendarView.week)
+              for (Rect _rect in _rects) ...[
+                Positioned.fromRect(
+                  rect: _rect,
+                  child: CompositedTransformFollower(
+                    offset: _rect.topLeft - rect.topLeft,
+                    link: _layerLink,
+                    child: RenderIdProvider(
+                      id: Constants.elevatedEventId,
+                      child: _elevatedEventView(),
+                    ),
+                  ),
+                ),
+                if (_event is EditableCalendarEvent)
+                  _sizerBuilder(context, _rect.bottomCenter),
+              ],
+          ],
+        );
+      },
+      child: CompositedTransformTarget(
+        link: _layerLink,
+        child: RenderIdProvider(
+          id: Constants.elevatedEventId,
+          child: _elevatedEventView(),
+        ),
+      ),
+    );
+  }
+
+  Widget _sizerBuilder(BuildContext context, Offset offset) => ValueListenableBuilder(
         valueListenable: _animation,
         builder: (context, scale, child) {
           final theme = _draggableEventTheme.sizerTheme;
+          final _width = theme.size.width * scale + theme.extraSpace * 2;
+          final _height = theme.size.height * scale + theme.extraSpace * 2;
 
           return Positioned(
-            width: theme.size.width * scale + theme.extraSpace * 2,
-            height: theme.size.height * scale + theme.extraSpace * 2,
+            top: offset.dy - _height / 2,
+            left: offset.dx - _width / 2,
+            width: _width,
+            height: _height,
             child: child!,
           );
         },
-        child: CompositedTransformFollower(
-          link: _layerLink,
-          showWhenUnlinked: false,
-          targetAnchor: Alignment.bottomCenter,
-          followerAnchor: Alignment.center,
-          child: RenderIdProvider(
-            id: Constants.sizerId,
-            child: _sizerView(),
-          ),
+        child: RenderIdProvider(
+          id: Constants.sizerId,
+          child: _sizerView(),
         ),
       );
 }
