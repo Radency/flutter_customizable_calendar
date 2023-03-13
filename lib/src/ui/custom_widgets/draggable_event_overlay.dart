@@ -277,10 +277,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _overlay.insert(_eventEntry!);
 
     // Non-editable event can't be resized
-    if (event is EditableCalendarEvent) {
-      _sizerEntry = OverlayEntry(builder: _sizerBuilder);
-      _overlay.insert(_sizerEntry!);
-    }
+    // if (event is EditableCalendarEvent) {
+    //   _sizerEntry = OverlayEntry(builder: _sizerBuilder);
+    //   _overlay.insert(_sizerEntry!);
+    // }
   }
 
   void _removeEntries() {
@@ -620,6 +620,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   Widget _floatingEventBuilder(BuildContext context) {
+    final _event = widget.event.value;
+
     return ValueListenableBuilder(
       valueListenable: _eventBounds,
       builder: (context, rect, child) {
@@ -633,8 +635,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               rect: rect,
               child: child!,
             ),
+            if (_event is EditableCalendarEvent)
+              _sizerBuilder(context, rect.bottomCenter),
             if (mounted && widget.viewType == CalendarView.week)
-              for (Rect _rect in _rects)
+              for (Rect _rect in _rects) ...[
                 Positioned.fromRect(
                   rect: _rect,
                   child: CompositedTransformFollower(
@@ -645,7 +649,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                       child: _elevatedEventView(),
                     ),
                   ),
-                )
+                ),
+                if (_event is EditableCalendarEvent)
+                  _sizerBuilder(context, _rect.bottomCenter),
+              ],
           ],
         );
       },
@@ -659,47 +666,45 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
   }
 
-  Widget _sizerBuilder(BuildContext context) => ValueListenableBuilder(
+  Widget _sizerBuilder(BuildContext context, Offset offset) => ValueListenableBuilder(
         valueListenable: _animation,
         builder: (context, scale, child) {
           final theme = _draggableEventTheme.sizerTheme;
+          final _width = theme.size.width * scale + theme.extraSpace * 2;
+          final _height = theme.size.height * scale + theme.extraSpace * 2;
 
           return Stack(
             children: [
               Positioned(
-                width: theme.size.width * scale + theme.extraSpace * 2,
-                height: theme.size.height * scale + theme.extraSpace * 2,
+                top: offset.dy - _height / 2,
+                left: offset.dx - _width / 2,
+                width: _width,
+                height: _height,
                 child: child!,
               ),
-              if (widget.viewType == CalendarView.week)
-                for (Rect _rect in _rects)
-                  Positioned(
-                    width: theme.size.width * scale + theme.extraSpace * 2,
-                    height: theme.size.height * scale + theme.extraSpace * 2,
-                    child: CompositedTransformFollower(
-                      link: _layerLink,
-                      showWhenUnlinked: false,
-                      targetAnchor: Alignment.bottomCenter,
-                      followerAnchor: Alignment.center,
-                      offset: _rect.bottomCenter - _eventBounds.value.bottomCenter,
-                      child: RenderIdProvider(
-                        id: Constants.sizerId,
-                        child: _sizerView(),
-                      ),
-                    ),
-                  ),
+              // if (widget.viewType == CalendarView.week)
+              //   for (Rect _rect in _rects)
+              //     Positioned(
+              //       width: theme.size.width * scale + theme.extraSpace * 2,
+              //       height: theme.size.height * scale + theme.extraSpace * 2,
+              //       child: CompositedTransformFollower(
+              //         link: _layerLink,
+              //         showWhenUnlinked: false,
+              //         targetAnchor: Alignment.bottomCenter,
+              //         followerAnchor: Alignment.center,
+              //         offset: _rect.bottomCenter - _eventBounds.value.bottomCenter,
+              //         child: RenderIdProvider(
+              //           id: Constants.sizerId,
+              //           child: _sizerView(),
+              //         ),
+              //       ),
+              //     ),
             ],
           );
         },
-        child: CompositedTransformFollower(
-          link: _layerLink,
-          showWhenUnlinked: false,
-          targetAnchor: Alignment.bottomCenter,
-          followerAnchor: Alignment.center,
-          child: RenderIdProvider(
-            id: Constants.sizerId,
-            child: _sizerView(),
-          ),
+        child: RenderIdProvider(
+          id: Constants.sizerId,
+          child: _sizerView(),
         ),
       );
 }
