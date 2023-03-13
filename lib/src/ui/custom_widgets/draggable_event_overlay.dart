@@ -275,12 +275,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   void _createEntriesFor(T event) {
     _eventEntry = OverlayEntry(builder: _floatingEventBuilder);
     _overlay.insert(_eventEntry!);
-
-    // Non-editable event can't be resized
-    // if (event is EditableCalendarEvent) {
-    //   _sizerEntry = OverlayEntry(builder: _sizerBuilder);
-    //   _overlay.insert(_sizerEntry!);
-    // }
   }
 
   void _removeEntries() {
@@ -673,33 +667,12 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
           final _width = theme.size.width * scale + theme.extraSpace * 2;
           final _height = theme.size.height * scale + theme.extraSpace * 2;
 
-          return Stack(
-            children: [
-              Positioned(
-                top: offset.dy - _height / 2,
-                left: offset.dx - _width / 2,
-                width: _width,
-                height: _height,
-                child: child!,
-              ),
-              // if (widget.viewType == CalendarView.week)
-              //   for (Rect _rect in _rects)
-              //     Positioned(
-              //       width: theme.size.width * scale + theme.extraSpace * 2,
-              //       height: theme.size.height * scale + theme.extraSpace * 2,
-              //       child: CompositedTransformFollower(
-              //         link: _layerLink,
-              //         showWhenUnlinked: false,
-              //         targetAnchor: Alignment.bottomCenter,
-              //         followerAnchor: Alignment.center,
-              //         offset: _rect.bottomCenter - _eventBounds.value.bottomCenter,
-              //         child: RenderIdProvider(
-              //           id: Constants.sizerId,
-              //           child: _sizerView(),
-              //         ),
-              //       ),
-              //     ),
-            ],
+          return Positioned(
+            top: offset.dy - _height / 2,
+            left: offset.dx - _width / 2,
+            width: _width,
+            height: _height,
+            child: child!,
           );
         },
         child: RenderIdProvider(
