@@ -568,7 +568,17 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       return [];
     }
     final timelineBox = widget.getTimelineBox();
-    final _layoutPosition = layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+    Offset _layoutPosition;
+    try {
+      _layoutPosition =
+          layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+    } catch (e) {
+      // return [];
+      _layoutPosition = bounds.topLeft;
+      // setState(() {
+      //
+      // });
+    }
     final _delta = bounds.topLeft - _layoutPosition;
 
     List<Rect> result = [];
@@ -581,8 +591,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       if (layoutBox == null) {
         break;
       }
-      final layoutPosition =
-      layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+      Offset layoutPosition;
+      try {
+        layoutPosition =
+            layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+      } catch (e) {
+        break;
+      }
       result.add(Rect.fromLTWH(
         layoutPosition.dx + _delta.dx,
         bounds.top - 24 * i * _hourExtent,
@@ -600,8 +615,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       if (layoutBox == null) {
         break;
       }
-      final layoutPosition =
-      layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+      Offset layoutPosition;
+      try {
+        layoutPosition =
+            layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+      } catch (e) {
+        break;
+      }
       result.add(Rect.fromLTWH(
         layoutPosition.dx + _delta.dx,
         bounds.top + 24 * i * _hourExtent,
