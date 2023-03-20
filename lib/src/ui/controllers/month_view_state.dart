@@ -9,6 +9,8 @@ abstract class MonthViewState extends Equatable {
   final DateTime focusedDate;
   final bool reverseAnimation;
 
+  DateTimeRange get displayedMonth => focusedDate.monthViewRange;
+
   @override
   List<Object?> get props => [
     focusedDate,

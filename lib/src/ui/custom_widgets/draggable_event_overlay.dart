@@ -38,10 +38,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     required this.getEventBox,
     required this.saverConfig,
     required this.child,
-  }) : assert(
-          viewType != CalendarView.month,
-          "MonthView isn't supported",
-        );
+  });
 
   /// A notifier which needs to control elevated event
   final FloatingEventNotifier<T> event;
