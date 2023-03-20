@@ -338,7 +338,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
             child: Container(
               padding: EdgeInsets.only(
                 top: theme.padding.top,
-                bottom: theme.padding.bottom,
+                // bottom: theme.padding.bottom,
               ),
               color: Colors.transparent, // Needs for hitTesting
               child: EventsLayout<T>(
@@ -351,6 +351,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                 events: widget.events,
                 elevatedEvent: _elevatedEvent,
                 onEventTap: widget.onEventTap,
+                simpleView: true,
               ),
             ),
           ),

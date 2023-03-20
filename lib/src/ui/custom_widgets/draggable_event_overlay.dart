@@ -222,6 +222,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     if (dayDate == null) return null;
 
+    if (widget.viewType == CalendarView.month) {
+      return dayDate.add(Duration(hours: 12));
+    }
+
     final layoutBox = widget.getLayoutBox(dayDate)!;
     final minutes = layoutBox.globalToLocal(globalPosition).dy ~/ _minuteExtent;
 
@@ -428,7 +432,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             _startDiff = _pointerTimePoint.difference(event.start);
 
             // Prevent accident day addition on WeekView
-            if (widget.viewType == CalendarView.week) {
+            if (widget.viewType != CalendarView.days) {
               _startDiff -= Duration(days: _startDiff.inDays);
               if (_startDiff.isNegative) {
                 _startDiff += Duration(days: 1);
@@ -646,9 +650,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               rect: rect,
               child: child!,
             ),
-            if (_event is EditableCalendarEvent)
+            if (widget.viewType != CalendarView.month &&
+                _event is EditableCalendarEvent)
               _sizerBuilder(context, rect.bottomCenter),
-            if (mounted && widget.viewType == CalendarView.week)
+            if (mounted && widget.viewType != CalendarView.days)
               for (Rect _rect in _rects) ...[
                 Positioned.fromRect(
                   rect: _rect,

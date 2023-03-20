@@ -21,6 +21,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     this.events = const [],
     required this.elevatedEvent,
     this.onEventTap,
+    this.simpleView = false,
   });
 
   /// A day which needs to be displayed
@@ -50,6 +51,9 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   /// Callback which returns a tapped event value
   final void Function(T)? onEventTap;
 
+  /// Defines if show events in simplified way. Defaults to false
+  final bool simpleView;
+
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) => list
       .where((event) => DateUtils.isSameDay(event.start, dayDate) ||
       (event.start.isBefore(dayDate) && event.end.isAfter(dayDate)))
@@ -63,23 +67,100 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
 
     return RenderIdProvider(
       id: Constants.layoutId,
+      // child: simpleView
+      //     ? SingleChildScrollView(
+      //       child: Column(
+      //           children: eventsToDisplay.map((event) => GestureDetector(
+      //             onLongPressStart: overlay.onEventLongPressStart,
+      //             onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+      //             onLongPressEnd: overlay.onEventLongPressEnd,
+      //             onLongPressCancel: overlay.onEventLongPressCancel,
+      //             child: RenderIdProvider(
+      //               id: event,
+      //               child: ValueListenableBuilder(
+      //                 valueListenable: elevatedEvent,
+      //                 builder: (context, elevatedEvent, child) => Opacity(
+      //                   opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
+      //                   child: child,
+      //                 ),
+      //                 child: EventView(
+      //                   // key: eventsKeys[event] ??= GlobalKey(),
+      //                   event,
+      //                   theme: timelineTheme.floatingEventsTheme,
+      //                   onTap: () => onEventTap?.call(event),
+      //                 ),
+      //               ),
+      //             ),
+      //           )).toList()
+      //         ),
+      //     )
+      //     : CustomMultiChildLayout(
+      //       key: layoutsKeys[dayDate] ??= GlobalKey(),
+      //       delegate: _EventsLayoutDelegate<T>(
+      //         date: dayDate,
+      //         breaks: breaksToDisplay,
+      //         events: eventsToDisplay,
+      //         cellExtent: timelineTheme.cellExtent,
+      //       ),
+      //       children: [
+      //         ...breaksToDisplay.map(
+      //           (event) => LayoutId(
+      //             id: event,
+      //             child: BreakView(event),
+      //           ),
+      //         ),
+      //         ...eventsToDisplay.map(
+      //           (event) => LayoutId(
+      //             id: event,
+      //             child: GestureDetector(
+      //               onLongPressStart: overlay.onEventLongPressStart,
+      //               onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+      //               onLongPressEnd: overlay.onEventLongPressEnd,
+      //               onLongPressCancel: overlay.onEventLongPressCancel,
+      //               child: RenderIdProvider(
+      //                 id: event,
+      //                 child: ValueListenableBuilder(
+      //                   valueListenable: elevatedEvent,
+      //                   builder: (context, elevatedEvent, child) => Opacity(
+      //                     opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
+      //                     child: child,
+      //                   ),
+      //                   child: EventView(
+      //                     // key: eventsKeys[event] ??= GlobalKey(),
+      //                     event,
+      //                     theme: timelineTheme.floatingEventsTheme,
+      //                     onTap: () => onEventTap?.call(event),
+      //                   ),
+      //                 ),
+      //               ),
+      //             ),
+      //           ),
+      //         ),
+      //       ],
+      //     ),
       child: CustomMultiChildLayout(
         key: layoutsKeys[dayDate] ??= GlobalKey(),
-        delegate: _EventsLayoutDelegate<T>(
+        delegate: !simpleView
+          ? _EventsLayoutDelegate<T>(
           date: dayDate,
           breaks: breaksToDisplay,
           events: eventsToDisplay,
           cellExtent: timelineTheme.cellExtent,
+        )
+        : _SimpleEventsLayoutDelegate<T>(
+          date: dayDate,
+          events: eventsToDisplay,
         ),
         children: [
-          ...breaksToDisplay.map(
-            (event) => LayoutId(
-              id: event,
-              child: BreakView(event),
-            ),
-          ),
+          if (!simpleView)
+              ...breaksToDisplay.map(
+                    (event) => LayoutId(
+                  id: event,
+                  child: BreakView(event),
+                ),
+              ),
           ...eventsToDisplay.map(
-            (event) => LayoutId(
+                (event) => LayoutId(
               id: event,
               child: GestureDetector(
                 onLongPressStart: overlay.onEventLongPressStart,
@@ -238,6 +319,56 @@ class _EventsLayoutDelegate<T extends FloatingCalendarEvent>
 
   @override
   bool shouldRelayout(covariant _EventsLayoutDelegate<T> oldDelegate) {
+    if (events.length != oldDelegate.events.length) return true;
+
+    for (var index = 0; index < events.length; index++) {
+      if (events[index].compareTo(oldDelegate.events[index]) != 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+}
+
+class _SimpleEventsLayoutDelegate<T extends FloatingCalendarEvent>
+    extends MultiChildLayoutDelegate {
+  _SimpleEventsLayoutDelegate({
+    required this.date,
+    // required this.breaks,
+    required this.events,
+  }) {
+    events.sort(); // Sorting the events before layout
+  }
+
+  final DateTime date;
+  // final List<Break> breaks;
+  final List<T> events;
+
+  @override
+  void performLayout(Size size) {
+    // Laying out all events
+    for (int i = 0; i < events.length; i++) {
+      final event = events[i];
+      final eventHeight = 30.0;
+      if (hasChild(event)) {
+        layoutChild(
+          event,
+          BoxConstraints.tightFor(
+            width: size.width,
+            height: eventHeight,
+          ),
+        );
+        positionChild(
+          event,
+          Offset(0, (eventHeight + 5) * i),
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRelayout(covariant _SimpleEventsLayoutDelegate<T> oldDelegate) {
     if (events.length != oldDelegate.events.length) return true;
 
     for (var index = 0; index < events.length; index++) {
