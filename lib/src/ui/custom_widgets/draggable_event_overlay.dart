@@ -584,15 +584,15 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     final _event = widget.event.value!;
     dayDate = DateUtils.dateOnly(dayDate);
-    final layoutBox = widget.getLayoutBox(dayDate);
-    if (layoutBox == null) {
+    final _layoutBox = widget.getLayoutBox(dayDate);
+    if (_layoutBox == null) {
       return [];
     }
     final timelineBox = widget.getTimelineBox();
     Offset _layoutPosition;
     try {
       _layoutPosition =
-          layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+          _layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
     } catch (e) {
       // return [];
       _layoutPosition = bounds.topLeft;
@@ -659,16 +659,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       DateTime _date = dayDate.add(Duration(days: _dayOffsets.first));
 
       for (int i = _dayOffsets.first; i <= _dayOffsets.last; i++) {
-        double _weekOffset = 0;
-        if (!_date.isSameWeekAs(dayDate)) {
-          _weekOffset = MediaQuery.of(context).size.height / 6.0;
-          if (_date.isBefore(dayDate)) {
-            _weekOffset = -_weekOffset;
-          }
-        }
-
         final layoutBox = widget.getLayoutBox(_date);
-        _date = _date.add(Duration(days: 1));
         if (layoutBox == null) {
           continue;
         }
@@ -679,12 +670,23 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         } catch (e) {
           continue;
         }
+
+        double _weekOffset = 0;
+        if (!_date.isSameWeekAs(dayDate)) {
+          // _weekOffset = MediaQuery.of(context).size.height / 9.0;
+          _weekOffset = _layoutBox.size.height * 1.6;
+          if (_date.isBefore(dayDate)) {
+            _weekOffset = -_weekOffset;
+          }
+        }
+
         result.add(Rect.fromLTWH(
           layoutPosition.dx + _delta.dx,
           bounds.top + _weekOffset,
           bounds.width,
           bounds.height,
         ));
+        _date = _date.add(Duration(days: 1));
       }
     }
 

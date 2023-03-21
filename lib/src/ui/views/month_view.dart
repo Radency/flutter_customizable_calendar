@@ -290,6 +290,9 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
         double crossAxisSpacing = 1.0;
         double aspectRatio = (constraints.maxWidth - crossAxisSpacing * 6) / 7
             / (constraints.maxHeight - mainAxisSpacing * 5) * 6;
+        if(aspectRatio > 1) {
+          aspectRatio = 1.0;// / aspectRatio;
+        }
 
         return Container(
           key: MonthViewKeys.timeline = GlobalKey(),
@@ -301,7 +304,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
               mainAxisSpacing: mainAxisSpacing,
               crossAxisSpacing: crossAxisSpacing,
               childAspectRatio: aspectRatio,
-              physics: NeverScrollableScrollPhysics(),
+              // physics: NeverScrollableScrollPhysics(),
               children: [
                 ...days.map(_singleDayView),
               ],
