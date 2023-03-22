@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
@@ -85,6 +86,8 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   final _elevatedEvent = FloatingEventNotifier<T>();
   late final PageController _monthPickerController;
   var _pointerLocation = Offset.zero;
+
+  static DateTime get _now => clock.now();
 
   DateTime get _initialDate => widget.controller.initialDate;
   DateTime? get _endDate => widget.controller.endDate;
@@ -290,21 +293,26 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
         double crossAxisSpacing = 1.0;
         double aspectRatio = (constraints.maxWidth - crossAxisSpacing * 6) / 7
             / (constraints.maxHeight - mainAxisSpacing * 5) * 6;
-        if(aspectRatio > 1) {
+        bool shouldScroll = aspectRatio > 1;
+        if(shouldScroll) {
           aspectRatio = 1.0;// / aspectRatio;
         }
 
         return Container(
           key: MonthViewKeys.timeline = GlobalKey(),
+          padding: EdgeInsets.only(
+            bottom: 1,
+          ),
+          color: widget.divider?.color ?? Colors.grey,
           // controller: _timelineController,
           child: IntrinsicHeight(
             child: GridView.count(
               crossAxisCount: 7,
-              // shrinkWrap: true,
+              shrinkWrap: true,
               mainAxisSpacing: mainAxisSpacing,
               crossAxisSpacing: crossAxisSpacing,
               childAspectRatio: aspectRatio,
-              // physics: NeverScrollableScrollPhysics(),
+              physics: shouldScroll ? null : NeverScrollableScrollPhysics(),
               children: [
                 ...days.map(_singleDayView),
               ],
@@ -317,10 +325,12 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
 
   Widget _singleDayView(DateTime dayDate) {
     final theme = widget.timelineTheme;
+    final bool isToday = DateUtils.isSameDay(dayDate, _now);
 
     return Container(
       // height: 200,
-      color: Colors.red,
+      // color: Colors.red,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: RenderIdProvider(
         id: dayDate,
         child: ValueListenableBuilder(
@@ -339,22 +349,44 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
               widget.onDateLongPress?.call(timestamp);
             },
             child: Container(
-              padding: EdgeInsets.only(
-                top: theme.padding.top,
-                // bottom: theme.padding.bottom,
-              ),
+              // padding: EdgeInsets.only(
+              //   top: theme.padding.top,
+              //   // bottom: theme.padding.bottom,
+              // ),
               color: Colors.transparent, // Needs for hitTesting
-              child: EventsLayout<T>(
-                dayDate: dayDate,
-                overlayKey: _overlayKey,
-                layoutsKeys: MonthViewKeys.layouts,
-                eventsKeys: MonthViewKeys.events,
-                timelineTheme: widget.timelineTheme,
-                breaks: widget.breaks,
-                events: widget.events,
-                elevatedEvent: _elevatedEvent,
-                onEventTap: widget.onEventTap,
-                simpleView: true,
+              child: Column(
+                children: [
+                  Container(
+                    margin: EdgeInsets.all(5),
+                    // padding: EdgeInsets.all(5),
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isToday ? Colors.blue : null,
+                    ),
+                    child: Text(
+                      dayDate.day.toString(),
+                      style: TextStyle(
+                        color: isToday ? Colors.white : null,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: EventsLayout<T>(
+                      dayDate: dayDate,
+                      overlayKey: _overlayKey,
+                      layoutsKeys: MonthViewKeys.layouts,
+                      eventsKeys: MonthViewKeys.events,
+                      timelineTheme: widget.timelineTheme,
+                      breaks: widget.breaks,
+                      events: widget.events,
+                      elevatedEvent: _elevatedEvent,
+                      onEventTap: widget.onEventTap,
+                      simpleView: true,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -395,6 +395,11 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     saverConfig: _saverConfig(),
     controller: _monthViewController,
     monthPickerTheme: _periodPickerTheme,
+    divider: Divider(
+      height: 2,
+      thickness: 1,
+      color: Colors.grey.withOpacity(0.33),
+    ),
     daysRowTheme: DaysRowTheme(
       weekdayStyle: _textStyle,
       numberStyle: _textStyle.copyWith(

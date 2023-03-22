@@ -674,7 +674,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         double _weekOffset = 0;
         if (!_date.isSameWeekAs(dayDate)) {
           // _weekOffset = MediaQuery.of(context).size.height / 9.0;
-          _weekOffset = _layoutBox.size.height * 1.6;
+          _weekOffset = _layoutBox.size.height * 1.5;
           if (_date.isBefore(dayDate)) {
             _weekOffset = -_weekOffset;
           }
