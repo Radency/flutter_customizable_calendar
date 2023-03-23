@@ -54,137 +54,101 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   /// Defines if show events in simplified way. Defaults to false
   final bool simpleView;
 
-  List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) => list
-      .where((event) => DateUtils.isSameDay(event.start, dayDate) ||
-      (event.start.isBefore(dayDate) && event.end.isAfter(dayDate)))
-      .toList(growable: false);
+  List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) =>
+      list
+          .where((event) =>
+      DateUtils.isSameDay(event.start, dayDate) ||
+          (event.start.isBefore(dayDate) && event.end.isAfter(dayDate)))
+          .toList(growable: false);
 
   @override
   Widget build(BuildContext context) {
     final breaksToDisplay = _getEventsOnDay(breaks);
-    final eventsToDisplay = _getEventsOnDay(events);
+    final eventsToDisplay = _getEventsOnDay(events)..sort();
     final overlay = overlayKey.currentState!;
 
     return RenderIdProvider(
       id: Constants.layoutId,
-      // child: simpleView
-      //     ? SingleChildScrollView(
-      //       child: Column(
-      //           children: eventsToDisplay.map((event) => GestureDetector(
-      //             onLongPressStart: overlay.onEventLongPressStart,
-      //             onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-      //             onLongPressEnd: overlay.onEventLongPressEnd,
-      //             onLongPressCancel: overlay.onEventLongPressCancel,
-      //             child: RenderIdProvider(
-      //               id: event,
-      //               child: ValueListenableBuilder(
-      //                 valueListenable: elevatedEvent,
-      //                 builder: (context, elevatedEvent, child) => Opacity(
-      //                   opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
-      //                   child: child,
-      //                 ),
-      //                 child: EventView(
-      //                   // key: eventsKeys[event] ??= GlobalKey(),
-      //                   event,
-      //                   theme: timelineTheme.floatingEventsTheme,
-      //                   onTap: () => onEventTap?.call(event),
-      //                 ),
-      //               ),
-      //             ),
-      //           )).toList()
-      //         ),
-      //     )
-      //     : CustomMultiChildLayout(
-      //       key: layoutsKeys[dayDate] ??= GlobalKey(),
-      //       delegate: _EventsLayoutDelegate<T>(
-      //         date: dayDate,
-      //         breaks: breaksToDisplay,
-      //         events: eventsToDisplay,
-      //         cellExtent: timelineTheme.cellExtent,
-      //       ),
-      //       children: [
-      //         ...breaksToDisplay.map(
-      //           (event) => LayoutId(
-      //             id: event,
-      //             child: BreakView(event),
-      //           ),
-      //         ),
-      //         ...eventsToDisplay.map(
-      //           (event) => LayoutId(
-      //             id: event,
-      //             child: GestureDetector(
-      //               onLongPressStart: overlay.onEventLongPressStart,
-      //               onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-      //               onLongPressEnd: overlay.onEventLongPressEnd,
-      //               onLongPressCancel: overlay.onEventLongPressCancel,
-      //               child: RenderIdProvider(
-      //                 id: event,
-      //                 child: ValueListenableBuilder(
-      //                   valueListenable: elevatedEvent,
-      //                   builder: (context, elevatedEvent, child) => Opacity(
-      //                     opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
-      //                     child: child,
-      //                   ),
-      //                   child: EventView(
-      //                     // key: eventsKeys[event] ??= GlobalKey(),
-      //                     event,
-      //                     theme: timelineTheme.floatingEventsTheme,
-      //                     onTap: () => onEventTap?.call(event),
-      //                   ),
-      //                 ),
-      //               ),
-      //             ),
-      //           ),
-      //         ),
-      //       ],
-      //     ),
-      child: CustomMultiChildLayout(
-        key: layoutsKeys[dayDate] ??= GlobalKey(),
-        delegate: !simpleView
-          ? _EventsLayoutDelegate<T>(
+      key: layoutsKeys[dayDate] ??= GlobalKey(),
+      child: !simpleView ? CustomMultiChildLayout(
+        delegate: _EventsLayoutDelegate<T>(
           date: dayDate,
           breaks: breaksToDisplay,
           events: eventsToDisplay,
           cellExtent: timelineTheme.cellExtent,
-        )
-        : _SimpleEventsLayoutDelegate<T>(
-          date: dayDate,
-          events: eventsToDisplay,
         ),
         children: [
           if (!simpleView)
-              ...breaksToDisplay.map(
-                    (event) => LayoutId(
-                  id: event,
-                  child: BreakView(event),
-                ),
-              ),
+            ...breaksToDisplay.map(
+                  (event) =>
+                  LayoutId(
+                    id: event,
+                    child: BreakView(event),
+                  ),
+            ),
           ...eventsToDisplay.map(
-                (event) => LayoutId(
-              id: event,
-              child: GestureDetector(
-                onLongPressStart: overlay.onEventLongPressStart,
-                onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-                onLongPressEnd: overlay.onEventLongPressEnd,
-                onLongPressCancel: overlay.onEventLongPressCancel,
-                child: RenderIdProvider(
+                (event) =>
+                LayoutId(
                   id: event,
-                  child: ValueListenableBuilder(
-                    valueListenable: elevatedEvent,
-                    builder: (context, elevatedEvent, child) => Opacity(
-                      opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
-                      child: child,
-                    ),
-                    child: EventView(
-                      // key: eventsKeys[event] ??= GlobalKey(),
-                      event,
-                      theme: timelineTheme.floatingEventsTheme,
-                      onTap: () => onEventTap?.call(event),
+                  child: GestureDetector(
+                    onLongPressStart: overlay.onEventLongPressStart,
+                    onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+                    onLongPressEnd: overlay.onEventLongPressEnd,
+                    onLongPressCancel: overlay.onEventLongPressCancel,
+                    child: RenderIdProvider(
+                      id: event,
+                      child: ValueListenableBuilder(
+                        valueListenable: elevatedEvent,
+                        builder: (context, elevatedEvent, child) =>
+                            Opacity(
+                              opacity: (elevatedEvent?.id == event.id)
+                                  ? 0.5
+                                  : 1,
+                              child: child,
+                            ),
+                        child: EventView(
+                          // key: eventsKeys[event] ??= GlobalKey(),
+                          event,
+                          theme: timelineTheme.floatingEventsTheme,
+                          onTap: () => onEventTap?.call(event),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
+          ),
+        ],
+      ) : ListView(
+        children: [
+          ...eventsToDisplay.map((event) =>
+                Container(
+                  margin: EdgeInsets.only(bottom: 2),
+                  child: GestureDetector(
+                    onLongPressStart: overlay.onEventLongPressStart,
+                    onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+                    onLongPressEnd: overlay.onEventLongPressEnd,
+                    onLongPressCancel: overlay.onEventLongPressCancel,
+                    child: RenderIdProvider(
+                      id: event,
+                      child: ValueListenableBuilder(
+                        valueListenable: elevatedEvent,
+                        builder: (context, elevatedEvent, child) =>
+                            Opacity(
+                              opacity: (elevatedEvent?.id == event.id)
+                                  ? 0.5
+                                  : 1,
+                              child: child,
+                            ),
+                        child: EventView(
+                          // key: eventsKeys[event] ??= GlobalKey(),
+                          event,
+                          theme: timelineTheme.floatingEventsTheme,
+                          onTap: () => onEventTap?.call(event),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
           ),
         ],
       ),
@@ -319,56 +283,6 @@ class _EventsLayoutDelegate<T extends FloatingCalendarEvent>
 
   @override
   bool shouldRelayout(covariant _EventsLayoutDelegate<T> oldDelegate) {
-    if (events.length != oldDelegate.events.length) return true;
-
-    for (var index = 0; index < events.length; index++) {
-      if (events[index].compareTo(oldDelegate.events[index]) != 0) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-}
-
-class _SimpleEventsLayoutDelegate<T extends FloatingCalendarEvent>
-    extends MultiChildLayoutDelegate {
-  _SimpleEventsLayoutDelegate({
-    required this.date,
-    // required this.breaks,
-    required this.events,
-  }) {
-    events.sort(); // Sorting the events before layout
-  }
-
-  final DateTime date;
-  // final List<Break> breaks;
-  final List<T> events;
-
-  @override
-  void performLayout(Size size) {
-    // Laying out all events
-    for (int i = 0; i < events.length; i++) {
-      final event = events[i];
-      final eventHeight = 30.0;
-      if (hasChild(event)) {
-        layoutChild(
-          event,
-          BoxConstraints.tightFor(
-            width: size.width,
-            height: eventHeight,
-          ),
-        );
-        positionChild(
-          event,
-          Offset(0, (eventHeight + 5) * i),
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRelayout(covariant _SimpleEventsLayoutDelegate<T> oldDelegate) {
     if (events.length != oldDelegate.events.length) return true;
 
     for (var index = 0; index < events.length; index++) {
