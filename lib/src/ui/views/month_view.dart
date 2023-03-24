@@ -132,21 +132,6 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                 curve: Curves.linearToEaseOut,
               ),
           ]);
-          //     .whenComplete(() {
-          //   // Scroll the timeline just after current week is displayed
-          //   final timelineOffset = min(
-          //     state.focusedDate.hour * _hourExtent,
-          //     _timelineController!.position.maxScrollExtent,
-          //   );
-          //
-          //   if (timelineOffset != _timelineController!.offset) {
-          //     _timelineController!.animateTo(
-          //       timelineOffset,
-          //       duration: const Duration(milliseconds: 300),
-          //       curve: Curves.fastLinearToSlowEaseIn,
-          //     );
-          //   }
-          // });
         } else if (state is MonthViewNextMonthSelected ||
             state is MonthViewPrevMonthSelected) {
           _monthPickerController.animateToPage(
@@ -168,11 +153,6 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
               padding: EdgeInsets.only(
                 top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
               ),
-              // onDragDown: _stopTimelineScrolling,
-              // onDragUpdate: _autoScrolling,
-              // onDragEnd: _stopAutoScrolling,
-              // onSizeUpdate: _autoScrolling,
-              // onResizingEnd: _stopAutoScrolling,
               onDropped: widget.onDiscardChanges,
               onChanged: widget.onEventUpdated,
               getTimelineBox: _getTimelineBox,
@@ -210,7 +190,6 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
 
   Widget _monthSection() {
     final theme = widget.timelineTheme;
-    // final timeScaleWidth = theme.timeScaleTheme.width;
 
     return PageView.builder(
       controller: _monthPickerController,
@@ -256,12 +235,6 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                     style: theme.weekdayStyle,
                     textAlign: TextAlign.center,
                   ),
-                // if (!theme.hideNumber)
-                //   Text(
-                //     theme.numberFormatter.call(dayDate),
-                //     style: theme.numberStyle,
-                //     textAlign: TextAlign.center,
-                //   ),
               ],
             ),
           ),
@@ -272,23 +245,8 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   }
 
   Widget _monthDays(List<DateTime> days) {
-    // final theme = widget.timelineTheme;
-    // final isCurrentWeek = days.first.isSameWeekAs(_now);
-
     return LayoutBuilder(
       builder: (context, constraints) {
-        // final scrollOffset = _timelineController?.offset ??
-        //     min(
-        //       _focusedDate.hour * _hourExtent,
-        //       _dayExtent + theme.padding.vertical - constraints.maxHeight,
-        //     );
-        //
-        // // Dispose the previous week timeline controller
-        // _timelineController?.dispose();
-        // _timelineController = ScrollController(
-        //   initialScrollOffset: scrollOffset,
-        // );
-
         double mainAxisSpacing = 1.0;
         double crossAxisSpacing = 1.0;
         double aspectRatio = (constraints.maxWidth - crossAxisSpacing * 6) / 7
@@ -304,7 +262,6 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
             bottom: 1,
           ),
           color: widget.divider?.color ?? Colors.grey,
-          // controller: _timelineController,
           child: IntrinsicHeight(
             child: GridView.count(
               crossAxisCount: 7,
@@ -324,12 +281,9 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   }
 
   Widget _singleDayView(DateTime dayDate) {
-    final theme = widget.timelineTheme;
     final bool isToday = DateUtils.isSameDay(dayDate, _now);
 
     return Container(
-      // height: 200,
-      // color: Colors.red,
       color: Theme.of(context).scaffoldBackgroundColor,
       child: RenderIdProvider(
         id: dayDate,
@@ -349,16 +303,11 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
               widget.onDateLongPress?.call(timestamp);
             },
             child: Container(
-              // padding: EdgeInsets.only(
-              //   top: theme.padding.top,
-              //   // bottom: theme.padding.bottom,
-              // ),
               color: Colors.transparent, // Needs for hitTesting
               child: Column(
                 children: [
                   Container(
                     margin: EdgeInsets.all(5),
-                    // padding: EdgeInsets.all(5),
                     height: 22,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
