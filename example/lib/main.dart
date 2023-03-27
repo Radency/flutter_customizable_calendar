@@ -429,9 +429,11 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         fontWeight: FontWeight.bold,
       ),
       currentDayColor: Colors.grey,
+      dayColor: Colors.white,
       spacingColor: Colors.orange,
       dayNumberHeight: 23,
-      dayNumberMargin: EdgeInsets.all(3)
+      dayNumberMargin: EdgeInsets.all(3),
+      dayNumberBackgroundColor: Colors.grey.withOpacity(0.3),
     ),
     breaks: listCubit.state.breaks.values.toList(),
     events: listCubit.state.events.values.cast<T>().toList(),
