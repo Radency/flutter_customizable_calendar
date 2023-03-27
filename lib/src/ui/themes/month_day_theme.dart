@@ -9,8 +9,14 @@ class MonthDayTheme extends Equatable {
     this.currentDayColor,
     this.dayNumberBackgroundColor = Colors.transparent,
     this.currentDayNumberBackgroundColor = Colors.blue,
+    this.spacingColor,
     this.dayNumberTextStyle = const TextStyle(),
     this.currentDayNumberTextStyle = const TextStyle(),
+    this.crossAxisSpacing = 1.0,
+    this.mainAxisSpacing = 1.0,
+    this.dayNumberPadding,
+    this.dayNumberMargin,
+    this.dayNumberHeight,
   });
 
   /// The color of day card
@@ -25,11 +31,29 @@ class MonthDayTheme extends Equatable {
   /// The background color of current day number
   final Color currentDayNumberBackgroundColor;
 
+  /// The color of spacing between day views
+  final Color? spacingColor;
+
   /// The TextStyle of day number
   final TextStyle dayNumberTextStyle;
 
   /// The TextStyle of current day number
   final TextStyle currentDayNumberTextStyle;
+
+  /// The cross axis spacing of spacing between day views
+  final double crossAxisSpacing;
+
+  /// The main axis spacing of spacing between day views
+  final double mainAxisSpacing;
+
+  /// The height of day number container
+  final double? dayNumberHeight;
+
+  /// The margin of day number container
+  final EdgeInsets? dayNumberMargin;
+
+  /// The padding of day number container
+  final EdgeInsets? dayNumberPadding;
 
   @override
   List<Object?> get props => [
@@ -39,6 +63,12 @@ class MonthDayTheme extends Equatable {
     currentDayNumberBackgroundColor,
     dayNumberTextStyle,
     currentDayNumberTextStyle,
+    spacingColor,
+    crossAxisSpacing,
+    mainAxisSpacing,
+    dayNumberHeight,
+    dayNumberMargin,
+    dayNumberPadding,
   ];
 
   /// Creates a copy of this theme but with the given fields replaced with
@@ -50,6 +80,12 @@ class MonthDayTheme extends Equatable {
     Color? currentDayNumberBackgroundColor,
     TextStyle? dayNumberTextStyle,
     TextStyle? currentDayNumberTextStyle,
+    Color? spacingColor,
+    double? crossAxisSpacing,
+    double? mainAxisSpacing,
+    double? dayNumberHeight,
+    EdgeInsets? dayNumberMargin,
+    EdgeInsets? dayNumberPadding,
   }) {
     return MonthDayTheme(
       dayColor: dayColor ?? this.dayColor,
@@ -58,6 +94,12 @@ class MonthDayTheme extends Equatable {
       currentDayNumberBackgroundColor: currentDayNumberBackgroundColor ?? this.currentDayNumberBackgroundColor,
       dayNumberTextStyle: dayNumberTextStyle ?? this.dayNumberTextStyle,
       currentDayNumberTextStyle: currentDayNumberTextStyle ?? this.currentDayNumberTextStyle,
+      spacingColor: spacingColor ?? this.spacingColor,
+      crossAxisSpacing: crossAxisSpacing ?? this.crossAxisSpacing,
+      mainAxisSpacing: mainAxisSpacing ?? this.mainAxisSpacing,
+      dayNumberHeight: dayNumberHeight ?? this.dayNumberHeight,
+      dayNumberMargin: dayNumberMargin ?? this.dayNumberMargin,
+      dayNumberPadding: dayNumberPadding ?? this.dayNumberPadding,
     );
   }
 }

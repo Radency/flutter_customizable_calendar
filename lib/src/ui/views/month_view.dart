@@ -250,10 +250,12 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   }
 
   Widget _monthDays(List<DateTime> days) {
+    final theme = widget.monthDayTheme;
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        double mainAxisSpacing = 1.0;
-        double crossAxisSpacing = 1.0;
+        double mainAxisSpacing = theme.mainAxisSpacing;
+        double crossAxisSpacing = theme.crossAxisSpacing;
         double aspectRatio = (constraints.maxWidth - crossAxisSpacing * 6) / 7
             / (constraints.maxHeight - mainAxisSpacing * 5) * 6;
         bool shouldScroll = aspectRatio > 1;
@@ -266,7 +268,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
           padding: EdgeInsets.only(
             bottom: 1,
           ),
-          color: widget.divider?.color ?? Colors.grey,
+          color: theme.spacingColor ?? widget.divider?.color ?? Colors.grey,
           child: IntrinsicHeight(
             child: GridView.count(
               crossAxisCount: 7,
@@ -314,8 +316,9 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
               child: Column(
                 children: [
                   Container(
-                    margin: EdgeInsets.all(5),
-                    height: 22,
+                    padding: theme.dayNumberPadding,
+                    margin: theme.dayNumberMargin,
+                    height: theme.dayNumberHeight,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
