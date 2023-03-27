@@ -398,7 +398,8 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     divider: Divider(
       height: 2,
       thickness: 1,
-      color: Colors.grey.withOpacity(0.33),
+      // color: Colors.grey.withOpacity(0.33),
+      color: Colors.orange,
     ),
     daysRowTheme: DaysRowTheme(
       weekdayStyle: _textStyle,
@@ -421,6 +422,13 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       ),
       floatingEventsTheme: _floatingEventsTheme,
       draggableEventTheme: _draggableEventTheme,
+    ),
+    monthDayTheme: MonthDayTheme(
+      currentDayNumberTextStyle: TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+      currentDayColor: Colors.grey,
     ),
     breaks: listCubit.state.breaks.values.toList(),
     events: listCubit.state.events.values.cast<T>().toList(),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
+import 'package:flutter_customizable_calendar/src/ui/themes/month_day_theme.dart';
 import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.dart';
 
 /// A key holder of all MonthView keys
@@ -28,6 +29,7 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.divider,
     this.timelineTheme = const TimelineTheme(),
     this.floatingEventTheme = const FloatingEventsTheme(),
+    this.monthDayTheme = const MonthDayTheme(),
     this.breaks = const [],
     this.events = const [],
     this.onDateLongPress,
@@ -55,6 +57,9 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Floating events customization params
   final FloatingEventsTheme floatingEventTheme;
+
+  /// Single day customization params
+  final MonthDayTheme monthDayTheme;
 
   /// Breaks list to display
   final List<Break> breaks;
@@ -281,10 +286,12 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   }
 
   Widget _singleDayView(DateTime dayDate) {
+    final theme = widget.monthDayTheme;
     final bool isToday = DateUtils.isSameDay(dayDate, _now);
 
     return Container(
-      color: Theme.of(context).scaffoldBackgroundColor,
+      color: (isToday ? theme.currentDayColor : theme.dayColor)
+          ??  Theme.of(context).scaffoldBackgroundColor,
       child: RenderIdProvider(
         id: dayDate,
         child: ValueListenableBuilder(
@@ -312,13 +319,15 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isToday ? Colors.blue : null,
+                      color: isToday
+                          ? theme.currentDayNumberBackgroundColor
+                          : theme.dayNumberBackgroundColor,
                     ),
                     child: Text(
                       dayDate.day.toString(),
-                      style: TextStyle(
-                        color: isToday ? Colors.white : null,
-                      ),
+                      style: isToday
+                          ? theme.currentDayNumberTextStyle
+                          : theme.dayNumberTextStyle,
                     ),
                   ),
                   Expanded(
