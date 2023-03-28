@@ -341,7 +341,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
     int firstOffset = _range.start.difference(_pointerTimePoint).inDays;
     _dayOffsets = List.generate(_range.days.length + 1, (index) => firstOffset + index);
-    print("aaa");
   }
 
   void _updateEventHeightAndDuration() {

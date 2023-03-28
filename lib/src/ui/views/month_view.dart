@@ -201,7 +201,6 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, pageIndex) {
         final monthDays = widget.controller.state.displayedMonth.days;
-        print ("aaa");
 
         return Padding(
           padding: EdgeInsets.only(
