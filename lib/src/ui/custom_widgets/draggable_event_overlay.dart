@@ -552,6 +552,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     return EventView(
         widget.event.value!,
         key: DraggableEventOverlayKeys.elevatedEvent,
+        viewType: widget.viewType,
         theme: widget.timelineTheme.floatingEventsTheme
             .copyWith(elevation: _draggableEventTheme.elevation),
         onTap: () {},

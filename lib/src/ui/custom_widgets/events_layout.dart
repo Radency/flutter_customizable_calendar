@@ -17,11 +17,11 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     required this.layoutsKeys,
     required this.eventsKeys,
     required this.timelineTheme,
+    required this.viewType,
     this.breaks = const [],
     this.events = const [],
     required this.elevatedEvent,
     this.onEventTap,
-    this.simpleView = false,
   });
 
   /// A day which needs to be displayed
@@ -52,7 +52,9 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   final void Function(T)? onEventTap;
 
   /// Defines if show events in simplified way. Defaults to false
-  final bool simpleView;
+  final CalendarView viewType;
+
+  bool get simpleView => viewType == CalendarView.month;
 
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) =>
       list
@@ -110,6 +112,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                           // key: eventsKeys[event] ??= GlobalKey(),
                           event,
                           theme: timelineTheme.floatingEventsTheme,
+                          viewType: viewType,
                           onTap: () => onEventTap?.call(event),
                         ),
                       ),
@@ -143,6 +146,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                           // key: eventsKeys[event] ??= GlobalKey(),
                           event,
                           theme: timelineTheme.floatingEventsTheme,
+                          viewType: viewType,
                           onTap: () => onEventTap?.call(event),
                         ),
                       ),

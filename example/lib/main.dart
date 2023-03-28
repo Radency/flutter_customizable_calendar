@@ -537,6 +537,11 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
           borderRadius: const BorderRadius.all(Radius.circular(4)),
         ),
         margin: const EdgeInsets.all(1),
+        monthTheme: ViewEventTheme(
+          titleStyle: TextStyle(
+            fontSize: 10,
+          ),
+        )
       );
 
   DraggableEventTheme get _draggableEventTheme => DraggableEventTheme(
