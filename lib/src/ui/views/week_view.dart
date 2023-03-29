@@ -461,6 +461,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               color: Colors.transparent, // Needs for hitTesting
               child: EventsLayout<T>(
                 dayDate: dayDate,
+                viewType: CalendarView.week,
                 overlayKey: _overlayKey,
                 layoutsKeys: WeekViewKeys.layouts,
                 eventsKeys: WeekViewKeys.events,

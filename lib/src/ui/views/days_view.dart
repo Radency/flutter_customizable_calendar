@@ -455,6 +455,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                     Expanded(
                       child: EventsLayout<T>(
                         dayDate: dayDate,
+                        viewType: CalendarView.days,
                         overlayKey: _overlayKey,
                         layoutsKeys: DaysViewKeys.layouts,
                         eventsKeys: DaysViewKeys.events,

@@ -7,6 +7,9 @@ class FloatingEventsTheme extends Equatable {
     this.elevation,
     this.shape,
     this.margin,
+    this.dayTheme = const ViewEventTheme(),
+    this.weekTheme = const ViewEventTheme(),
+    this.monthTheme = const ViewEventTheme(),
   });
 
   /// Elevation over a day view
@@ -18,12 +21,19 @@ class FloatingEventsTheme extends Equatable {
   /// Paddings between the views
   final EdgeInsetsGeometry? margin;
 
+  final ViewEventTheme dayTheme;
+  final ViewEventTheme weekTheme;
+  final ViewEventTheme monthTheme;
+
   @override
   List<Object?> get props => [
-        elevation,
-        shape,
-        margin,
-      ];
+    elevation,
+    shape,
+    margin,
+    dayTheme,
+    weekTheme,
+    monthTheme,
+  ];
 
   /// Creates a copy of this theme but with the given fields replaced with
   /// the new values
@@ -31,11 +41,26 @@ class FloatingEventsTheme extends Equatable {
     double? elevation,
     ShapeBorder? shape,
     EdgeInsetsGeometry? margin,
+    ViewEventTheme? dayTheme,
+    ViewEventTheme? weekTheme,
+    ViewEventTheme? monthTheme,
   }) {
     return FloatingEventsTheme(
       elevation: elevation ?? this.elevation,
       shape: shape ?? this.shape,
       margin: margin ?? this.margin,
+      dayTheme: dayTheme ?? this.dayTheme,
+      weekTheme: weekTheme ?? this.weekTheme,
+      monthTheme: monthTheme ?? this.monthTheme,
     );
   }
+}
+
+class ViewEventTheme extends Equatable {
+  const ViewEventTheme({this.titleStyle = const TextStyle()});
+
+  final TextStyle titleStyle;
+
+  @override
+  List<Object?> get props => [titleStyle];
 }

@@ -17,6 +17,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     required this.layoutsKeys,
     required this.eventsKeys,
     required this.timelineTheme,
+    required this.viewType,
     this.breaks = const [],
     this.events = const [],
     required this.elevatedEvent,
@@ -50,21 +51,28 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   /// Callback which returns a tapped event value
   final void Function(T)? onEventTap;
 
-  List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) => list
-      .where((event) => DateUtils.isSameDay(event.start, dayDate) ||
-      (event.start.isBefore(dayDate) && event.end.isAfter(dayDate)))
-      .toList(growable: false);
+  /// Defines if show events in simplified way. Defaults to false
+  final CalendarView viewType;
+
+  bool get simpleView => viewType == CalendarView.month;
+
+  List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) =>
+      list
+          .where((event) =>
+      DateUtils.isSameDay(event.start, dayDate) ||
+          (event.start.isBefore(dayDate) && event.end.isAfter(dayDate)))
+          .toList(growable: false);
 
   @override
   Widget build(BuildContext context) {
     final breaksToDisplay = _getEventsOnDay(breaks);
-    final eventsToDisplay = _getEventsOnDay(events);
+    final eventsToDisplay = _getEventsOnDay(events)..sort();
     final overlay = overlayKey.currentState!;
 
     return RenderIdProvider(
       id: Constants.layoutId,
-      child: CustomMultiChildLayout(
-        key: layoutsKeys[dayDate] ??= GlobalKey(),
+      key: layoutsKeys[dayDate] ??= GlobalKey(),
+      child: !simpleView ? CustomMultiChildLayout(
         delegate: _EventsLayoutDelegate<T>(
           date: dayDate,
           breaks: breaksToDisplay,
@@ -72,38 +80,79 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
           cellExtent: timelineTheme.cellExtent,
         ),
         children: [
-          ...breaksToDisplay.map(
-            (event) => LayoutId(
-              id: event,
-              child: BreakView(event),
+          if (!simpleView)
+            ...breaksToDisplay.map(
+                  (event) =>
+                  LayoutId(
+                    id: event,
+                    child: BreakView(event),
+                  ),
             ),
-          ),
           ...eventsToDisplay.map(
-            (event) => LayoutId(
-              id: event,
-              child: GestureDetector(
-                onLongPressStart: overlay.onEventLongPressStart,
-                onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-                onLongPressEnd: overlay.onEventLongPressEnd,
-                onLongPressCancel: overlay.onEventLongPressCancel,
-                child: RenderIdProvider(
+                (event) =>
+                LayoutId(
                   id: event,
-                  child: ValueListenableBuilder(
-                    valueListenable: elevatedEvent,
-                    builder: (context, elevatedEvent, child) => Opacity(
-                      opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
-                      child: child,
-                    ),
-                    child: EventView(
-                      // key: eventsKeys[event] ??= GlobalKey(),
-                      event,
-                      theme: timelineTheme.floatingEventsTheme,
-                      onTap: () => onEventTap?.call(event),
+                  child: GestureDetector(
+                    onLongPressStart: overlay.onEventLongPressStart,
+                    onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+                    onLongPressEnd: overlay.onEventLongPressEnd,
+                    onLongPressCancel: overlay.onEventLongPressCancel,
+                    child: RenderIdProvider(
+                      id: event,
+                      child: ValueListenableBuilder(
+                        valueListenable: elevatedEvent,
+                        builder: (context, elevatedEvent, child) =>
+                            Opacity(
+                              opacity: (elevatedEvent?.id == event.id)
+                                  ? 0.5
+                                  : 1,
+                              child: child,
+                            ),
+                        child: EventView(
+                          // key: eventsKeys[event] ??= GlobalKey(),
+                          event,
+                          theme: timelineTheme.floatingEventsTheme,
+                          viewType: viewType,
+                          onTap: () => onEventTap?.call(event),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
+          ),
+        ],
+      ) : ListView(
+        children: [
+          ...eventsToDisplay.map((event) =>
+                Container(
+                  margin: EdgeInsets.only(bottom: 2),
+                  child: GestureDetector(
+                    onLongPressStart: overlay.onEventLongPressStart,
+                    onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+                    onLongPressEnd: overlay.onEventLongPressEnd,
+                    onLongPressCancel: overlay.onEventLongPressCancel,
+                    child: RenderIdProvider(
+                      id: event,
+                      child: ValueListenableBuilder(
+                        valueListenable: elevatedEvent,
+                        builder: (context, elevatedEvent, child) =>
+                            Opacity(
+                              opacity: (elevatedEvent?.id == event.id)
+                                  ? 0.5
+                                  : 1,
+                              child: child,
+                            ),
+                        child: EventView(
+                          // key: eventsKeys[event] ??= GlobalKey(),
+                          event,
+                          theme: timelineTheme.floatingEventsTheme,
+                          viewType: viewType,
+                          onTap: () => onEventTap?.call(event),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
           ),
         ],
       ),

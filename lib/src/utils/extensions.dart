@@ -29,6 +29,22 @@ extension WeekUtils on DateTime {
 }
 
 ///
+extension MonthUtils on DateTime {
+  /// Returns day dates of 6 weeks which include current month.
+  DateTimeRange get monthViewRange {
+    DateTime first = DateUtils.addDaysToDate(this, 1 - day);
+    DateTime startDate = DateUtils.addDaysToDate(first, 1 - first.weekday);
+
+    /// In case of clock change, set end day to 12:00
+    return DateTimeRange(
+      start: startDate,
+      end: DateUtils.addDaysToDate(startDate, 42)
+          .add(Duration(hours: 12)),
+    );
+  }
+}
+
+///
 extension DaysList on DateTimeRange {
   /// Returns all days dates between [start] and [end] values.
   List<DateTime> get days => List.generate(

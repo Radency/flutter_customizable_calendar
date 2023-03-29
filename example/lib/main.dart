@@ -391,7 +391,112 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         },
       );
 
-  Widget _monthView() => MonthView<T>();
+  Widget _monthView() => MonthView<T>(
+    saverConfig: _saverConfig(),
+    controller: _monthViewController,
+    monthPickerTheme: _periodPickerTheme,
+    divider: Divider(
+      height: 2,
+      thickness: 2,
+      // color: Colors.grey.withOpacity(0.33),
+      color: Colors.green,
+    ),
+    daysRowTheme: DaysRowTheme(
+      weekdayStyle: _textStyle,
+      numberStyle: _textStyle.copyWith(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: _theme.primaryColor,
+      ),
+    ),
+    timelineTheme: TimelineTheme(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      timeScaleTheme: TimeScaleTheme(
+        width: 48,
+        currentTimeMarkTheme: _currentTimeMarkTheme,
+        drawHalfHourMarks: false,
+        drawQuarterHourMarks: false,
+        hourFormatter: (time) => time.hour.toString(),
+        textStyle: _textStyle,
+        marksAlign: MarksAlign.center,
+      ),
+      floatingEventsTheme: _floatingEventsTheme,
+      draggableEventTheme: _draggableEventTheme,
+    ),
+    monthDayTheme: MonthDayTheme(
+      currentDayNumberTextStyle: TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+      currentDayColor: Colors.grey,
+      dayColor: Colors.white,
+      spacingColor: Colors.orange,
+      dayNumberHeight: 23,
+      dayNumberMargin: EdgeInsets.all(3),
+      dayNumberBackgroundColor: Colors.grey.withOpacity(0.3),
+    ),
+    breaks: listCubit.state.breaks.values.toList(),
+    events: listCubit.state.events.values.cast<T>().toList(),
+    onDateLongPress: (timestamp) async {
+      print(timestamp);
+      final _minute = timestamp.minute;
+      await showModalBottomSheet(
+        context: context,
+        builder: (context) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListTile(
+              title: Text("Simple Event"),
+              onTap: (){
+                listCubit.save(
+                  SimpleEvent(
+                    id: const Uuid().v1(),
+                    start: timestamp.subtract(Duration(minutes: _minute)),
+                    duration: Duration(hours: 1),
+                    title: "Simple event",
+                  ) as T,
+                );
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              title: Text("Task Due"),
+              onTap: (){
+                listCubit.save(
+                  TaskDue(
+                    id: const Uuid().v1(),
+                    start: timestamp.subtract(Duration(minutes: _minute)),
+                  ) as T,
+                );
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              title: Text("Break"),
+              onTap: (){
+                listCubit.save(
+                  Break(
+                    id: const Uuid().v1(),
+                    start: timestamp.subtract(Duration(minutes: _minute)),
+                    duration: Duration(hours: 1),
+                  ),
+                );
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      );
+    },
+    onEventTap: print,
+    onEventUpdated: (obj){
+      print(obj);
+      context.read<ListCubit>().save(obj);
+    },
+    onDiscardChanges: (obj){
+      print(obj);
+    },
+  );
 
   SaverConfig _saverConfig() => SaverConfig(
     child: Container(
@@ -432,6 +537,11 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
           borderRadius: const BorderRadius.all(Radius.circular(4)),
         ),
         margin: const EdgeInsets.all(1),
+        monthTheme: ViewEventTheme(
+          titleStyle: TextStyle(
+            fontSize: 10,
+          ),
+        )
       );
 
   DraggableEventTheme get _draggableEventTheme => DraggableEventTheme(
