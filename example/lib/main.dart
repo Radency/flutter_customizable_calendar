@@ -35,6 +35,11 @@ class App extends StatelessWidget {
         id: 'TaskDue 1',
         start: today.add(const Duration(hours: 13)),
       ),
+      // TaskDue(
+      //   id: 'TaskDue 2',
+      //   start: today.add(const Duration(hours: 27)),
+      //   wholeDay: true,
+      // ),
       SimpleEvent(
         id: 'Event 2',
         start: today.add(const Duration(hours: 12)),
@@ -429,7 +434,8 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         fontWeight: FontWeight.bold,
       ),
       currentDayColor: Colors.grey,
-      dayColor: Colors.white,
+      dayColor: Colors.white.withOpacity(0.3),
+      // dayColor: Colors.transparent,
       spacingColor: Colors.orange,
       dayNumberHeight: 23,
       dayNumberMargin: EdgeInsets.all(3),
@@ -537,11 +543,11 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
           borderRadius: const BorderRadius.all(Radius.circular(4)),
         ),
         margin: const EdgeInsets.all(1),
-        monthTheme: ViewEventTheme(
-          titleStyle: TextStyle(
-            fontSize: 10,
-          ),
-        )
+        // monthTheme: ViewEventTheme(
+        //   titleStyle: TextStyle(
+        //     fontSize: 10,
+        //   ),
+        // )
       );
 
   DraggableEventTheme get _draggableEventTheme => DraggableEventTheme(

@@ -657,6 +657,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     if (widget.viewType == CalendarView.month) {
       DateTime _date = dayDate.add(Duration(days: _dayOffsets.first));
+      int _totalDays = _dayOffsets.length;
 
       for (int i = _dayOffsets.first; i <= _dayOffsets.last; i++) {
         final layoutBox = widget.getLayoutBox(_date);
@@ -681,13 +682,16 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         }
 
         result.add(Rect.fromLTWH(
-          layoutPosition.dx + _delta.dx,
+          // layoutPosition.dx + _delta.dx,
+          _date.isSameWeekAs(dayDate) ? bounds.left : layoutPosition.dx + _delta.dx,
           bounds.top + _weekOffset,
-          bounds.width,
+          bounds.width * _totalDays,
           bounds.height,
         ));
         _date = _date.add(Duration(days: 1));
       }
+
+      result = [];
     }
 
     return result;

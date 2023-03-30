@@ -344,7 +344,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                       elevatedEvent: _elevatedEvent,
                       onEventTap: widget.onEventTap,
                       viewType: CalendarView.month,
-                    ),
+                    )
                   ),
                 ],
               ),
