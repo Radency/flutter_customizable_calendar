@@ -72,15 +72,12 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     return RenderIdProvider(
       id: Constants.layoutId,
       key: layoutsKeys[dayDate] ??= GlobalKey(),
-      child: CustomMultiChildLayout(
-        delegate: !simpleView ? _EventsLayoutDelegate<T>(
+      child: !simpleView ? CustomMultiChildLayout(
+        delegate: _EventsLayoutDelegate<T>(
           date: dayDate,
           breaks: breaksToDisplay,
           events: eventsToDisplay,
           cellExtent: timelineTheme.cellExtent,
-        ) : _SimpleEventsLayoutDelegate(
-          date: dayDate,
-          events: eventsToDisplay,
         ),
         children: [
           if (!simpleView)
@@ -124,42 +121,41 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                 ),
           ),
         ],
-      )
-      //       : ListView(
-      //   children: [
-      //     ...eventsToDisplay.map((event) =>
-      //           Container(
-      //             margin: EdgeInsets.only(bottom: 2),
-      //             child: GestureDetector(
-      //               onLongPressStart: overlay.onEventLongPressStart,
-      //               onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-      //               onLongPressEnd: overlay.onEventLongPressEnd,
-      //               onLongPressCancel: overlay.onEventLongPressCancel,
-      //               child: RenderIdProvider(
-      //                 id: event,
-      //                 child: ValueListenableBuilder(
-      //                   valueListenable: elevatedEvent,
-      //                   builder: (context, elevatedEvent, child) =>
-      //                       Opacity(
-      //                         opacity: (elevatedEvent?.id == event.id)
-      //                             ? 0.5
-      //                             : 1,
-      //                         child: child,
-      //                       ),
-      //                   child: EventView(
-      //                     // key: eventsKeys[event] ??= GlobalKey(),
-      //                     event,
-      //                     theme: timelineTheme.floatingEventsTheme,
-      //                     viewType: viewType,
-      //                     onTap: () => onEventTap?.call(event),
-      //                   ),
-      //                 ),
-      //               ),
-      //             ),
-      //           ),
-      //     ),
-      //   ],
-      // ),
+      ) : ListView(
+        children: [
+          ...eventsToDisplay.map((event) =>
+                Container(
+                  margin: EdgeInsets.only(bottom: 2),
+                  child: GestureDetector(
+                    onLongPressStart: overlay.onEventLongPressStart,
+                    onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+                    onLongPressEnd: overlay.onEventLongPressEnd,
+                    onLongPressCancel: overlay.onEventLongPressCancel,
+                    child: RenderIdProvider(
+                      id: event,
+                      child: ValueListenableBuilder(
+                        valueListenable: elevatedEvent,
+                        builder: (context, elevatedEvent, child) =>
+                            Opacity(
+                              opacity: (elevatedEvent?.id == event.id)
+                                  ? 0.5
+                                  : 1,
+                              child: child,
+                            ),
+                        child: EventView(
+                          // key: eventsKeys[event] ??= GlobalKey(),
+                          event,
+                          theme: timelineTheme.floatingEventsTheme,
+                          viewType: viewType,
+                          onTap: () => onEventTap?.call(event),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -303,70 +299,70 @@ class _EventsLayoutDelegate<T extends FloatingCalendarEvent>
   }
 }
 
-class _SimpleEventsLayoutDelegate<T extends FloatingCalendarEvent>
-    extends MultiChildLayoutDelegate {
-  _SimpleEventsLayoutDelegate({
-    required this.date,
-    // required this.breaks,
-    required this.events,
-  }) {
-    events.sort(); // Sorting the events before layout
-  }
-
-  final DateTime date;
-  // final List<Break> breaks;
-  final List<T> events;
-
-  @override
-  void performLayout(Size size) {
-    final layoutsMap = <T, Rect>{};
-
-    // Laying out all events
-    for (int i = 0; i < events.length; i++) {
-      final event = events[i];
-      final eventHeight = 30.0;
-      DateTimeRange _range = DateTimeRange(
-        start: DateUtils.dateOnly(event.start),
-        end: DateUtils.dateOnly(event.end),
-      );
-      final eventDays = _range.days.length + 1;
-      // final eventDays = 2;
-
-      layoutsMap[event] = Rect.fromLTWH(
-        0,
-        (eventHeight + 5) * i,
-        size.width * eventDays,
-        eventHeight,
-      );
-
-      // if (hasChild(event) && DateUtils.dateOnly(event.start) == date) {
-      if (hasChild(event)) {
-        layoutChild(
-          event,
-          BoxConstraints.tightFor(
-            width: size.width * eventDays,
-            height: eventHeight,
-          ),
-        );
-        positionChild(
-          event,
-          Offset(0, (eventHeight + 5) * i),
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRelayout(covariant _SimpleEventsLayoutDelegate<T> oldDelegate) {
-    if (events.length != oldDelegate.events.length) return true;
-
-    for (var index = 0; index < events.length; index++) {
-      if (events[index].compareTo(oldDelegate.events[index]) != 0) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-}
+// class _SimpleEventsLayoutDelegate<T extends FloatingCalendarEvent>
+//     extends MultiChildLayoutDelegate {
+//   _SimpleEventsLayoutDelegate({
+//     required this.date,
+//     // required this.breaks,
+//     required this.events,
+//   }) {
+//     events.sort(); // Sorting the events before layout
+//   }
+//
+//   final DateTime date;
+//   // final List<Break> breaks;
+//   final List<T> events;
+//
+//   @override
+//   void performLayout(Size size) {
+//     final layoutsMap = <T, Rect>{};
+//
+//     // Laying out all events
+//     for (int i = 0; i < events.length; i++) {
+//       final event = events[i];
+//       final eventHeight = 30.0;
+//       DateTimeRange _range = DateTimeRange(
+//         start: DateUtils.dateOnly(event.start),
+//         end: DateUtils.dateOnly(event.end),
+//       );
+//       final eventDays = _range.days.length + 1;
+//       // final eventDays = 2;
+//
+//       layoutsMap[event] = Rect.fromLTWH(
+//         0,
+//         (eventHeight + 5) * i,
+//         size.width * eventDays,
+//         eventHeight,
+//       );
+//
+//       // if (hasChild(event) && DateUtils.dateOnly(event.start) == date) {
+//       if (hasChild(event)) {
+//         layoutChild(
+//           event,
+//           BoxConstraints.tightFor(
+//             width: size.width * eventDays,
+//             height: eventHeight,
+//           ),
+//         );
+//         positionChild(
+//           event,
+//           Offset(0, (eventHeight + 5) * i),
+//         );
+//       }
+//     }
+//   }
+//
+//   @override
+//   bool shouldRelayout(covariant _SimpleEventsLayoutDelegate<T> oldDelegate) {
+//     if (events.length != oldDelegate.events.length) return true;
+//
+//     for (var index = 0; index < events.length; index++) {
+//       if (events[index].compareTo(oldDelegate.events[index]) != 0) {
+//         return true;
+//       }
+//     }
+//
+//     return false;
+//   }
+// }
 
