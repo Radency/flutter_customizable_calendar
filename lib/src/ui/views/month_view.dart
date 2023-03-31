@@ -277,7 +277,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
               childAspectRatio: aspectRatio,
               physics: shouldScroll ? null : NeverScrollableScrollPhysics(),
               children: [
-                ...days.map(_singleDayView),
+                ...days.map((day) => _singleDayView(day, constraints.maxWidth * 13 / 7)),
               ],
             ),
           ),
@@ -286,7 +286,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     );
   }
 
-  Widget _singleDayView(DateTime dayDate) {
+  Widget _singleDayView(DateTime dayDate, double maxWidth) {
     final theme = widget.monthDayTheme;
     final bool isToday = DateUtils.isSameDay(dayDate, _now);
 
@@ -333,17 +333,27 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                     ),
                   ),
                   Expanded(
-                    child: EventsLayout<T>(
-                      dayDate: dayDate,
-                      overlayKey: _overlayKey,
-                      layoutsKeys: MonthViewKeys.layouts,
-                      eventsKeys: MonthViewKeys.events,
-                      timelineTheme: widget.timelineTheme,
-                      breaks: widget.breaks,
-                      events: widget.events,
-                      elevatedEvent: _elevatedEvent,
-                      onEventTap: widget.onEventTap,
-                      viewType: CalendarView.month,
+                    child: OverflowBox(
+                      maxWidth: maxWidth,
+                      child: Container(
+                        margin: EdgeInsets.only(
+                          // left: maxWidth * 3 / 7,
+                          left: maxWidth * 6 / 13,
+                        ),
+                        child: EventsLayout<T>(
+                          dayDate: dayDate,
+                          overlayKey: _overlayKey,
+                          layoutsKeys: MonthViewKeys.layouts,
+                          eventsKeys: MonthViewKeys.events,
+                          timelineTheme: widget.timelineTheme,
+                          breaks: widget.breaks,
+                          events: widget.events,
+                          elevatedEvent: _elevatedEvent,
+                          onEventTap: widget.onEventTap,
+                          viewType: CalendarView.month,
+                          dayWidth: maxWidth / 13,
+                        ),
+                      ),
                     )
                   ),
                 ],

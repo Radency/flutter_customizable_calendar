@@ -691,7 +691,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         _date = _date.add(Duration(days: 1));
       }
 
-      // result = [];
+      result = [];
     }
 
     return result;
