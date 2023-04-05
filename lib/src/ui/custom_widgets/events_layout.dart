@@ -77,31 +77,82 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     final eventsToDisplay = _getEventsOnDay(events)..sort();
     final overlay = overlayKey.currentState!;
 
-    return Container(
-      // color: Colors.blue,
-      child: RenderIdProvider(
-        id: Constants.layoutId,
-        key: layoutsKeys[dayDate] ??= GlobalKey(),
-        child: !simpleView ? CustomMultiChildLayout(
-          delegate: _EventsLayoutDelegate<T>(
-            date: dayDate,
-            breaks: breaksToDisplay,
-            events: eventsToDisplay,
-            cellExtent: timelineTheme.cellExtent,
-          ),
-          children: [
-            if (!simpleView)
-              ...breaksToDisplay.map(
-                    (event) =>
-                    LayoutId(
-                      id: event,
-                      child: BreakView(event),
-                    ),
-              ),
-            ...eventsToDisplay.map(
+    return RenderIdProvider(
+      id: Constants.layoutId,
+      key: layoutsKeys[dayDate] ??= GlobalKey(),
+      child: !simpleView ? CustomMultiChildLayout(
+        delegate: _EventsLayoutDelegate<T>(
+          date: dayDate,
+          breaks: breaksToDisplay,
+          events: eventsToDisplay,
+          cellExtent: timelineTheme.cellExtent,
+        ),
+        children: [
+          if (!simpleView)
+            ...breaksToDisplay.map(
                   (event) =>
                   LayoutId(
                     id: event,
+                    child: BreakView(event),
+                  ),
+            ),
+          ...eventsToDisplay.map(
+                (event) =>
+                LayoutId(
+                  id: event,
+                  child: GestureDetector(
+                    onLongPressStart: overlay.onEventLongPressStart,
+                    onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+                    onLongPressEnd: overlay.onEventLongPressEnd,
+                    onLongPressCancel: overlay.onEventLongPressCancel,
+                    child: RenderIdProvider(
+                      id: event,
+                      child: ValueListenableBuilder(
+                        valueListenable: elevatedEvent,
+                        builder: (context, elevatedEvent, child) =>
+                            Opacity(
+                              opacity: (elevatedEvent?.id == event.id)
+                                  ? 0.5
+                                  : 1,
+                              child: child,
+                            ),
+                        child: EventView(
+                          // key: eventsKeys[event] ??= GlobalKey(),
+                          event,
+                          theme: timelineTheme.floatingEventsTheme,
+                          viewType: viewType,
+                          onTap: () => onEventTap?.call(event),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+          ),
+        ],
+      ) : GestureDetector(
+        onLongPressStart: overlay.onEventLongPressStart,
+        onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+        onLongPressEnd: overlay.onEventLongPressEnd,
+        onLongPressCancel: overlay.onEventLongPressCancel,
+        child: Container(
+          color: Colors.green.withOpacity(0.2),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              ...eventsToDisplay.map((event) {
+                DateTimeRange _range = DateTimeRange(
+                  start: DateUtils.dateOnly(event.start),
+                  end: DateUtils.dateOnly(event.end),
+                );
+                int _eventDays = _range.days.length + 1;
+
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Container(
+                    width: dayWidth! * _eventDays,
+                    margin: const EdgeInsets.only(
+                      bottom: 2,
+                    ),
                     child: GestureDetector(
                       onLongPressStart: overlay.onEventLongPressStart,
                       onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
@@ -123,79 +174,22 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                             event,
                             theme: timelineTheme.floatingEventsTheme,
                             viewType: viewType,
-                            onTap: () => onEventTap?.call(event),
+                            onTap: () {
+                              onEventTap?.call(event);
+                            },
                           ),
                         ),
                       ),
                     ),
                   ),
-            ),
-          ],
-        ) : GestureDetector(
-          // behavior: HitTestBehavior.translucent,
-          onLongPressStart: overlay.onEventLongPressStart,
-          onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-          onLongPressEnd: overlay.onEventLongPressEnd,
-          onLongPressCancel: overlay.onEventLongPressCancel,
-          child: Container(
-            color: Colors.green.withOpacity(0.2),
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                ...eventsToDisplay.map((event) {
-                  DateTimeRange _range = DateTimeRange(
-                    start: DateUtils.dateOnly(event.start),
-                    end: DateUtils.dateOnly(event.end),
-                  );
-                  int _eventDays = _range.days.length + 1;
-
-                  return Align(
-                    alignment: Alignment.topLeft,
-                    child: Container(
-                      // color: Colors.green,
-                      width: dayWidth! * _eventDays,
-                      margin: const EdgeInsets.only(
-                        bottom: 2,
-                        // right: dayWidth! * (7 - _eventDays),
-                      ),
-                      child: GestureDetector(
-                        onLongPressStart: overlay.onEventLongPressStart,
-                        onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-                        onLongPressEnd: overlay.onEventLongPressEnd,
-                        onLongPressCancel: overlay.onEventLongPressCancel,
-                        child: RenderIdProvider(
-                          id: event,
-                          child: ValueListenableBuilder(
-                            valueListenable: elevatedEvent,
-                            builder: (context, elevatedEvent, child) =>
-                                Opacity(
-                                  opacity: (elevatedEvent?.id == event.id)
-                                      ? 0.5
-                                      : 1,
-                                  child: child,
-                                ),
-                            child: EventView(
-                              // key: eventsKeys[event] ??= GlobalKey(),
-                              event,
-                              theme: timelineTheme.floatingEventsTheme,
-                              viewType: viewType,
-                              onTap: () {
-                                onEventTap?.call(event);
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-                // TODO: Add some space
-                // Container(
-                //   height: 30,
-                //   color: Colors.red,
-                // ),
-              ],
-            ),
+                );
+              }),
+              // TODO: Add some space
+              // Container(
+              //   height: 30,
+              //   color: Colors.red,
+              // ),
+            ],
           ),
         ),
       ),
@@ -341,71 +335,3 @@ class _EventsLayoutDelegate<T extends FloatingCalendarEvent>
     return false;
   }
 }
-
-// class _SimpleEventsLayoutDelegate<T extends FloatingCalendarEvent>
-//     extends MultiChildLayoutDelegate {
-//   _SimpleEventsLayoutDelegate({
-//     required this.date,
-//     // required this.breaks,
-//     required this.events,
-//   }) {
-//     events.sort(); // Sorting the events before layout
-//   }
-//
-//   final DateTime date;
-//   // final List<Break> breaks;
-//   final List<T> events;
-//
-//   @override
-//   void performLayout(Size size) {
-//     final layoutsMap = <T, Rect>{};
-//
-//     // Laying out all events
-//     for (int i = 0; i < events.length; i++) {
-//       final event = events[i];
-//       final eventHeight = 30.0;
-//       DateTimeRange _range = DateTimeRange(
-//         start: DateUtils.dateOnly(event.start),
-//         end: DateUtils.dateOnly(event.end),
-//       );
-//       final eventDays = _range.days.length + 1;
-//       // final eventDays = 2;
-//
-//       layoutsMap[event] = Rect.fromLTWH(
-//         0,
-//         (eventHeight + 5) * i,
-//         size.width * eventDays,
-//         eventHeight,
-//       );
-//
-//       // if (hasChild(event) && DateUtils.dateOnly(event.start) == date) {
-//       if (hasChild(event)) {
-//         layoutChild(
-//           event,
-//           BoxConstraints.tightFor(
-//             width: size.width * eventDays,
-//             height: eventHeight,
-//           ),
-//         );
-//         positionChild(
-//           event,
-//           Offset(0, (eventHeight + 5) * i),
-//         );
-//       }
-//     }
-//   }
-//
-//   @override
-//   bool shouldRelayout(covariant _SimpleEventsLayoutDelegate<T> oldDelegate) {
-//     if (events.length != oldDelegate.events.length) return true;
-//
-//     for (var index = 0; index < events.length; index++) {
-//       if (events[index].compareTo(oldDelegate.events[index]) != 0) {
-//         return true;
-//       }
-//     }
-//
-//     return false;
-//   }
-// }
-

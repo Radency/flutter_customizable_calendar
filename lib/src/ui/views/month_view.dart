@@ -2,8 +2,6 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
-import 'package:flutter_customizable_calendar/src/custom_stack/custom_positioned.dart';
-import 'package:flutter_customizable_calendar/src/custom_stack/custom_stack.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/month_day_theme.dart';
 import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.dart';
@@ -303,117 +301,74 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
             absorbing: elevatedEvent != null,
             child: child,
           ),
-          child: Stack(
-            children: [
-              GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onLongPressStart: (details) {
-                  final timestamp = dayDate.add(Duration(hours: 12));
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onLongPressStart: (details) {
+              final timestamp = dayDate.add(Duration(hours: 12));
 
-                  if (timestamp.isBefore(_initialDate)) return;
-                  if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+              if (timestamp.isBefore(_initialDate)) return;
+              if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 
-                  widget.onDateLongPress?.call(timestamp);
-                },
-                child: Container(
-                  color: Colors.transparent, // Needs for hitTesting
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: theme.dayNumberPadding,
-                        margin: theme.dayNumberMargin,
-                        height: theme.dayNumberHeight,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isToday
-                              ? theme.currentDayNumberBackgroundColor
-                              : theme.dayNumberBackgroundColor,
-                        ),
-                        child: Text(
-                          dayDate.day.toString(),
-                          style: isToday
-                              ? theme.currentDayNumberTextStyle
-                              : theme.dayNumberTextStyle,
-                        ),
-                      ),
-                      Expanded(
-                        // child: OverflowBox(
-                        //   maxWidth: maxWidth,
-                        //   child: Container(
-                        //     margin: EdgeInsets.only(
-                        //       // left: maxWidth * 3 / 7,
-                        //       left: maxWidth * 6 / 13,
-                        //     ),
-                        //     child: EventsLayout<T>(
-                        //       dayDate: dayDate,
-                        //       overlayKey: _overlayKey,
-                        //       layoutsKeys: MonthViewKeys.layouts,
-                        //       eventsKeys: MonthViewKeys.events,
-                        //       timelineTheme: widget.timelineTheme,
-                        //       breaks: widget.breaks,
-                        //       events: widget.events,
-                        //       elevatedEvent: _elevatedEvent,
-                        //       onEventTap: widget.onEventTap,
-                        //       viewType: CalendarView.month,
-                        //       dayWidth: maxWidth / 13,
-                        //     ),
-                        //   ),
-                        // )
-                        child: LayoutBuilder(
-                          builder: (context, constraints) => Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                width: maxWidth,
-                                height: constraints.maxHeight,
-                                child: Container(
-                                  constraints: BoxConstraints(
-                                    maxHeight: constraints.maxHeight,
-                                  ),
-                                  // margin: EdgeInsets.only(
-                                  //   // left: maxWidth * 3 / 7,
-                                  //   left: maxWidth * 6 / 13,
-                                  // ),
-                                  child: EventsLayout<T>(
-                                    dayDate: dayDate,
-                                    overlayKey: _overlayKey,
-                                    layoutsKeys: MonthViewKeys.layouts,
-                                    eventsKeys: MonthViewKeys.events,
-                                    timelineTheme: widget.timelineTheme,
-                                    breaks: widget.breaks,
-                                    events: widget.events,
-                                    elevatedEvent: _elevatedEvent,
-                                    onEventTap: widget.onEventTap,
-                                    viewType: CalendarView.month,
-                                    dayWidth: maxWidth / 13,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+              widget.onDateLongPress?.call(timestamp);
+            },
+            child: Container(
+              color: Colors.transparent, // Needs for hitTesting
+              child: Column(
+                children: [
+                  Container(
+                    padding: theme.dayNumberPadding,
+                    margin: theme.dayNumberMargin,
+                    height: theme.dayNumberHeight,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isToday
+                          ? theme.currentDayNumberBackgroundColor
+                          : theme.dayNumberBackgroundColor,
+                    ),
+                    child: Text(
+                      dayDate.day.toString(),
+                      style: isToday
+                          ? theme.currentDayNumberTextStyle
+                          : theme.dayNumberTextStyle,
+                    ),
                   ),
-                ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            width: maxWidth,
+                            height: constraints.maxHeight,
+                            child: Container(
+                              constraints: BoxConstraints(
+                                maxHeight: constraints.maxHeight,
+                              ),
+                              child: EventsLayout<T>(
+                                dayDate: dayDate,
+                                overlayKey: _overlayKey,
+                                layoutsKeys: MonthViewKeys.layouts,
+                                eventsKeys: MonthViewKeys.events,
+                                timelineTheme: widget.timelineTheme,
+                                breaks: widget.breaks,
+                                events: widget.events,
+                                elevatedEvent: _elevatedEvent,
+                                onEventTap: widget.onEventTap,
+                                viewType: CalendarView.month,
+                                dayWidth: maxWidth / 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              // if (_elevatedEvent.value == null)
-              //   Positioned.fill(
-              //     child: GestureDetector(
-              //       onLongPressStart: (details) {
-              //         final timestamp = dayDate.add(Duration(hours: 12));
-              //
-              //         if (timestamp.isBefore(_initialDate)) return;
-              //         if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
-              //
-              //         widget.onDateLongPress?.call(timestamp);
-              //       },
-              //     ),
-              //   ),
-            ],
+            ),
           ),
         ),
       ),
