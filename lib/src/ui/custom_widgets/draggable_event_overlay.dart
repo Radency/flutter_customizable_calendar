@@ -106,7 +106,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   late Animation<double> _animation;
   late RectTween _boundsTween;
   late DateTime _pointerTimePoint;
-  late Duration _startDiff;
+  late Duration _startDiff = Duration.zero;
   var _pointerLocation = Offset.zero;
   var _dragging = false;
   var _resizing = false;
@@ -189,6 +189,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   /// Needs to make interaction between a timeline and the overlay
   void onEventLongPressEnd(LongPressEndDetails details) {
+    if (widget.event.value == null) {
+      return;
+    }
+
     _dragging = false;
     widget.onDragEnd?.call();
     _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;

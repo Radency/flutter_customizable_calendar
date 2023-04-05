@@ -131,58 +131,71 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                   ),
             ),
           ],
-        ) : Container(
-          color: Colors.green.withOpacity(0.2),
-          child: ListView(
-            children: [
-              ...eventsToDisplay.map((event) {
-                DateTimeRange _range = DateTimeRange(
-                  start: DateUtils.dateOnly(event.start),
-                  end: DateUtils.dateOnly(event.end),
-                );
-                int _eventDays = _range.days.length + 1;
+        ) : GestureDetector(
+          // behavior: HitTestBehavior.translucent,
+          onLongPressStart: overlay.onEventLongPressStart,
+          onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+          onLongPressEnd: overlay.onEventLongPressEnd,
+          onLongPressCancel: overlay.onEventLongPressCancel,
+          child: Container(
+            color: Colors.green.withOpacity(0.2),
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                ...eventsToDisplay.map((event) {
+                  DateTimeRange _range = DateTimeRange(
+                    start: DateUtils.dateOnly(event.start),
+                    end: DateUtils.dateOnly(event.end),
+                  );
+                  int _eventDays = _range.days.length + 1;
 
-                return Align(
-                  alignment: Alignment.topLeft,
-                  child: Container(
-                    // color: Colors.green,
-                    width: dayWidth! * _eventDays,
-                    margin: const EdgeInsets.only(
-                      bottom: 2,
-                      // right: dayWidth! * (7 - _eventDays),
-                    ),
-                    child: GestureDetector(
-                      onLongPressStart: overlay.onEventLongPressStart,
-                      onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-                      onLongPressEnd: overlay.onEventLongPressEnd,
-                      onLongPressCancel: overlay.onEventLongPressCancel,
-                      child: RenderIdProvider(
-                        id: event,
-                        child: ValueListenableBuilder(
-                          valueListenable: elevatedEvent,
-                          builder: (context, elevatedEvent, child) =>
-                              Opacity(
-                                opacity: (elevatedEvent?.id == event.id)
-                                    ? 0.5
-                                    : 1,
-                                child: child,
-                              ),
-                          child: EventView(
-                            // key: eventsKeys[event] ??= GlobalKey(),
-                            event,
-                            theme: timelineTheme.floatingEventsTheme,
-                            viewType: viewType,
-                            onTap: () {
-                              onEventTap?.call(event);
-                            },
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Container(
+                      // color: Colors.green,
+                      width: dayWidth! * _eventDays,
+                      margin: const EdgeInsets.only(
+                        bottom: 2,
+                        // right: dayWidth! * (7 - _eventDays),
+                      ),
+                      child: GestureDetector(
+                        onLongPressStart: overlay.onEventLongPressStart,
+                        onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+                        onLongPressEnd: overlay.onEventLongPressEnd,
+                        onLongPressCancel: overlay.onEventLongPressCancel,
+                        child: RenderIdProvider(
+                          id: event,
+                          child: ValueListenableBuilder(
+                            valueListenable: elevatedEvent,
+                            builder: (context, elevatedEvent, child) =>
+                                Opacity(
+                                  opacity: (elevatedEvent?.id == event.id)
+                                      ? 0.5
+                                      : 1,
+                                  child: child,
+                                ),
+                            child: EventView(
+                              // key: eventsKeys[event] ??= GlobalKey(),
+                              event,
+                              theme: timelineTheme.floatingEventsTheme,
+                              viewType: viewType,
+                              onTap: () {
+                                onEventTap?.call(event);
+                              },
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              }),
-            ],
+                  );
+                }),
+                // TODO: Add some space
+                // Container(
+                //   height: 30,
+                //   color: Colors.red,
+                // ),
+              ],
+            ),
           ),
         ),
       ),

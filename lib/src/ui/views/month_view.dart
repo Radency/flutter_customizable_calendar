@@ -303,7 +303,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
             absorbing: elevatedEvent != null,
             child: child,
           ),
-          child: CustomStack(
+          child: Stack(
             children: [
               GestureDetector(
                 behavior: HitTestBehavior.translucent,
@@ -361,7 +361,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                         //   ),
                         // )
                         child: LayoutBuilder(
-                          builder: (context, constraints) => CustomStack(
+                          builder: (context, constraints) => Stack(
                             clipBehavior: Clip.none,
                             children: [
                               Positioned(
@@ -370,6 +370,9 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                                 width: maxWidth,
                                 height: constraints.maxHeight,
                                 child: Container(
+                                  constraints: BoxConstraints(
+                                    maxHeight: constraints.maxHeight,
+                                  ),
                                   // margin: EdgeInsets.only(
                                   //   // left: maxWidth * 3 / 7,
                                   //   left: maxWidth * 6 / 13,
@@ -397,119 +400,19 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                   ),
                 ),
               ),
-              // Container(
-              //   color: Colors.transparent, // Needs for hitTesting
-              //   child: Column(
-              //     children: [
-              //       Container(
-              //         padding: theme.dayNumberPadding,
-              //         margin: theme.dayNumberMargin,
-              //         height: theme.dayNumberHeight,
-              //         alignment: Alignment.center,
-              //         decoration: BoxDecoration(
-              //           shape: BoxShape.circle,
-              //           color: isToday
-              //               ? theme.currentDayNumberBackgroundColor
-              //               : theme.dayNumberBackgroundColor,
-              //         ),
-              //         child: Text(
-              //           dayDate.day.toString(),
-              //           style: isToday
-              //               ? theme.currentDayNumberTextStyle
-              //               : theme.dayNumberTextStyle,
-              //         ),
-              //       ),
-              //       Expanded(
-              //         // child: OverflowBox(
-              //         //   maxWidth: maxWidth,
-              //         //   child: Container(
-              //         //     margin: EdgeInsets.only(
-              //         //       // left: maxWidth * 3 / 7,
-              //         //       left: maxWidth * 6 / 13,
-              //         //     ),
-              //         //     child: EventsLayout<T>(
-              //         //       dayDate: dayDate,
-              //         //       overlayKey: _overlayKey,
-              //         //       layoutsKeys: MonthViewKeys.layouts,
-              //         //       eventsKeys: MonthViewKeys.events,
-              //         //       timelineTheme: widget.timelineTheme,
-              //         //       breaks: widget.breaks,
-              //         //       events: widget.events,
-              //         //       elevatedEvent: _elevatedEvent,
-              //         //       onEventTap: widget.onEventTap,
-              //         //       viewType: CalendarView.month,
-              //         //       dayWidth: maxWidth / 13,
-              //         //     ),
-              //         //   ),
-              //         // )
-              //         // child: LayoutBuilder(
-              //         //   builder: (context, constraints) => CustomStack(
-              //         //     // fit: StackFit.expand,
-              //         //     clipBehavior: Clip.none,
-              //         //     children: [
-              //         //       CustomPositioned(
-              //         //         left: 0,
-              //         //         top: 0,
-              //         //         width: maxWidth,
-              //         //         height: constraints.maxHeight,
-              //         //         child: Container(
-              //         //           // margin: EdgeInsets.only(
-              //         //           //   // left: maxWidth * 3 / 7,
-              //         //           //   left: maxWidth * 6 / 13,
-              //         //           // ),
-              //         //           child: EventsLayout<T>(
-              //         //             dayDate: dayDate,
-              //         //             overlayKey: _overlayKey,
-              //         //             layoutsKeys: MonthViewKeys.layouts,
-              //         //             eventsKeys: MonthViewKeys.events,
-              //         //             timelineTheme: widget.timelineTheme,
-              //         //             breaks: widget.breaks,
-              //         //             events: widget.events,
-              //         //             elevatedEvent: _elevatedEvent,
-              //         //             onEventTap: widget.onEventTap,
-              //         //             viewType: CalendarView.month,
-              //         //             dayWidth: maxWidth / 13,
-              //         //           ),
-              //         //         ),
-              //         //       ),
-              //         //     ],
-              //         //   ),
-              //         // ),
-              //         child: CustomStack(
-              //             // fit: StackFit.expand,
-              //             clipBehavior: Clip.none,
-              //             children: [
-              //             CustomPositioned(
-              //               left: 0,
-              //               top: 0,
-              //               width: maxWidth,
-              //               height: 50,
-              //               child: Container(
-              //                 // margin: EdgeInsets.only(
-              //                 //   // left: maxWidth * 3 / 7,
-              //                 //   left: maxWidth * 6 / 13,
-              //                 // ),
-              //                 child: EventsLayout<T>(
-              //                   dayDate: dayDate,
-              //                   overlayKey: _overlayKey,
-              //                   layoutsKeys: MonthViewKeys.layouts,
-              //                   eventsKeys: MonthViewKeys.events,
-              //                   timelineTheme: widget.timelineTheme,
-              //                   breaks: widget.breaks,
-              //                   events: widget.events,
-              //                   elevatedEvent: _elevatedEvent,
-              //                   onEventTap: widget.onEventTap,
-              //                   viewType: CalendarView.month,
-              //                   dayWidth: maxWidth / 13,
-              //                 ),
-              //               ),
-              //             ),
-              //           ],
-              //         ),
-              //       ),
-              //     ],
+              // if (_elevatedEvent.value == null)
+              //   Positioned.fill(
+              //     child: GestureDetector(
+              //       onLongPressStart: (details) {
+              //         final timestamp = dayDate.add(Duration(hours: 12));
+              //
+              //         if (timestamp.isBefore(_initialDate)) return;
+              //         if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+              //
+              //         widget.onDateLongPress?.call(timestamp);
+              //       },
+              //     ),
               //   ),
-              // ),
             ],
           ),
         ),
