@@ -302,14 +302,15 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
             child: child,
           ),
           child: GestureDetector(
-            onLongPressStart: (details) {
-              final timestamp = dayDate.add(Duration(hours: 12));
-
-              if (timestamp.isBefore(_initialDate)) return;
-              if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
-
-              widget.onDateLongPress?.call(timestamp);
-            },
+            behavior: HitTestBehavior.translucent,
+            // onLongPressStart: (details) {
+            //   final timestamp = dayDate.add(Duration(hours: 12));
+            //
+            //   if (timestamp.isBefore(_initialDate)) return;
+            //   if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+            //
+            //   widget.onDateLongPress?.call(timestamp);
+            // },
             child: Container(
               color: Colors.transparent, // Needs for hitTesting
               child: Column(
@@ -333,28 +334,60 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                     ),
                   ),
                   Expanded(
-                    child: OverflowBox(
-                      maxWidth: maxWidth,
-                      child: Container(
-                        margin: EdgeInsets.only(
-                          // left: maxWidth * 3 / 7,
-                          left: maxWidth * 6 / 13,
-                        ),
-                        child: EventsLayout<T>(
-                          dayDate: dayDate,
-                          overlayKey: _overlayKey,
-                          layoutsKeys: MonthViewKeys.layouts,
-                          eventsKeys: MonthViewKeys.events,
-                          timelineTheme: widget.timelineTheme,
-                          breaks: widget.breaks,
-                          events: widget.events,
-                          elevatedEvent: _elevatedEvent,
-                          onEventTap: widget.onEventTap,
-                          viewType: CalendarView.month,
-                          dayWidth: maxWidth / 13,
-                        ),
+                    // child: OverflowBox(
+                    //   maxWidth: maxWidth,
+                    //   child: Container(
+                    //     margin: EdgeInsets.only(
+                    //       // left: maxWidth * 3 / 7,
+                    //       left: maxWidth * 6 / 13,
+                    //     ),
+                    //     child: EventsLayout<T>(
+                    //       dayDate: dayDate,
+                    //       overlayKey: _overlayKey,
+                    //       layoutsKeys: MonthViewKeys.layouts,
+                    //       eventsKeys: MonthViewKeys.events,
+                    //       timelineTheme: widget.timelineTheme,
+                    //       breaks: widget.breaks,
+                    //       events: widget.events,
+                    //       elevatedEvent: _elevatedEvent,
+                    //       onEventTap: widget.onEventTap,
+                    //       viewType: CalendarView.month,
+                    //       dayWidth: maxWidth / 13,
+                    //     ),
+                    //   ),
+                    // )
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            width: maxWidth,
+                            height: constraints.maxHeight,
+                            child: Container(
+                              // margin: EdgeInsets.only(
+                              //   // left: maxWidth * 3 / 7,
+                              //   left: maxWidth * 6 / 13,
+                              // ),
+                              child: EventsLayout<T>(
+                                dayDate: dayDate,
+                                overlayKey: _overlayKey,
+                                layoutsKeys: MonthViewKeys.layouts,
+                                eventsKeys: MonthViewKeys.events,
+                                timelineTheme: widget.timelineTheme,
+                                breaks: widget.breaks,
+                                events: widget.events,
+                                elevatedEvent: _elevatedEvent,
+                                onEventTap: widget.onEventTap,
+                                viewType: CalendarView.month,
+                                dayWidth: maxWidth / 13,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    )
+                    ),
                   ),
                 ],
               ),
