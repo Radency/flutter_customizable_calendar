@@ -261,6 +261,10 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final LinkedScrollControllerGroup _group = LinkedScrollControllerGroup();
+        ScrollController _forward = _group.addAndGet();
+        ScrollController _backward = _group.addAndGet();
+
         double mainAxisSpacing = theme.mainAxisSpacing;
         double crossAxisSpacing = theme.crossAxisSpacing;
         double aspectRatio = (constraints.maxWidth - crossAxisSpacing * 6) / 7
@@ -277,15 +281,38 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
           ),
           color: theme.spacingColor ?? widget.divider?.color ?? Colors.grey,
           child: IntrinsicHeight(
-            child: GridView.count(
-              crossAxisCount: 7,
-              shrinkWrap: true,
-              mainAxisSpacing: mainAxisSpacing,
-              crossAxisSpacing: crossAxisSpacing,
-              childAspectRatio: aspectRatio,
-              physics: shouldScroll ? null : NeverScrollableScrollPhysics(),
+            child: Stack(
               children: [
-                ...days.map((day) => _singleDayView(day, constraints.maxWidth * 13 / 7)),
+                GridView.count(
+                  controller: _backward,
+                  crossAxisCount: 7,
+                  shrinkWrap: true,
+                  mainAxisSpacing: mainAxisSpacing,
+                  crossAxisSpacing: crossAxisSpacing,
+                  childAspectRatio: aspectRatio,
+                  physics: shouldScroll ? null : NeverScrollableScrollPhysics(),
+                  children: [
+                    ...days.map((day) {
+                      final bool isToday = DateUtils.isSameDay(day, _now);
+                      return Container(
+                      color: (isToday ? theme.currentDayColor : theme.dayColor)
+                          ??  Theme.of(context).scaffoldBackgroundColor,
+                    );
+                    }),
+                  ],
+                ),
+                GridView.count(
+                  controller: _forward,
+                  crossAxisCount: 7,
+                  shrinkWrap: true,
+                  mainAxisSpacing: mainAxisSpacing,
+                  crossAxisSpacing: crossAxisSpacing,
+                  childAspectRatio: aspectRatio,
+                  physics: shouldScroll ? null : NeverScrollableScrollPhysics(),
+                  children: [
+                    ...days.map((day) => _singleDayView(day, constraints.maxWidth * 13 / 7)),
+                  ],
+                ),
               ],
             ),
           ),
@@ -298,85 +325,81 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     final theme = widget.monthDayTheme;
     final bool isToday = DateUtils.isSameDay(dayDate, _now);
 
-    return Container(
-      color: (isToday ? theme.currentDayColor : theme.dayColor)
-          ??  Theme.of(context).scaffoldBackgroundColor,
-      child: RenderIdProvider(
-        id: dayDate,
-        child: ValueListenableBuilder(
-          valueListenable: _elevatedEvent,
-          builder: (context, elevatedEvent, child) => AbsorbPointer(
-            absorbing: elevatedEvent != null,
-            child: child,
-          ),
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onLongPressStart: (details) {
-              final timestamp = dayDate.add(Duration(hours: 12));
+    return RenderIdProvider(
+      id: dayDate,
+      child: ValueListenableBuilder(
+        valueListenable: _elevatedEvent,
+        builder: (context, elevatedEvent, child) => AbsorbPointer(
+          absorbing: elevatedEvent != null,
+          child: child,
+        ),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onLongPressStart: (details) {
+            final timestamp = dayDate.add(Duration(hours: 12));
 
-              if (timestamp.isBefore(_initialDate)) return;
-              if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+            if (timestamp.isBefore(_initialDate)) return;
+            if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 
-              widget.onDateLongPress?.call(timestamp);
-            },
-            child: Container(
-              color: Colors.transparent, // Needs for hitTesting
-              child: Column(
-                children: [
-                  Container(
-                    padding: theme.dayNumberPadding,
-                    margin: theme.dayNumberMargin,
-                    height: theme.dayNumberHeight,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isToday
-                          ? theme.currentDayNumberBackgroundColor
-                          : theme.dayNumberBackgroundColor,
-                    ),
-                    child: Text(
-                      dayDate.day.toString(),
-                      style: isToday
-                          ? theme.currentDayNumberTextStyle
-                          : theme.dayNumberTextStyle,
-                    ),
+            widget.onDateLongPress?.call(timestamp);
+          },
+          child: Container(
+            color: Colors.transparent, // Needs for hitTesting
+            child: Column(
+              children: [
+                Container(
+                  padding: theme.dayNumberPadding,
+                  margin: theme.dayNumberMargin,
+                  height: theme.dayNumberHeight,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isToday
+                        ? theme.currentDayNumberBackgroundColor
+                        : theme.dayNumberBackgroundColor,
                   ),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) => Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            width: maxWidth,
-                            height: constraints.maxHeight,
-                            child: Container(
-                              constraints: BoxConstraints(
-                                maxHeight: constraints.maxHeight,
-                              ),
-                              child: EventsLayout<T>(
-                                dayDate: dayDate,
-                                overlayKey: _overlayKey,
-                                layoutsKeys: MonthViewKeys.layouts,
-                                eventsKeys: MonthViewKeys.events,
-                                timelineTheme: widget.timelineTheme,
-                                breaks: widget.breaks,
-                                events: dayEventMap[dayDate] ?? [],
-                                elevatedEvent: _elevatedEvent,
-                                onEventTap: widget.onEventTap,
-                                viewType: CalendarView.month,
-                                dayWidth: maxWidth / 13,
-                                controller: dayControllerMap[dayDate],
-                              ),
+                  child: Text(
+                    dayDate.day.toString(),
+                    style: isToday
+                        ? theme.currentDayNumberTextStyle
+                        : theme.dayNumberTextStyle,
+                  ),
+                ),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          width: maxWidth,
+                          height: constraints.maxHeight,
+                          child: Container(
+                            constraints: BoxConstraints(
+                              maxHeight: constraints.maxHeight,
+                            ),
+                            child: EventsLayout<T>(
+                              dayDate: dayDate,
+                              overlayKey: _overlayKey,
+                              layoutsKeys: MonthViewKeys.layouts,
+                              eventsKeys: MonthViewKeys.events,
+                              timelineTheme: widget.timelineTheme,
+                              breaks: widget.breaks,
+                              events: dayEventMap[dayDate] ?? [],
+                              elevatedEvent: _elevatedEvent,
+                              onEventTap: widget.onEventTap,
+                              viewType: CalendarView.month,
+                              dayWidth: maxWidth / 13,
+                              controller: dayControllerMap[dayDate],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
