@@ -421,7 +421,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
       dayEventMap[monday] = _getEventsOnDay(events, monday, true);
       for(int j = 1; j < 7; j++) {
         final currentDay = DateUtils.dateOnly(monthDays[7 * i + j]);
-        List<T> currentEvents = _getEventsOnDay(events, currentDay);
+        List<T> currentEvents = _getEventsOnDay(events, currentDay)..sort();
 
         final previousDay = DateUtils.dateOnly(monthDays[7 * i + j - 1]);
         List<T> previousEvents = dayEventMap[previousDay] ?? [];

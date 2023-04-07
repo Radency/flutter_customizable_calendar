@@ -80,7 +80,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final breaksToDisplay = _getEventsOnDay(breaks);
-    final eventsToDisplay = _getEventsOnDay(events)..sort();
+    final eventsToDisplay = _getEventsOnDay(events);
     final overlay = overlayKey.currentState!;
 
     return RenderIdProvider(
@@ -141,6 +141,9 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
         onLongPressEnd: overlay.onEventLongPressEnd,
         onLongPressCancel: overlay.onEventLongPressCancel,
         child: ListView(
+          // key: ValueKey(dayDate),
+          key: ValueKey(controller),
+          // key: GlobalKey(),
           controller: controller,
           children: [
             ...eventsToDisplay.map((event) {
@@ -156,7 +159,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
               }
 
               return Visibility(
-                visible: DateUtils.dateOnly(event.start) == dayDate || dayDate.weekday == 1,
+                visible: DateUtils.dateOnly(event.start) == DateUtils.dateOnly(dayDate) || dayDate.weekday == 1,
                 maintainState: true,
                 maintainAnimation: true,
                 maintainSize: true,
