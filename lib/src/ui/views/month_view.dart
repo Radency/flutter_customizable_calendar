@@ -5,6 +5,7 @@ import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/month_day_theme.dart';
 import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.dart';
+import 'package:linked_scroll_controller/linked_scroll_controller.dart';
 
 /// A key holder of all MonthView keys
 @visibleForTesting
@@ -92,6 +93,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   late final PageController _monthPickerController;
   var _pointerLocation = Offset.zero;
   Map<DateTime, List<T>> dayEventMap = {};
+  Map<DateTime, ScrollController> dayControllerMap = {};
 
   static DateTime get _now => clock.now();
 
@@ -120,7 +122,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     _monthPickerController = PageController(
       initialPage: DateUtils.monthDelta(_initialDate, _monthDate),
     );
-    _initDayEventMap();
+    _initDailyEventsAndControllers();
   }
 
   @override
@@ -149,7 +151,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
         }
 
         if (displayedMonth != _monthPickerController.page?.round()) {
-          _initDayEventMap();
+          _initDailyEventsAndControllers();
         }
       },
       child: Column(
@@ -366,6 +368,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                                 onEventTap: widget.onEventTap,
                                 viewType: CalendarView.month,
                                 dayWidth: maxWidth / 13,
+                                controller: dayControllerMap[dayDate],
                               ),
                             ),
                           ),
@@ -382,7 +385,12 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     );
   }
 
-  void _initDayEventMap() {
+  void _initDailyEventsAndControllers() {
+    _initDailyEvents();
+    _initDailyControllers();
+  }
+
+  void _initDailyEvents() {
     final events = widget.events;
     final monthDays = _displayedMonth.days;
 
@@ -404,12 +412,40 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
           }
         }
 
+        for(int k = currentEvents.length; k < previousEvents.length; k++) {
+          currentEvents.add(previousEvents[k]);
+        }
+
         dayEventMap[currentDay] = currentEvents;
       }
     }
   }
 
-  List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list, DateTime dayDate, [bool all = false]) {
+  void _initDailyControllers() {
+    final events = widget.events;
+    final monthDays = _displayedMonth.days;
+
+    LinkedScrollControllerGroup _group;
+
+    for(int i = 0; i < 6; i++) {
+      final monday = DateUtils.dateOnly(monthDays[7 * i]);
+      _group = LinkedScrollControllerGroup();
+      ScrollController controller = _group.addAndGet();
+      dayControllerMap[monday] = controller;
+      for(int j = 1; j < 7; j++) {
+        final currentDay = DateUtils.dateOnly(monthDays[7 * i + j]);
+
+        if(_getEventsOnDay(events, currentDay).length == _getEventsOnDay(events, currentDay, true).length) {
+          _group = LinkedScrollControllerGroup();
+        }
+        ScrollController controller = _group.addAndGet();
+        dayControllerMap[currentDay] = controller;
+      }
+    }
+  }
+
+  List<E> _getEventsOnDay<E extends CalendarEvent>(
+      List<E> list, DateTime dayDate, [bool all = false]) {
     if (all) {
       return list
           .where((event) =>

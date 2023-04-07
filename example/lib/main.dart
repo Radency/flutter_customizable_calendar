@@ -35,11 +35,10 @@ class App extends StatelessWidget {
         id: 'TaskDue 1',
         start: today.add(const Duration(hours: 13)),
       ),
-      // TaskDue(
-      //   id: 'TaskDue 2',
-      //   start: today.add(const Duration(hours: 27)),
-      //   wholeDay: true,
-      // ),
+      TaskDue(
+        id: 'TaskDue 2',
+        start: today.add(const Duration(hours: 47)),
+      ),
       SimpleEvent(
         id: 'Event 3',
         start: today.add(const Duration(hours: 12)),

@@ -23,6 +23,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     required this.elevatedEvent,
     this.onEventTap,
     this.dayWidth,
+    this.controller,
   });
 
   /// A day which needs to be displayed
@@ -52,11 +53,15 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   /// Callback which returns a tapped event value
   final void Function(T)? onEventTap;
 
-  /// Defines if show events in simplified way. Defaults to false
+  /// Type of calendar view. Can be [CalendarView.days], [CalendarView.week],
+  /// [CalendarView.month].
   final CalendarView viewType;
 
   final double? dayWidth;
 
+  final ScrollController? controller;
+
+  /// Defines if show events in simplified way
   bool get simpleView => viewType == CalendarView.month;
 
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) {
@@ -138,7 +143,8 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
         child: Container(
           // color: Colors.green.withOpacity(0.2),
           child: ListView(
-            shrinkWrap: true,
+            controller: controller,
+            // shrinkWrap: true,
             children: [
               ...eventsToDisplay.map((event) {
                 DateTimeRange _range = DateTimeRange(
