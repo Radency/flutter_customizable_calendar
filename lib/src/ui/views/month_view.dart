@@ -91,6 +91,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   final _elevatedEvent = FloatingEventNotifier<T>();
   late final PageController _monthPickerController;
   var _pointerLocation = Offset.zero;
+  Map<DateTime, List<T>> dayEventMap = {};
 
   static DateTime get _now => clock.now();
 
@@ -119,6 +120,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     _monthPickerController = PageController(
       initialPage: DateUtils.monthDelta(_initialDate, _monthDate),
     );
+    _initDayEventMap();
   }
 
   @override
@@ -144,6 +146,10 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
             duration: const Duration(milliseconds: 300),
             curve: Curves.linearToEaseOut,
           );
+        }
+
+        if (displayedMonth != _monthPickerController.page?.round()) {
+          _initDayEventMap();
         }
       },
       child: Column(
@@ -200,7 +206,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
       controller: _monthPickerController,
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, pageIndex) {
-        final monthDays = widget.controller.state.displayedMonth.days;
+        final monthDays = _displayedMonth.days;
 
         return Padding(
           padding: EdgeInsets.only(
@@ -354,7 +360,8 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                                 eventsKeys: MonthViewKeys.events,
                                 timelineTheme: widget.timelineTheme,
                                 breaks: widget.breaks,
-                                events: widget.events,
+                                // events: widget.events,
+                                events: dayEventMap[dayDate] ?? [],
                                 elevatedEvent: _elevatedEvent,
                                 onEventTap: widget.onEventTap,
                                 viewType: CalendarView.month,
@@ -373,5 +380,45 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
         ),
       ),
     );
+  }
+
+  void _initDayEventMap() {
+    final events = widget.events;
+    final monthDays = _displayedMonth.days;
+
+    for(int i = 0; i < 6; i++) {
+      final monday = DateUtils.dateOnly(monthDays[7 * i]);
+      dayEventMap[monday] = _getEventsOnDay(events, monday, true);
+      for(int j = 1; j < 7; j++) {
+        final currentDay = DateUtils.dateOnly(monthDays[7 * i + j]);
+        List<T> currentEvents = _getEventsOnDay(events, currentDay);
+
+        final previousDay = DateUtils.dateOnly(monthDays[7 * i + j - 1]);
+        List<T> previousEvents = dayEventMap[previousDay] ?? [];
+
+        for(int k = 0; k < previousEvents.length; k++) {
+          T previousEvent = previousEvents[k];
+          if(previousEvent.end.isAfter(currentDay) &&
+             k <= currentEvents.length) {
+            currentEvents.insert(k, previousEvent);
+          }
+        }
+
+        dayEventMap[currentDay] = currentEvents;
+      }
+    }
+  }
+
+  List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list, DateTime dayDate, [bool all = false]) {
+    if (all) {
+      return list
+          .where((event) =>
+      DateUtils.isSameDay(event.start, dayDate) ||
+          (event.start.isBefore(dayDate) && event.end.isAfter(dayDate)))
+          .toList(growable: false);
+    } else {
+      return list
+          .where((event) => DateUtils.isSameDay(event.start, dayDate)).toList();
+    }
   }
 }

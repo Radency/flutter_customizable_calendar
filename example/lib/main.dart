@@ -41,6 +41,12 @@ class App extends StatelessWidget {
       //   wholeDay: true,
       // ),
       SimpleEvent(
+        id: 'Event 3',
+        start: today.add(const Duration(hours: 12)),
+        duration: const Duration(days: 2, minutes: 30),
+        title: 'Event 3',
+      ),
+      SimpleEvent(
         id: 'Event 2',
         start: today.add(const Duration(hours: 12)),
         duration: const Duration(minutes: 30),
@@ -434,7 +440,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         fontWeight: FontWeight.bold,
       ),
       currentDayColor: Colors.grey,
-      dayColor: Colors.white.withOpacity(0.3),
+      dayColor: Colors.white.withOpacity(0.5),
       // dayColor: Colors.transparent,
       spacingColor: Colors.orange,
       dayNumberHeight: 23,
