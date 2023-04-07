@@ -362,7 +362,6 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                                 eventsKeys: MonthViewKeys.events,
                                 timelineTheme: widget.timelineTheme,
                                 breaks: widget.breaks,
-                                // events: widget.events,
                                 events: dayEventMap[dayDate] ?? [],
                                 elevatedEvent: _elevatedEvent,
                                 onEventTap: widget.onEventTap,
