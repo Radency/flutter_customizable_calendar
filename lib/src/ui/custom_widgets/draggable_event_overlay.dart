@@ -473,6 +473,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             }
           },
           onPanEnd: (details) {
+            if (widget.event.value == null) {
+              return;
+            }
             if (_resizing) {
               _resizing = false;
               widget.onResizingEnd?.call();
