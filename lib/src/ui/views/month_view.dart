@@ -94,6 +94,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   var _pointerLocation = Offset.zero;
   Map<DateTime, List<T>> dayEventMap = {};
   Map<DateTime, ScrollController> dayControllerMap = {};
+  List<T> events = [];
 
   static DateTime get _now => clock.now();
 
@@ -122,6 +123,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     _monthPickerController = PageController(
       initialPage: DateUtils.monthDelta(_initialDate, _monthDate),
     );
+    events = widget.events;
     _initDailyEventsAndControllers();
   }
 
@@ -167,7 +169,13 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                 top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
               ),
               onDropped: widget.onDiscardChanges,
-              onChanged: widget.onEventUpdated,
+              onChanged: (event) async {
+                events
+                  ..removeWhere((element) => element.id == event.id)
+                  ..add(event);
+                widget.onEventUpdated?.call(event);
+                _initDailyEventsAndControllers();
+              },
               getTimelineBox: _getTimelineBox,
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
@@ -413,7 +421,6 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   }
 
   void _initDailyEvents() {
-    final events = widget.events;
     final monthDays = _displayedMonth.days;
 
     for(int i = 0; i < 6; i++) {
@@ -444,7 +451,6 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   }
 
   void _initDailyControllers() {
-    final events = widget.events;
     final monthDays = _displayedMonth.days;
 
     LinkedScrollControllerGroup _group;
