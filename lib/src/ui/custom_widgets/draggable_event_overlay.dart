@@ -159,7 +159,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       end: Rect.fromLTWH(
         layoutPosition.dx,
         eventPosition.dy,
-        layoutBox.size.width,
+        widget.viewType == CalendarView.month
+            ? eventBox.size.width
+            : layoutBox.size.width,
         eventBox.size.height,
       ),
     );
