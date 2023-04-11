@@ -57,7 +57,7 @@ class App extends StatelessWidget {
       SimpleEvent(
         id: 'Event 1',
         start: today.add(const Duration(hours: 38)),
-        duration: const Duration(hours: 46),
+        duration: const Duration(hours: 70),
         title: 'Event 1',
       ),
     ];

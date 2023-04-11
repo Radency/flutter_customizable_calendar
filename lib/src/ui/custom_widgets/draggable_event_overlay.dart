@@ -154,13 +154,37 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
 
     widget.event.value = event;
+    // _boundsTween = RectTween(
+    //   begin: eventPosition & eventBox.size,
+    //   end: Rect.fromLTWH(
+    //     layoutPosition.dx,
+    //     eventPosition.dy,
+    //     widget.viewType == CalendarView.month
+    //         ? eventBox.size.width
+    //         : layoutBox.size.width,
+    //     eventBox.size.height,
+    //   ),
+    // );
+    // _createEntriesFor(event);
+    // _animationController.forward();
+    //
+    // _dragging = true;
+    _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
+    _startDiff = _pointerTimePoint.difference(event.start);
+
+    _updateDayOffsets(event);
+
+    double _dayWidth = layoutBox.size.width / 13;
     _boundsTween = RectTween(
       begin: eventPosition & eventBox.size,
       end: Rect.fromLTWH(
-        layoutPosition.dx,
+        widget.viewType == CalendarView.month
+            ? layoutPosition.dx + _dayWidth * _dayOffsets.first
+            : layoutPosition.dx,
+        // layoutPosition.dx,
         eventPosition.dy,
         widget.viewType == CalendarView.month
-            ? eventBox.size.width
+            ? _dayWidth * _dayOffsets.length
             : layoutBox.size.width,
         eventBox.size.height,
       ),
@@ -169,10 +193,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _animationController.forward();
 
     _dragging = true;
-    _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
-    _startDiff = _pointerTimePoint.difference(event.start);
-
-    _updateDayOffsets(event);
   }
 
   /// Needs to make interaction between a timeline and the overlay
@@ -668,7 +688,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       DateTime _date = dayDate.add(Duration(days: _dayOffsets.first));
       int _totalDays = _dayOffsets.length;
 
-      for (int i = _dayOffsets.first; i <= _dayOffsets.last; i++) {
+      for (int i = _dayOffsets.first; i <= _dayOffsets.last; i++, _date = _date.add(Duration(days: 1))) {
+        if (_date.weekday > 1 &&
+            DateUtils.dateOnly(_date) != DateUtils.dateOnly(_event.start)) {
+          continue;
+        }
         final layoutBox = widget.getLayoutBox(_date);
         if (layoutBox == null) {
           continue;
@@ -694,13 +718,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
           // layoutPosition.dx + _delta.dx,
           _date.isSameWeekAs(dayDate) ? bounds.left : layoutPosition.dx + _delta.dx,
           bounds.top + _weekOffset,
-          bounds.width * _totalDays,
+          bounds.width,// * _totalDays,
           bounds.height,
         ));
-        _date = _date.add(Duration(days: 1));
+        // _date = _date.add(Duration(days: 1));
       }
 
-      result = [];
+      // result = [];
     }
 
     return result;
