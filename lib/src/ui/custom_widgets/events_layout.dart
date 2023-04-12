@@ -64,17 +64,17 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   /// Defines if show events in simplified way
   bool get simpleView => viewType == CalendarView.month;
 
+  bool _eventPresentAtDay<E extends CalendarEvent>(E event) =>
+      DateUtils.isSameDay(event.start, dayDate) ||
+      (event.start.isBefore(dayDate) && event.end.isAfter(dayDate));
+
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) {
     if (viewType == CalendarView.month) {
       // return list
       //     .where((event) => DateUtils.isSameDay(event.start, dayDate)).toList();
       return list;
     }
-    return list
-          .where((event) =>
-      DateUtils.isSameDay(event.start, dayDate) ||
-          (event.start.isBefore(dayDate) && event.end.isAfter(dayDate)))
-          .toList(growable: false);
+    return list.where(_eventPresentAtDay).toList(growable: false);
   }
 
   @override
@@ -163,6 +163,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                 maintainState: true,
                 maintainAnimation: true,
                 maintainSize: true,
+                maintainInteractivity: _eventPresentAtDay(event),
                 child: Align(
                   alignment: Alignment.topLeft,
                   child: Container(
