@@ -176,7 +176,15 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     double _dayWidth = layoutBox.size.width / 13;
     _boundsTween = RectTween(
-      begin: eventPosition & eventBox.size,
+      // begin: eventPosition & eventBox.size,
+      begin: Rect.fromLTWH(
+        widget.viewType == CalendarView.month
+            ? eventPosition.dx + _dayWidth * _dayOffsets.first
+            : eventPosition.dx,
+        eventPosition.dy,
+        eventBox.size.width,
+        eventBox.size.height,
+      ),
       end: Rect.fromLTWH(
         widget.viewType == CalendarView.month
             ? layoutPosition.dx + _dayWidth * _dayOffsets.first
@@ -479,7 +487,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             _startDiff = _pointerTimePoint.difference(event.start);
 
             // Prevent accident day addition on WeekView
-            if (widget.viewType != CalendarView.days) {
+            if (widget.viewType == CalendarView.week) {
               _startDiff -= Duration(days: _startDiff.inDays);
               if (_startDiff.isNegative) {
                 _startDiff += Duration(days: 1);

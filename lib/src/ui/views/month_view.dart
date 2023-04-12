@@ -2,6 +2,8 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
+import 'package:flutter_customizable_calendar/src/custom_stack/custom_positioned.dart';
+import 'package:flutter_customizable_calendar/src/custom_stack/custom_stack.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/month_day_theme.dart';
 import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.dart';
@@ -375,10 +377,10 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                 ),
                 Expanded(
                   child: LayoutBuilder(
-                    builder: (context, constraints) => Stack(
+                    builder: (context, constraints) => CustomStack(
                       clipBehavior: Clip.none,
                       children: [
-                        Positioned(
+                        CustomPositioned(
                           left: 0,
                           top: 0,
                           width: maxWidth,
