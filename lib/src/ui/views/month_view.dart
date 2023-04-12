@@ -2,8 +2,6 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
-import 'package:flutter_customizable_calendar/src/custom_stack/custom_positioned.dart';
-import 'package:flutter_customizable_calendar/src/custom_stack/custom_stack.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/month_day_theme.dart';
 import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.dart';
@@ -71,7 +69,7 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final List<T> events;
 
   /// Returns selected timestamp
-  final void Function(DateTime)? onDateLongPress;
+  final dynamic Function(DateTime)? onDateLongPress;
 
   /// Returns the tapped event
   final void Function(T)? onEventTap;
@@ -345,13 +343,17 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
         ),
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
-          onLongPressStart: (details) {
+          onLongPressStart: (details) async {
             final timestamp = dayDate.add(Duration(hours: 12));
 
             if (timestamp.isBefore(_initialDate)) return;
             if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 
-            widget.onDateLongPress?.call(timestamp);
+            final newItem = await widget.onDateLongPress?.call(timestamp);
+            if (newItem is T) {
+              events.add(newItem);
+              _initDailyEventsAndControllers();
+            }
           },
           child: Container(
             color: Colors.transparent, // Needs for hitTesting
@@ -377,10 +379,10 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                 ),
                 Expanded(
                   child: LayoutBuilder(
-                    builder: (context, constraints) => CustomStack(
+                    builder: (context, constraints) => Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        CustomPositioned(
+                        Positioned(
                           left: 0,
                           top: 0,
                           width: maxWidth,

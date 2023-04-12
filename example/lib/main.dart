@@ -453,7 +453,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     onDateLongPress: (timestamp) async {
       print(timestamp);
       final _minute = timestamp.minute;
-      await showModalBottomSheet(
+      return await showModalBottomSheet(
         context: context,
         builder: (context) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -461,40 +461,37 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
             ListTile(
               title: Text("Simple Event"),
               onTap: (){
-                listCubit.save(
-                  SimpleEvent(
-                    id: const Uuid().v1(),
-                    start: timestamp.subtract(Duration(minutes: _minute)),
-                    duration: Duration(hours: 1),
-                    title: "Simple event",
-                  ) as T,
-                );
-                Navigator.of(context).pop();
+                T newItem = SimpleEvent(
+                  id: const Uuid().v1(),
+                  start: timestamp.subtract(Duration(minutes: _minute)),
+                  duration: Duration(hours: 1),
+                  title: "Simple event",
+                ) as T;
+                listCubit.save(newItem);
+                Navigator.of(context).pop(newItem);
               },
             ),
             ListTile(
               title: Text("Task Due"),
               onTap: (){
-                listCubit.save(
-                  TaskDue(
-                    id: const Uuid().v1(),
-                    start: timestamp.subtract(Duration(minutes: _minute)),
-                  ) as T,
-                );
-                Navigator.of(context).pop();
+                T newItem = TaskDue(
+                  id: const Uuid().v1(),
+                  start: timestamp.subtract(Duration(minutes: _minute)),
+                ) as T;
+                listCubit.save(newItem);
+                Navigator.of(context).pop(newItem);
               },
             ),
             ListTile(
               title: Text("Break"),
               onTap: (){
-                listCubit.save(
-                  Break(
-                    id: const Uuid().v1(),
-                    start: timestamp.subtract(Duration(minutes: _minute)),
-                    duration: Duration(hours: 1),
-                  ),
+                Break newItem = Break(
+                  id: const Uuid().v1(),
+                  start: timestamp.subtract(Duration(minutes: _minute)),
+                  duration: Duration(hours: 1),
                 );
-                Navigator.of(context).pop();
+                listCubit.save(newItem);
+                Navigator.of(context).pop(newItem);
               },
             ),
           ],
