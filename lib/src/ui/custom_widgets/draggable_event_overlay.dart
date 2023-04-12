@@ -685,46 +685,16 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     }
 
     if (widget.viewType == CalendarView.month) {
-      DateTime _date = dayDate.add(Duration(days: _dayOffsets.first));
-      int _totalDays = _dayOffsets.length;
-
-      for (int i = _dayOffsets.first; i <= _dayOffsets.last; i++, _date = _date.add(Duration(days: 1))) {
-        if (_date.weekday > 1 &&
-            DateUtils.dateOnly(_date) != DateUtils.dateOnly(_event.start)) {
-          continue;
-        }
-        final layoutBox = widget.getLayoutBox(_date);
-        if (layoutBox == null) {
-          continue;
-        }
-        Offset layoutPosition;
-        try {
-          layoutPosition =
-              layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
-        } catch (e) {
-          continue;
-        }
-
-        double _weekOffset = 0;
-        if (!_date.isSameWeekAs(dayDate)) {
-          // _weekOffset = MediaQuery.of(context).size.height / 9.0;
-          _weekOffset = _layoutBox.size.height * 1.5;
-          if (_date.isBefore(dayDate)) {
-            _weekOffset = -_weekOffset;
-          }
-        }
-
+      double _weekOffsetY = _layoutBox.size.height * 1.5;
+      double _dayWidth = _layoutBox.size.width / 13;
+      for (int i = -5; i <= 5; i++) {
         result.add(Rect.fromLTWH(
-          // layoutPosition.dx + _delta.dx,
-          _date.isSameWeekAs(dayDate) ? bounds.left : layoutPosition.dx + _delta.dx,
-          bounds.top + _weekOffset,
-          bounds.width,// * _totalDays,
+          _layoutPosition.dx + _delta.dx + i * _dayWidth * 7,
+          bounds.top - _weekOffsetY * i,
+          bounds.width,
           bounds.height,
         ));
-        // _date = _date.add(Duration(days: 1));
       }
-
-      // result = [];
     }
 
     return result;
