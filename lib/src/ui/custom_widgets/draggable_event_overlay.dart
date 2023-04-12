@@ -333,7 +333,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   void _updateEventOriginAndStart() {
-    final dayDate = _getTargetDayAt(_pointerLocation)!; // <- temporary
+    bool isMonth = widget.viewType == CalendarView.month;
+    DateTime dayDate = _getTargetDayAt(_pointerLocation)!; // <- temporary
+    if (isMonth) {
+      dayDate = dayDate.add(Duration(days: _dayOffsets.first));
+    }
     final layoutBox = widget.getLayoutBox(dayDate)!;
     final timelineBox = widget.getTimelineBox();
     final layoutPosition =
@@ -348,7 +352,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     _eventBounds.update(
       dx: layoutPosition.dx,
-      dy: _eventBounds.dy - offset,
+      dy: isMonth
+          ? layoutPosition.dy
+          : _eventBounds.dy - offset,
     );
 
     widget.event.value =
