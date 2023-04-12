@@ -154,21 +154,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
 
     widget.event.value = event;
-    // _boundsTween = RectTween(
-    //   begin: eventPosition & eventBox.size,
-    //   end: Rect.fromLTWH(
-    //     layoutPosition.dx,
-    //     eventPosition.dy,
-    //     widget.viewType == CalendarView.month
-    //         ? eventBox.size.width
-    //         : layoutBox.size.width,
-    //     eventBox.size.height,
-    //   ),
-    // );
-    // _createEntriesFor(event);
-    // _animationController.forward();
-    //
-    // _dragging = true;
     _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
     _startDiff = _pointerTimePoint.difference(event.start);
 
@@ -176,7 +161,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     double _dayWidth = layoutBox.size.width / 13;
     _boundsTween = RectTween(
-      // begin: eventPosition & eventBox.size,
       begin: Rect.fromLTWH(
         widget.viewType == CalendarView.month
             ? eventPosition.dx + _dayWidth * _dayOffsets.first
@@ -189,7 +173,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         widget.viewType == CalendarView.month
             ? layoutPosition.dx + _dayWidth * _dayOffsets.first
             : layoutPosition.dx,
-        // layoutPosition.dx,
         eventPosition.dy,
         widget.viewType == CalendarView.month
             ? _dayWidth * _dayOffsets.length
@@ -625,7 +608,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       return [];
     }
 
-    final _event = widget.event.value!;
     dayDate = DateUtils.dateOnly(dayDate);
     final _layoutBox = widget.getLayoutBox(dayDate);
     if (_layoutBox == null) {
@@ -637,11 +619,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       _layoutPosition =
           _layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
     } catch (e) {
-      // return [];
       _layoutPosition = bounds.topLeft;
-      // setState(() {
-      //
-      // });
     }
     final _delta = bounds.topLeft - _layoutPosition;
 

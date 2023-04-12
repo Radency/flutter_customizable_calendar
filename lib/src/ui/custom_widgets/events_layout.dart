@@ -69,9 +69,8 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
       (event.start.isBefore(dayDate) && event.end.isAfter(dayDate));
 
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) {
+    // For month view, daily event list is passed in constructor
     if (viewType == CalendarView.month) {
-      // return list
-      //     .where((event) => DateUtils.isSameDay(event.start, dayDate)).toList();
       return list;
     }
     return list.where(_eventPresentAtDay).toList(growable: false);
@@ -141,9 +140,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
         onLongPressEnd: overlay.onEventLongPressEnd,
         onLongPressCancel: overlay.onEventLongPressCancel,
         child: ListView(
-          // key: ValueKey(dayDate),
           key: ValueKey(controller),
-          // key: GlobalKey(),
           controller: controller,
           children: [
             ...eventsToDisplay.map((event) {
