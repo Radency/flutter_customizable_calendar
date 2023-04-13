@@ -24,6 +24,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     this.onEventTap,
     this.dayWidth,
     this.controller,
+    this.onDateLongPress,
   });
 
   /// A day which needs to be displayed
@@ -60,6 +61,8 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   final double? dayWidth;
 
   final ScrollController? controller;
+
+  final void Function(DateTime)? onDateLongPress;
 
   /// Defines if show events in simplified way
   bool get simpleView => viewType == CalendarView.month;
@@ -135,7 +138,11 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
           ),
         ],
       ) : GestureDetector(
-        onLongPressStart: overlay.onEventLongPressStart,
+        onLongPressStart: (details) {
+          if(!overlay.onEventLongPressStart(details)) {
+            onDateLongPress?.call(dayDate);
+          }
+        },
         onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
         onLongPressEnd: overlay.onEventLongPressEnd,
         onLongPressCancel: overlay.onEventLongPressCancel,
@@ -168,31 +175,25 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                     margin: const EdgeInsets.only(
                       bottom: 2,
                     ),
-                    child: GestureDetector(
-                      onLongPressStart: overlay.onEventLongPressStart,
-                      onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-                      onLongPressEnd: overlay.onEventLongPressEnd,
-                      onLongPressCancel: overlay.onEventLongPressCancel,
-                      child: RenderIdProvider(
-                        id: event,
-                        child: ValueListenableBuilder(
-                          valueListenable: elevatedEvent,
-                          builder: (context, elevatedEvent, child) =>
-                              Opacity(
-                                opacity: (elevatedEvent?.id == event.id)
-                                    ? 0.5
-                                    : 1,
-                                child: child,
-                              ),
-                          child: EventView(
-                            // key: eventsKeys[event] ??= GlobalKey(),
-                            event,
-                            theme: timelineTheme.floatingEventsTheme,
-                            viewType: viewType,
-                            onTap: () {
-                              onEventTap?.call(event);
-                            },
-                          ),
+                    child: RenderIdProvider(
+                      id: event,
+                      child: ValueListenableBuilder(
+                        valueListenable: elevatedEvent,
+                        builder: (context, elevatedEvent, child) =>
+                            Opacity(
+                              opacity: (elevatedEvent?.id == event.id)
+                                  ? 0.5
+                                  : 1,
+                              child: child,
+                            ),
+                        child: EventView(
+                          // key: eventsKeys[event] ??= GlobalKey(),
+                          event,
+                          theme: timelineTheme.floatingEventsTheme,
+                          viewType: viewType,
+                          onTap: () {
+                            onEventTap?.call(event);
+                          },
                         ),
                       ),
                     ),

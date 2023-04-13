@@ -344,16 +344,17 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onLongPressStart: (details) async {
-            final timestamp = dayDate.add(Duration(hours: 12));
-
-            if (timestamp.isBefore(_initialDate)) return;
-            if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
-
-            final newItem = await widget.onDateLongPress?.call(timestamp);
-            if (newItem is T) {
-              events.add(newItem);
-              _initDailyEventsAndControllers();
-            }
+            // final timestamp = dayDate.add(Duration(hours: 12));
+            //
+            // if (timestamp.isBefore(_initialDate)) return;
+            // if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+            //
+            // final newItem = await widget.onDateLongPress?.call(timestamp);
+            // if (newItem is T) {
+            //   events.add(newItem);
+            //   _initDailyEventsAndControllers();
+            // }
+            _onLongPressStart(dayDate);
           },
           child: Container(
             color: Colors.transparent, // Needs for hitTesting
@@ -404,6 +405,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                               viewType: CalendarView.month,
                               dayWidth: maxWidth / 13,
                               controller: dayControllerMap[dayDate],
+                              onDateLongPress: _onLongPressStart,
                             ),
                           ),
                         ),
@@ -487,6 +489,19 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     } else {
       return list
           .where((event) => DateUtils.isSameDay(event.start, dayDate)).toList();
+    }
+  }
+
+  void _onLongPressStart(DateTime dayDate) async {
+    final timestamp = dayDate.add(Duration(hours: 12));
+
+    if (timestamp.isBefore(_initialDate)) return;
+    if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+
+    final newItem = await widget.onDateLongPress?.call(timestamp);
+    if (newItem is T) {
+    events.add(newItem);
+    _initDailyEventsAndControllers();
     }
   }
 }

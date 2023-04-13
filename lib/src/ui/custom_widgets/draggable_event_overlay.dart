@@ -129,7 +129,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   List<Rect> _rects = [];
 
   /// Needs to make interaction between a timeline and the overlay
-  void onEventLongPressStart(LongPressStartDetails details) {
+  bool onEventLongPressStart(LongPressStartDetails details) {
     _pointerLocation = details.globalPosition;
 
     if (_animationController.isAnimating) {
@@ -140,7 +140,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     final renderIds = _timelineHitTest(_pointerLocation);
     final hitTestedEvents = renderIds.whereType<RenderId<T>>();
 
-    if (hitTestedEvents.isEmpty) return;
+    if (hitTestedEvents.isEmpty) return false;
 
     final eventBox = hitTestedEvents.first;
     final event = eventBox.id;
@@ -184,6 +184,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _animationController.forward();
 
     _dragging = true;
+    return true;
   }
 
   /// Needs to make interaction between a timeline and the overlay
