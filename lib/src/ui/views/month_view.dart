@@ -69,7 +69,7 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final List<T> events;
 
   /// Returns selected timestamp
-  final dynamic Function(DateTime)? onDateLongPress;
+  final Future<CalendarEvent?> Function(DateTime)? onDateLongPress;
 
   /// Returns the tapped event
   final void Function(T)? onEventTap;

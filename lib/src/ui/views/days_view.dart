@@ -64,7 +64,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final List<T> events;
 
   /// Returns selected timestamp
-  final void Function(DateTime)? onDateLongPress;
+  final Future<CalendarEvent?> Function(DateTime)? onDateLongPress;
 
   /// Returns the tapped event
   final void Function(T)? onEventTap;
