@@ -22,6 +22,9 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     this.events = const [],
     required this.elevatedEvent,
     this.onEventTap,
+    this.dayWidth,
+    this.controller,
+    this.onDateLongPress,
   });
 
   /// A day which needs to be displayed
@@ -51,22 +54,35 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   /// Callback which returns a tapped event value
   final void Function(T)? onEventTap;
 
-  /// Defines if show events in simplified way. Defaults to false
+  /// Type of calendar view. Can be [CalendarView.days], [CalendarView.week],
+  /// [CalendarView.month].
   final CalendarView viewType;
 
+  final double? dayWidth;
+
+  final ScrollController? controller;
+
+  final void Function(DateTime)? onDateLongPress;
+
+  /// Defines if show events in simplified way
   bool get simpleView => viewType == CalendarView.month;
 
-  List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) =>
-      list
-          .where((event) =>
+  bool _eventPresentAtDay<E extends CalendarEvent>(E event) =>
       DateUtils.isSameDay(event.start, dayDate) ||
-          (event.start.isBefore(dayDate) && event.end.isAfter(dayDate)))
-          .toList(growable: false);
+      (event.start.isBefore(dayDate) && event.end.isAfter(dayDate));
+
+  List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) {
+    // For month view, daily event list is passed in constructor
+    if (viewType == CalendarView.month) {
+      return list;
+    }
+    return list.where(_eventPresentAtDay).toList(growable: false);
+  }
 
   @override
   Widget build(BuildContext context) {
     final breaksToDisplay = _getEventsOnDay(breaks);
-    final eventsToDisplay = _getEventsOnDay(events)..sort();
+    final eventsToDisplay = _getEventsOnDay(events);
     final overlay = overlayKey.currentState!;
 
     return RenderIdProvider(
@@ -121,16 +137,44 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                 ),
           ),
         ],
-      ) : ListView(
-        children: [
-          ...eventsToDisplay.map((event) =>
-                Container(
-                  margin: EdgeInsets.only(bottom: 2),
-                  child: GestureDetector(
-                    onLongPressStart: overlay.onEventLongPressStart,
-                    onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-                    onLongPressEnd: overlay.onEventLongPressEnd,
-                    onLongPressCancel: overlay.onEventLongPressCancel,
+      ) : GestureDetector(
+        onLongPressStart: (details) {
+          if(!overlay.onEventLongPressStart(details)) {
+            onDateLongPress?.call(dayDate);
+          }
+        },
+        onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+        onLongPressEnd: overlay.onEventLongPressEnd,
+        onLongPressCancel: overlay.onEventLongPressCancel,
+        child: ListView(
+          key: ValueKey(controller),
+          controller: controller,
+          children: [
+            ...eventsToDisplay.map((event) {
+              DateTimeRange _range = DateTimeRange(
+                start: DateUtils.dateOnly(event.start),
+                end: DateUtils.dateOnly(event.end),
+              );
+              int _eventDays = _range.days.length + 1;
+              double eventWidth = dayWidth! * _eventDays;
+              if(dayDate.weekday == 1) {
+                int diff = event.end.weekday;
+                eventWidth = dayWidth! * diff;
+              }
+
+              return Visibility(
+                visible: DateUtils.dateOnly(event.start) == DateUtils.dateOnly(dayDate) || dayDate.weekday == 1,
+                maintainState: true,
+                maintainAnimation: true,
+                maintainSize: true,
+                maintainInteractivity: _eventPresentAtDay(event),
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Container(
+                    width: eventWidth,
+                    margin: const EdgeInsets.only(
+                      bottom: 2,
+                    ),
                     child: RenderIdProvider(
                       id: event,
                       child: ValueListenableBuilder(
@@ -147,14 +191,18 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                           event,
                           theme: timelineTheme.floatingEventsTheme,
                           viewType: viewType,
-                          onTap: () => onEventTap?.call(event),
+                          onTap: () {
+                            onEventTap?.call(event);
+                          },
                         ),
                       ),
                     ),
                   ),
                 ),
-          ),
-        ],
+              );
+            }),
+          ],
+        ),
       ),
     );
   }

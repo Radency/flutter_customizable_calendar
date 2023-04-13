@@ -36,6 +36,19 @@ class App extends StatelessWidget {
         start: today.add(const Duration(hours: 13)),
       ),
       SimpleEvent(
+        id: 'Event 4',
+        start: today.add(const Duration(hours: 71)),
+        duration: const Duration(hours: 1),
+        title: 'Event 4',
+
+      ),
+      SimpleEvent(
+        id: 'Event 3',
+        start: today.add(const Duration(hours: 12)),
+        duration: const Duration(days: 1, minutes: 30),
+        title: 'Event 3',
+      ),
+      SimpleEvent(
         id: 'Event 2',
         start: today.add(const Duration(hours: 12)),
         duration: const Duration(minutes: 30),
@@ -44,7 +57,7 @@ class App extends StatelessWidget {
       SimpleEvent(
         id: 'Event 1',
         start: today.add(const Duration(hours: 38)),
-        duration: const Duration(hours: 46),
+        duration: const Duration(hours: 70),
         title: 'Event 1',
       ),
     ];
@@ -237,7 +250,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
             onDateLongPress: (timestamp) async {
               print(timestamp);
               final _minute = timestamp.minute;
-              await showModalBottomSheet(
+              return await showModalBottomSheet(
                 context: context,
                 builder: (context) => Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -245,40 +258,37 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
                     ListTile(
                       title: Text("Simple Event"),
                       onTap: (){
-                        listCubit.save(
-                          SimpleEvent(
-                            id: const Uuid().v1(),
-                            start: timestamp.subtract(Duration(minutes: _minute)),
-                            duration: Duration(hours: 1),
-                            title: "Simple event",
-                          ) as T,
-                        );
-                        Navigator.of(context).pop();
+                        T newItem = SimpleEvent(
+                          id: const Uuid().v1(),
+                          start: timestamp.subtract(Duration(minutes: _minute)),
+                          duration: Duration(hours: 1),
+                          title: "Simple event",
+                        ) as T;
+                        listCubit.save(newItem);
+                        Navigator.of(context).pop(newItem);
                       },
                     ),
                     ListTile(
                       title: Text("Task Due"),
                       onTap: (){
-                        listCubit.save(
-                          TaskDue(
-                            id: const Uuid().v1(),
-                            start: timestamp.subtract(Duration(minutes: _minute)),
-                          ) as T,
-                        );
-                        Navigator.of(context).pop();
+                        T newItem = TaskDue(
+                          id: const Uuid().v1(),
+                          start: timestamp.subtract(Duration(minutes: _minute)),
+                        ) as T;
+                        listCubit.save(newItem);
+                        Navigator.of(context).pop(newItem);
                       },
                     ),
                     ListTile(
                       title: Text("Break"),
                       onTap: (){
-                        listCubit.save(
-                          Break(
-                            id: const Uuid().v1(),
-                            start: timestamp.subtract(Duration(minutes: _minute)),
-                            duration: Duration(hours: 1),
-                          ),
+                        Break newItem = Break(
+                          id: const Uuid().v1(),
+                          start: timestamp.subtract(Duration(minutes: _minute)),
+                          duration: Duration(hours: 1),
                         );
-                        Navigator.of(context).pop();
+                        listCubit.save(newItem);
+                        Navigator.of(context).pop(newItem);
                       },
                     ),
                   ],
@@ -333,7 +343,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         onDateLongPress: (timestamp) async {
           print(timestamp);
           final _minute = timestamp.minute;
-          await showModalBottomSheet(
+          return await showModalBottomSheet(
             context: context,
             builder: (context) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -341,40 +351,37 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
                 ListTile(
                   title: Text("Simple Event"),
                   onTap: (){
-                    listCubit.save(
-                      SimpleEvent(
-                        id: const Uuid().v1(),
-                        start: timestamp.subtract(Duration(minutes: _minute)),
-                        duration: Duration(hours: 1),
-                        title: "Simple event",
-                      ) as T,
-                    );
-                    Navigator.of(context).pop();
+                    T newItem = SimpleEvent(
+                      id: const Uuid().v1(),
+                      start: timestamp.subtract(Duration(minutes: _minute)),
+                      duration: Duration(hours: 1),
+                      title: "Simple event",
+                    ) as T;
+                    listCubit.save(newItem);
+                    Navigator.of(context).pop(newItem);
                   },
                 ),
                 ListTile(
                   title: Text("Task Due"),
                   onTap: (){
-                    listCubit.save(
-                      TaskDue(
-                        id: const Uuid().v1(),
-                        start: timestamp.subtract(Duration(minutes: _minute)),
-                      ) as T,
-                    );
-                    Navigator.of(context).pop();
+                    T newItem = TaskDue(
+                      id: const Uuid().v1(),
+                      start: timestamp.subtract(Duration(minutes: _minute)),
+                    ) as T;
+                    listCubit.save(newItem);
+                    Navigator.of(context).pop(newItem);
                   },
                 ),
                 ListTile(
                   title: Text("Break"),
                   onTap: (){
-                    listCubit.save(
-                      Break(
-                        id: const Uuid().v1(),
-                        start: timestamp.subtract(Duration(minutes: _minute)),
-                        duration: Duration(hours: 1),
-                      ),
+                    Break newItem = Break(
+                      id: const Uuid().v1(),
+                      start: timestamp.subtract(Duration(minutes: _minute)),
+                      duration: Duration(hours: 1),
                     );
-                    Navigator.of(context).pop();
+                    listCubit.save(newItem);
+                    Navigator.of(context).pop(newItem);
                   },
                 ),
               ],
@@ -440,7 +447,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     onDateLongPress: (timestamp) async {
       print(timestamp);
       final _minute = timestamp.minute;
-      await showModalBottomSheet(
+      return await showModalBottomSheet(
         context: context,
         builder: (context) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -448,40 +455,37 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
             ListTile(
               title: Text("Simple Event"),
               onTap: (){
-                listCubit.save(
-                  SimpleEvent(
-                    id: const Uuid().v1(),
-                    start: timestamp.subtract(Duration(minutes: _minute)),
-                    duration: Duration(hours: 1),
-                    title: "Simple event",
-                  ) as T,
-                );
-                Navigator.of(context).pop();
+                T newItem = SimpleEvent(
+                  id: const Uuid().v1(),
+                  start: timestamp.subtract(Duration(minutes: _minute)),
+                  duration: Duration(hours: 1),
+                  title: "Simple event",
+                ) as T;
+                listCubit.save(newItem);
+                Navigator.of(context).pop(newItem);
               },
             ),
             ListTile(
               title: Text("Task Due"),
               onTap: (){
-                listCubit.save(
-                  TaskDue(
-                    id: const Uuid().v1(),
-                    start: timestamp.subtract(Duration(minutes: _minute)),
-                  ) as T,
-                );
-                Navigator.of(context).pop();
+                T newItem = TaskDue(
+                  id: const Uuid().v1(),
+                  start: timestamp.subtract(Duration(minutes: _minute)),
+                ) as T;
+                listCubit.save(newItem);
+                Navigator.of(context).pop(newItem);
               },
             ),
             ListTile(
               title: Text("Break"),
               onTap: (){
-                listCubit.save(
-                  Break(
-                    id: const Uuid().v1(),
-                    start: timestamp.subtract(Duration(minutes: _minute)),
-                    duration: Duration(hours: 1),
-                  ),
+                Break newItem = Break(
+                  id: const Uuid().v1(),
+                  start: timestamp.subtract(Duration(minutes: _minute)),
+                  duration: Duration(hours: 1),
                 );
-                Navigator.of(context).pop();
+                listCubit.save(newItem);
+                Navigator.of(context).pop(newItem);
               },
             ),
           ],
@@ -537,11 +541,11 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
           borderRadius: const BorderRadius.all(Radius.circular(4)),
         ),
         margin: const EdgeInsets.all(1),
-        monthTheme: ViewEventTheme(
-          titleStyle: TextStyle(
-            fontSize: 10,
-          ),
-        )
+        // monthTheme: ViewEventTheme(
+        //   titleStyle: TextStyle(
+        //     fontSize: 10,
+        //   ),
+        // )
       );
 
   DraggableEventTheme get _draggableEventTheme => DraggableEventTheme(
