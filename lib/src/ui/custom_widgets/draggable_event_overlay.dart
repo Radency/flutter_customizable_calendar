@@ -521,47 +521,64 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
           child: child,
         );
       },
-      child: Stack(
-        children: [
-          NotificationListener<ScrollUpdateNotification>(
-            onNotification: (event) {
-              final scrollDelta = event.scrollDelta ?? 0;
+      child: Listener(
+        onPointerMove: (moveDetails) {
+          if (_dragging) {
+            print("--------onPointerMove");
+            LongPressMoveUpdateDetails details = LongPressMoveUpdateDetails(
+              globalPosition: moveDetails.position,
+              localPosition: moveDetails.localPosition,
+            );
+            onEventLongPressMoveUpdate(details);
+          }
+        },
+        onPointerUp: (upDetails) {
+          if (_dragging) {
+            LongPressEndDetails details = LongPressEndDetails();
+            onEventLongPressEnd(details);
+          }
+        },
+        child: Stack(
+          children: [
+            NotificationListener<ScrollUpdateNotification>(
+              onNotification: (event) {
+                final scrollDelta = event.scrollDelta ?? 0;
 
-              if (!_dragging && event.metrics.axis == Axis.vertical) {
-                _eventBounds.update(
-                  dy: _eventBounds.dy - scrollDelta,
-                  height: _eventBounds.height + (_resizing ? scrollDelta : 0),
-                );
-              }
-
-              return true;
-            },
-            child: widget.child,
-          ),
-          Positioned.fill(
-            left: widget.padding.left,
-            top: widget.padding.top,
-            right: widget.padding.right,
-            bottom: widget.padding.bottom,
-            child: Overlay(key: _overlayKey),
-          ),
-          if (_edited)
-            Saver(
-              alignment: widget.saverConfig.alignment,
-              onPressed: () {
-                widget.onChanged?.call(widget.event.value!);
-                _dropEvent(widget.event.value!);
-                setState((){
-                  _edited = false;
-                  _removeEntries();
-                  widget.event.value = null;
-                  _resizing = false;
-                  _dragging = false;
-                });
+                if (!_dragging && event.metrics.axis == Axis.vertical) {
+                  _eventBounds.update(
+                    dy: _eventBounds.dy - scrollDelta,
+                    height: _eventBounds.height + (_resizing ? scrollDelta : 0),
+                  );
+                }
+                return true;
               },
-              child: widget.saverConfig.child,
-            )
-        ],
+              child: widget.child,
+            ),
+            Positioned.fill(
+              left: widget.padding.left,
+              top: widget.padding.top,
+              right: widget.padding.right,
+              bottom: widget.padding.bottom,
+              child: Overlay(key: _overlayKey),
+            ),
+            if (_edited)
+              Saver(
+                alignment: widget.saverConfig.alignment,
+                onPressed: () {
+                  widget.onChanged?.call(widget.event.value!);
+                  _dropEvent(widget.event.value!);
+                  setState((){
+                    _edited = false;
+                    _removeEntries();
+                    widget.event.value = null;
+                    _resizing = false;
+                    _dragging = false;
+                  });
+                },
+                child: widget.saverConfig.child,
+              )
+          ],
+        ),
       ),
     );
   }
