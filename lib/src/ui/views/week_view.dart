@@ -107,6 +107,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   double get _hourExtent => widget.timelineTheme.timeScaleTheme.hourExtent;
   double get _dayExtent => _hourExtent * Duration.hoursPerDay;
 
+  // DraggableEventOverlayState<T>? get _overlay => _overlayKey.currentState;
+
   int get _cellExtent => widget.timelineTheme.cellExtent;
 
   RenderBox? _getTimelineBox() =>
@@ -246,6 +248,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               padding: EdgeInsets.only(
                 top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
               ),
+              onDateLongPress: _onDateLongPress,
               onDragDown: _stopTimelineScrolling,
               onDragUpdate: _autoScrolling,
               onDragEnd: _stopAutoScrolling,
@@ -435,46 +438,51 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     return Expanded(
       child: RenderIdProvider(
         id: dayDate,
-        child: ValueListenableBuilder(
-          valueListenable: _elevatedEvent,
-          builder: (context, elevatedEvent, child) => AbsorbPointer(
-            absorbing: elevatedEvent != null,
-            child: child,
-          ),
-          child: GestureDetector(
-            onLongPressStart: (details) {
-              final minutes = details.localPosition.dy ~/ _minuteExtent;
-              final roundedMinutes =
-                  (minutes / _cellExtent).round() * _cellExtent;
-              final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
-
-              if (timestamp.isBefore(_initialDate)) return;
-              if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
-
-              widget.onDateLongPress?.call(timestamp);
-            },
-            child: Container(
-              padding: EdgeInsets.only(
-                top: theme.padding.top,
-                bottom: theme.padding.bottom,
-              ),
-              color: Colors.transparent, // Needs for hitTesting
-              child: EventsLayout<T>(
-                dayDate: dayDate,
-                viewType: CalendarView.week,
-                overlayKey: _overlayKey,
-                layoutsKeys: WeekViewKeys.layouts,
-                eventsKeys: WeekViewKeys.events,
-                timelineTheme: widget.timelineTheme,
-                breaks: widget.breaks,
-                events: widget.events,
-                elevatedEvent: _elevatedEvent,
-                onEventTap: widget.onEventTap,
-              ),
+        child: GestureDetector(
+          // onLongPressStart: (details) {
+          //   final minutes = details.localPosition.dy ~/ _minuteExtent;
+          //   final roundedMinutes =
+          //       (minutes / _cellExtent).round() * _cellExtent;
+          //   final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
+          //
+          //   if (timestamp.isBefore(_initialDate)) return;
+          //   if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+          //
+          //   widget.onDateLongPress?.call(timestamp);
+          // },
+          child: Container(
+            padding: EdgeInsets.only(
+              top: theme.padding.top,
+              bottom: theme.padding.bottom,
+            ),
+            color: Colors.transparent, // Needs for hitTesting
+            child: EventsLayout<T>(
+              dayDate: dayDate,
+              viewType: CalendarView.week,
+              overlayKey: _overlayKey,
+              layoutsKeys: WeekViewKeys.layouts,
+              eventsKeys: WeekViewKeys.events,
+              timelineTheme: widget.timelineTheme,
+              breaks: widget.breaks,
+              events: widget.events,
+              elevatedEvent: _elevatedEvent,
+              onEventTap: widget.onEventTap,
             ),
           ),
         ),
       ),
     );
+  }
+
+  void _onDateLongPress(DateTime dayDate, LongPressStartDetails details) {
+    final minutes = details.localPosition.dy ~/ _minuteExtent;
+    final roundedMinutes =
+        (minutes / _cellExtent).round() * _cellExtent;
+    final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
+
+    if (timestamp.isBefore(_initialDate)) return;
+    if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+
+    widget.onDateLongPress?.call(timestamp);
   }
 }

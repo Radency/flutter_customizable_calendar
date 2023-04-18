@@ -109,10 +109,10 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                 LayoutId(
                   id: event,
                   child: GestureDetector(
-                    onLongPressStart: overlay.onEventLongPressStart,
-                    onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-                    onLongPressEnd: overlay.onEventLongPressEnd,
-                    onLongPressCancel: overlay.onEventLongPressCancel,
+                    // onLongPressStart: overlay.onEventLongPressStart,
+                    // onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
+                    // onLongPressEnd: overlay.onEventLongPressEnd,
+                    // onLongPressCancel: overlay.onEventLongPressCancel,
                     child: RenderIdProvider(
                       id: event,
                       child: ValueListenableBuilder(

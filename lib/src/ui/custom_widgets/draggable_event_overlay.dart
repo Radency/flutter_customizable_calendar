@@ -34,6 +34,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     this.onResizingEnd,
     this.onDropped,
     this.onChanged,
+    this.onDateLongPress,
     required this.getTimelineBox,
     required this.getLayoutBox,
     required this.getEventBox,
@@ -55,6 +56,9 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
 
   /// Is called just after user start to interact with the event view
   final void Function()? onDragDown;
+
+  /// Is called when user tap outside events
+  final void Function(DateTime, LongPressStartDetails)? onDateLongPress;
 
   /// Is called during user drags the event view
   final void Function(DragUpdateDetails)? onDragUpdate;
@@ -220,7 +224,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   /// Needs to make interaction between a timeline and the overlay
-  void onEventLongPressCancel() => _dragging = false;
+  void onEventLongPressCancel() {
+    _dragging = false;
+  }
 
   Rect _getEventBounds(T event) {
     final eventBox = widget.getEventBox(event);
@@ -442,101 +448,98 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: widget.event,
-      builder: (context, elevatedEvent, child) {
-        if (elevatedEvent == null) return child!;
-
-        return GestureDetector(
-          onTap: () {
-            _dropEvent(elevatedEvent);
-          },
-          onPanDown: (details) {
-            final renderIds = _globalHitTest(details.globalPosition);
-            final ids = renderIds.map((renderId) => renderId.id);
-
-            if (ids.contains(Constants.sizerId)) {
-              _resizing = true;
-              widget.onDragDown?.call();
-            } else if (ids.contains(Constants.elevatedEventId)) {
-              _dragging = true;
-              widget.onDragDown?.call();
-            }
-          },
-          onPanStart: (details) {
-            if (!_dragging) return;
-            final event = widget.event.value!;
-            _pointerLocation = details.globalPosition;
-            _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
-            _startDiff = _pointerTimePoint.difference(event.start);
-
-            // Prevent accident day addition on WeekView
-            if (widget.viewType == CalendarView.week) {
-              _startDiff -= Duration(days: _startDiff.inDays);
-              if (_startDiff.isNegative) {
-                _startDiff += Duration(days: 1);
-              }
-            }
-
-            _updateDayOffsets(event);
-          },
-          onPanUpdate: (details) {
-            if (_resizing) {
-              widget.onSizeUpdate?.call(details);
-              _eventBounds.height += details.delta.dy;
-            } else if (_dragging) {
-              widget.onDragUpdate?.call(details);
-              _eventBounds.origin += details.delta;
-              if (!_resetPointerLocation(details.globalPosition)) return;
-              _pointerTimePoint =
-                  _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
-            }
-          },
-          onPanEnd: (details) {
-            if (widget.event.value == null) {
-              return;
-            }
-            if (_resizing) {
-              _resizing = false;
-              widget.onResizingEnd?.call();
-              _updateEventHeightAndDuration();
-            } else if (_dragging) {
-              _dragging = false;
-              widget.onDragEnd?.call();
-              _pointerTimePoint =
-                  _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
-              _updateEventOriginAndStart();
-              _updateDayOffsets(widget.event.value!);
-            }
-            if (!_edited) {
-              setState((){
-                _edited = true;
-              });
-            }
-          },
-          onPanCancel: () {
-            _resizing = false;
-            _dragging = false;
-          },
-          child: child,
-        );
+    return GestureDetector(
+      onLongPressStart: (details) {
+        if (!_dragging && !onEventLongPressStart(details)) {
+          final _dayDate = _getTargetDayAt(details.globalPosition);
+          if (_dayDate != null) {
+            widget.onDateLongPress?.call(_dayDate, details);
+          }
+        }
       },
-      child: Listener(
-        onPointerMove: (moveDetails) {
-          if (_dragging) {
-            print("--------onPointerMove");
-            LongPressMoveUpdateDetails details = LongPressMoveUpdateDetails(
-              globalPosition: moveDetails.position,
-              localPosition: moveDetails.localPosition,
-            );
-            onEventLongPressMoveUpdate(details);
-          }
-        },
-        onPointerUp: (upDetails) {
-          if (_dragging) {
-            LongPressEndDetails details = LongPressEndDetails();
-            onEventLongPressEnd(details);
-          }
+      onLongPressMoveUpdate: onEventLongPressMoveUpdate,
+      onLongPressEnd: onEventLongPressEnd,
+      child: ValueListenableBuilder(
+        valueListenable: widget.event,
+        builder: (context, elevatedEvent, child) {
+          if (elevatedEvent == null) return child!;
+
+          return GestureDetector(
+            // Prevent parent's onLongPress reaction
+            onLongPress: (){},
+
+            onTap: () {
+              _dropEvent(elevatedEvent);
+            },
+            onPanDown: (details) {
+              final renderIds = _globalHitTest(details.globalPosition);
+              final ids = renderIds.map((renderId) => renderId.id);
+
+              if (ids.contains(Constants.sizerId)) {
+                _resizing = true;
+                widget.onDragDown?.call();
+              } else if (ids.contains(Constants.elevatedEventId)) {
+                _dragging = true;
+                widget.onDragDown?.call();
+              }
+            },
+            onPanStart: (details) {
+              if (!_dragging) return;
+              final event = widget.event.value!;
+              _pointerLocation = details.globalPosition;
+              _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
+              _startDiff = _pointerTimePoint.difference(event.start);
+
+              // Prevent accident day addition on WeekView
+              if (widget.viewType == CalendarView.week) {
+                _startDiff -= Duration(days: _startDiff.inDays);
+                if (_startDiff.isNegative) {
+                  _startDiff += Duration(days: 1);
+                }
+              }
+
+              _updateDayOffsets(event);
+            },
+            onPanUpdate: (details) {
+              if (_resizing) {
+                widget.onSizeUpdate?.call(details);
+                _eventBounds.height += details.delta.dy;
+              } else if (_dragging) {
+                widget.onDragUpdate?.call(details);
+                _eventBounds.origin += details.delta;
+                if (!_resetPointerLocation(details.globalPosition)) return;
+                _pointerTimePoint =
+                    _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+              }
+            },
+            onPanEnd: (details) {
+              if (widget.event.value == null) {
+                return;
+              }
+              if (_resizing) {
+                _resizing = false;
+                widget.onResizingEnd?.call();
+                _updateEventHeightAndDuration();
+              } else if (_dragging) {
+                _dragging = false;
+                widget.onDragEnd?.call();
+                _pointerTimePoint =
+                    _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+                _updateEventOriginAndStart();
+                _updateDayOffsets(widget.event.value!);
+              }
+              if (!_edited) {
+                setState((){
+                  _edited = true;
+                });
+              }
+            },
+            // onPanCancel: () {
+            //   _resizing = false;
+            //   _dragging = false;
+            // },
+            child: child,
+          );
         },
         child: Stack(
           children: [
@@ -598,7 +601,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         viewType: widget.viewType,
         theme: widget.timelineTheme.floatingEventsTheme
             .copyWith(elevation: _draggableEventTheme.elevation),
-        onTap: () {},
+        // onTap: () {},
       );
   }
 
