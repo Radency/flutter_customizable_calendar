@@ -24,7 +24,6 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
     this.onEventTap,
     this.dayWidth,
     this.controller,
-    this.onDateLongPress,
   });
 
   /// A day which needs to be displayed
@@ -62,8 +61,6 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
 
   final ScrollController? controller;
 
-  final void Function(DateTime)? onDateLongPress;
-
   /// Defines if show events in simplified way
   bool get simpleView => viewType == CalendarView.month;
 
@@ -83,7 +80,6 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
   Widget build(BuildContext context) {
     final breaksToDisplay = _getEventsOnDay(breaks);
     final eventsToDisplay = _getEventsOnDay(events);
-    final overlay = overlayKey.currentState!;
 
     return RenderIdProvider(
       id: Constants.layoutId,
@@ -108,101 +104,85 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                 (event) =>
                 LayoutId(
                   id: event,
-                  child: GestureDetector(
-                    // onLongPressStart: overlay.onEventLongPressStart,
-                    // onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-                    // onLongPressEnd: overlay.onEventLongPressEnd,
-                    // onLongPressCancel: overlay.onEventLongPressCancel,
-                    child: RenderIdProvider(
-                      id: event,
-                      child: ValueListenableBuilder(
-                        valueListenable: elevatedEvent,
-                        builder: (context, elevatedEvent, child) =>
-                            Opacity(
-                              opacity: (elevatedEvent?.id == event.id)
-                                  ? 0.5
-                                  : 1,
-                              child: child,
-                            ),
-                        child: EventView(
-                          // key: eventsKeys[event] ??= GlobalKey(),
-                          event,
-                          theme: timelineTheme.floatingEventsTheme,
-                          viewType: viewType,
-                          onTap: () => onEventTap?.call(event),
-                        ),
+                  child: RenderIdProvider(
+                    id: event,
+                    child: ValueListenableBuilder(
+                      valueListenable: elevatedEvent,
+                      builder: (context, elevatedEvent, child) =>
+                          Opacity(
+                            opacity: (elevatedEvent?.id == event.id)
+                                ? 0.5
+                                : 1,
+                            child: child,
+                          ),
+                      child: EventView(
+                        // key: eventsKeys[event] ??= GlobalKey(),
+                        event,
+                        theme: timelineTheme.floatingEventsTheme,
+                        viewType: viewType,
+                        onTap: () => onEventTap?.call(event),
                       ),
                     ),
                   ),
                 ),
           ),
         ],
-      ) : GestureDetector(
-        onLongPressStart: (details) {
-          if(!overlay.onEventLongPressStart(details)) {
-            onDateLongPress?.call(dayDate);
-          }
-        },
-        onLongPressMoveUpdate: overlay.onEventLongPressMoveUpdate,
-        onLongPressEnd: overlay.onEventLongPressEnd,
-        onLongPressCancel: overlay.onEventLongPressCancel,
-        child: ListView(
-          key: ValueKey(controller),
-          controller: controller,
-          children: [
-            ...eventsToDisplay.map((event) {
-              DateTimeRange _range = DateTimeRange(
-                start: DateUtils.dateOnly(event.start),
-                end: DateUtils.dateOnly(event.end),
-              );
-              int _eventDays = _range.days.length + 1;
-              double eventWidth = dayWidth! * _eventDays;
-              if(dayDate.weekday == 1) {
-                int diff = event.end.weekday;
-                eventWidth = dayWidth! * diff;
-              }
+      ) : ListView(
+        key: ValueKey(controller),
+        controller: controller,
+        children: [
+          ...eventsToDisplay.map((event) {
+            DateTimeRange _range = DateTimeRange(
+              start: DateUtils.dateOnly(event.start),
+              end: DateUtils.dateOnly(event.end),
+            );
+            int _eventDays = _range.days.length + 1;
+            double eventWidth = dayWidth! * _eventDays;
+            if(dayDate.weekday == 1) {
+              int diff = event.end.weekday;
+              eventWidth = dayWidth! * diff;
+            }
 
-              return Visibility(
-                visible: DateUtils.dateOnly(event.start) == DateUtils.dateOnly(dayDate) || dayDate.weekday == 1,
-                maintainState: true,
-                maintainAnimation: true,
-                maintainSize: true,
-                maintainInteractivity: _eventPresentAtDay(event),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Container(
-                    width: eventWidth,
-                    margin: const EdgeInsets.only(
-                      bottom: 2,
-                    ),
-                    child: RenderIdProvider(
-                      id: event,
-                      child: ValueListenableBuilder(
-                        valueListenable: elevatedEvent,
-                        builder: (context, elevatedEvent, child) =>
-                            Opacity(
-                              opacity: (elevatedEvent?.id == event.id)
-                                  ? 0.5
-                                  : 1,
-                              child: child,
-                            ),
-                        child: EventView(
-                          // key: eventsKeys[event] ??= GlobalKey(),
-                          event,
-                          theme: timelineTheme.floatingEventsTheme,
-                          viewType: viewType,
-                          onTap: () {
-                            onEventTap?.call(event);
-                          },
-                        ),
+            return Visibility(
+              visible: DateUtils.dateOnly(event.start) == DateUtils.dateOnly(dayDate) || dayDate.weekday == 1,
+              maintainState: true,
+              maintainAnimation: true,
+              maintainSize: true,
+              maintainInteractivity: _eventPresentAtDay(event),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Container(
+                  width: eventWidth,
+                  margin: const EdgeInsets.only(
+                    bottom: 2,
+                  ),
+                  child: RenderIdProvider(
+                    id: event,
+                    child: ValueListenableBuilder(
+                      valueListenable: elevatedEvent,
+                      builder: (context, elevatedEvent, child) =>
+                          Opacity(
+                            opacity: (elevatedEvent?.id == event.id)
+                                ? 0.5
+                                : 1,
+                            child: child,
+                          ),
+                      child: EventView(
+                        // key: eventsKeys[event] ??= GlobalKey(),
+                        event,
+                        theme: timelineTheme.floatingEventsTheme,
+                        viewType: viewType,
+                        onTap: () {
+                          onEventTap?.call(event);
+                        },
                       ),
                     ),
                   ),
                 ),
-              );
-            }),
-          ],
-        ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

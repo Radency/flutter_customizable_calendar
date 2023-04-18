@@ -438,36 +438,23 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     return Expanded(
       child: RenderIdProvider(
         id: dayDate,
-        child: GestureDetector(
-          // onLongPressStart: (details) {
-          //   final minutes = details.localPosition.dy ~/ _minuteExtent;
-          //   final roundedMinutes =
-          //       (minutes / _cellExtent).round() * _cellExtent;
-          //   final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
-          //
-          //   if (timestamp.isBefore(_initialDate)) return;
-          //   if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
-          //
-          //   widget.onDateLongPress?.call(timestamp);
-          // },
-          child: Container(
-            padding: EdgeInsets.only(
-              top: theme.padding.top,
-              bottom: theme.padding.bottom,
-            ),
-            color: Colors.transparent, // Needs for hitTesting
-            child: EventsLayout<T>(
-              dayDate: dayDate,
-              viewType: CalendarView.week,
-              overlayKey: _overlayKey,
-              layoutsKeys: WeekViewKeys.layouts,
-              eventsKeys: WeekViewKeys.events,
-              timelineTheme: widget.timelineTheme,
-              breaks: widget.breaks,
-              events: widget.events,
-              elevatedEvent: _elevatedEvent,
-              onEventTap: widget.onEventTap,
-            ),
+        child: Container(
+          padding: EdgeInsets.only(
+            top: theme.padding.top,
+            bottom: theme.padding.bottom,
+          ),
+          color: Colors.transparent, // Needs for hitTesting
+          child: EventsLayout<T>(
+            dayDate: dayDate,
+            viewType: CalendarView.week,
+            overlayKey: _overlayKey,
+            layoutsKeys: WeekViewKeys.layouts,
+            eventsKeys: WeekViewKeys.events,
+            timelineTheme: widget.timelineTheme,
+            breaks: widget.breaks,
+            events: widget.events,
+            elevatedEvent: _elevatedEvent,
+            onEventTap: widget.onEventTap,
           ),
         ),
       ),

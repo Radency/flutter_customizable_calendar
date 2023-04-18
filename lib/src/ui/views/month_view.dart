@@ -168,6 +168,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
               padding: EdgeInsets.only(
                 top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
               ),
+              onDateLongPress: _onLongPressStart,
               onDropped: widget.onDiscardChanges,
               onChanged: (event) async {
                 events
@@ -341,80 +342,63 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
           absorbing: elevatedEvent != null,
           child: child,
         ),
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onLongPressStart: (details) async {
-            // final timestamp = dayDate.add(Duration(hours: 12));
-            //
-            // if (timestamp.isBefore(_initialDate)) return;
-            // if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
-            //
-            // final newItem = await widget.onDateLongPress?.call(timestamp);
-            // if (newItem is T) {
-            //   events.add(newItem);
-            //   _initDailyEventsAndControllers();
-            // }
-            _onLongPressStart(dayDate);
-          },
-          child: Container(
-            color: Colors.transparent, // Needs for hitTesting
-            child: Column(
-              children: [
-                Container(
-                  padding: theme.dayNumberPadding,
-                  margin: theme.dayNumberMargin,
-                  height: theme.dayNumberHeight,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isToday
-                        ? theme.currentDayNumberBackgroundColor
-                        : theme.dayNumberBackgroundColor,
-                  ),
-                  child: Text(
-                    dayDate.day.toString(),
-                    style: isToday
-                        ? theme.currentDayNumberTextStyle
-                        : theme.dayNumberTextStyle,
-                  ),
+        child: Container(
+          color: Colors.transparent, // Needs for hitTesting
+          child: Column(
+            children: [
+              Container(
+                padding: theme.dayNumberPadding,
+                margin: theme.dayNumberMargin,
+                height: theme.dayNumberHeight,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isToday
+                      ? theme.currentDayNumberBackgroundColor
+                      : theme.dayNumberBackgroundColor,
                 ),
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) => Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          width: maxWidth,
-                          height: constraints.maxHeight,
-                          child: Container(
-                            constraints: BoxConstraints(
-                              maxHeight: constraints.maxHeight,
-                            ),
-                            child: EventsLayout<T>(
-                              dayDate: dayDate,
-                              overlayKey: _overlayKey,
-                              layoutsKeys: MonthViewKeys.layouts,
-                              eventsKeys: MonthViewKeys.events,
-                              timelineTheme: widget.timelineTheme,
-                              breaks: widget.breaks,
-                              events: dayEventMap[dayDate] ?? [],
-                              elevatedEvent: _elevatedEvent,
-                              onEventTap: widget.onEventTap,
-                              viewType: CalendarView.month,
-                              dayWidth: maxWidth / 13,
-                              controller: dayControllerMap[dayDate],
-                              onDateLongPress: _onLongPressStart,
-                            ),
+                child: Text(
+                  dayDate.day.toString(),
+                  style: isToday
+                      ? theme.currentDayNumberTextStyle
+                      : theme.dayNumberTextStyle,
+                ),
+              ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        width: maxWidth,
+                        height: constraints.maxHeight,
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxHeight: constraints.maxHeight,
+                          ),
+                          child: EventsLayout<T>(
+                            dayDate: dayDate,
+                            overlayKey: _overlayKey,
+                            layoutsKeys: MonthViewKeys.layouts,
+                            eventsKeys: MonthViewKeys.events,
+                            timelineTheme: widget.timelineTheme,
+                            breaks: widget.breaks,
+                            events: dayEventMap[dayDate] ?? [],
+                            elevatedEvent: _elevatedEvent,
+                            onEventTap: widget.onEventTap,
+                            viewType: CalendarView.month,
+                            dayWidth: maxWidth / 13,
+                            controller: dayControllerMap[dayDate],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -492,7 +476,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     }
   }
 
-  void _onLongPressStart(DateTime dayDate) async {
+  void _onLongPressStart(DateTime dayDate, LongPressStartDetails details) async {
     final timestamp = dayDate.add(Duration(hours: 12));
 
     if (timestamp.isBefore(_initialDate)) return;
