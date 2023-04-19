@@ -92,6 +92,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   final _elevatedEvent = FloatingEventNotifier<T>();
   late final PageController _monthPickerController;
   var _pointerLocation = Offset.zero;
+  var _scrolling = false;
   Map<DateTime, List<T>> dayEventMap = {};
   Map<DateTime, ScrollController> dayControllerMap = {};
   List<T> events = [];
@@ -116,6 +117,87 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   RenderBox? _getEventBox(T event) =>
       MonthViewKeys.events[event]?.currentContext?.findRenderObject()
       as RenderBox?;
+
+  Future<void> _scrollIfNecessary() async {
+    final timelineBox = _getTimelineBox();
+
+    _scrolling = timelineBox != null;
+
+    if (!_scrolling) return; // Scrollable isn't found
+
+    final fingerPosition = timelineBox!.globalToLocal(_pointerLocation);
+    // final timelineScrollPosition = _timelineController!.position;
+    // var timelineScrollOffset = timelineScrollPosition.pixels;
+
+    const detectionArea = 25;
+    const moveDistance = 25;
+
+    // if (fingerPosition.dy > timelineBox.size.height - detectionArea &&
+    //     timelineScrollOffset < timelineScrollPosition.maxScrollExtent) {
+    //   timelineScrollOffset = min(
+    //     timelineScrollOffset + moveDistance,
+    //     timelineScrollPosition.maxScrollExtent,
+    //   );
+    // } else if (fingerPosition.dy < detectionArea &&
+    //     timelineScrollOffset > timelineScrollPosition.minScrollExtent) {
+    //   timelineScrollOffset = max(
+    //     timelineScrollOffset - moveDistance,
+    //     timelineScrollPosition.minScrollExtent,
+    //   );
+    // } else {
+    //   final monthPickerPosition = _weekPickerController.position;
+    //
+    //   // Checking if scroll is finished
+    //   if (!monthPickerPosition.isScrollingNotifier.value) {
+    //     if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
+    //         monthPickerPosition.pixels < monthPickerPosition.maxScrollExtent) {
+    //       widget.controller.next();
+    //     } else if (fingerPosition.dx < detectionArea &&
+    //         monthPickerPosition.pixels > monthPickerPosition.minScrollExtent) {
+    //       widget.controller.prev();
+    //     }
+    //   }
+    //
+    //   _scrolling = false;
+    //   return;
+    // }
+
+    // if (fingerPosition.dy < timelineBox.size.height - detectionArea &&
+    //     fingerPosition.dy > detectionArea) {
+      final monthPickerPosition = _monthPickerController.position;
+
+      // Checking if scroll is finished
+      if (!monthPickerPosition.isScrollingNotifier.value) {
+        if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
+            monthPickerPosition.pixels < monthPickerPosition.maxScrollExtent) {
+          widget.controller.next();
+        } else if (fingerPosition.dx < detectionArea &&
+            monthPickerPosition.pixels > monthPickerPosition.minScrollExtent) {
+          widget.controller.prev();
+        }
+      }
+
+      _scrolling = false;
+      return;
+    // }
+
+    // await timelineScrollPosition.animateTo(
+    //   timelineScrollOffset,
+    //   duration: const Duration(milliseconds: 100),
+    //   curve: Curves.linear,
+    // );
+
+    if (_scrolling) await _scrollIfNecessary();
+  }
+
+  void _stopAutoScrolling() {
+    _scrolling = false;
+  }
+
+  void _autoScrolling(DragUpdateDetails details) {
+    _pointerLocation = details.globalPosition;
+    if (!_scrolling) _scrollIfNecessary();
+  }
 
   @override
   void initState() {
@@ -169,6 +251,8 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                 top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
               ),
               onDateLongPress: _onLongPressStart,
+              onDragUpdate: _autoScrolling,
+              onDragEnd: _stopAutoScrolling,
               onDropped: widget.onDiscardChanges,
               onChanged: (event) async {
                 events
@@ -336,70 +420,63 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
 
     return RenderIdProvider(
       id: dayDate,
-      child: ValueListenableBuilder(
-        valueListenable: _elevatedEvent,
-        builder: (context, elevatedEvent, child) => AbsorbPointer(
-          absorbing: elevatedEvent != null,
-          child: child,
-        ),
-        child: Container(
-          color: Colors.transparent, // Needs for hitTesting
-          child: Column(
-            children: [
-              Container(
-                padding: theme.dayNumberPadding,
-                margin: theme.dayNumberMargin,
-                height: theme.dayNumberHeight,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isToday
-                      ? theme.currentDayNumberBackgroundColor
-                      : theme.dayNumberBackgroundColor,
-                ),
-                child: Text(
-                  dayDate.day.toString(),
-                  style: isToday
-                      ? theme.currentDayNumberTextStyle
-                      : theme.dayNumberTextStyle,
-                ),
+      child: Container(
+        color: Colors.transparent, // Needs for hitTesting
+        child: Column(
+          children: [
+            Container(
+              padding: theme.dayNumberPadding,
+              margin: theme.dayNumberMargin,
+              height: theme.dayNumberHeight,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isToday
+                    ? theme.currentDayNumberBackgroundColor
+                    : theme.dayNumberBackgroundColor,
               ),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) => Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        width: maxWidth,
-                        height: constraints.maxHeight,
-                        child: Container(
-                          constraints: BoxConstraints(
-                            maxHeight: constraints.maxHeight,
-                          ),
-                          child: EventsLayout<T>(
-                            dayDate: dayDate,
-                            overlayKey: _overlayKey,
-                            layoutsKeys: MonthViewKeys.layouts,
-                            eventsKeys: MonthViewKeys.events,
-                            timelineTheme: widget.timelineTheme,
-                            breaks: widget.breaks,
-                            events: dayEventMap[dayDate] ?? [],
-                            elevatedEvent: _elevatedEvent,
-                            onEventTap: widget.onEventTap,
-                            viewType: CalendarView.month,
-                            dayWidth: maxWidth / 13,
-                            controller: dayControllerMap[dayDate],
-                          ),
+              child: Text(
+                dayDate.day.toString(),
+                style: isToday
+                    ? theme.currentDayNumberTextStyle
+                    : theme.dayNumberTextStyle,
+              ),
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) => Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      width: maxWidth,
+                      height: constraints.maxHeight,
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxHeight: constraints.maxHeight,
+                        ),
+                        child: EventsLayout<T>(
+                          dayDate: dayDate,
+                          overlayKey: _overlayKey,
+                          layoutsKeys: MonthViewKeys.layouts,
+                          eventsKeys: MonthViewKeys.events,
+                          timelineTheme: widget.timelineTheme,
+                          breaks: widget.breaks,
+                          events: dayEventMap[dayDate] ?? [],
+                          elevatedEvent: _elevatedEvent,
+                          onEventTap: widget.onEventTap,
+                          viewType: CalendarView.month,
+                          dayWidth: maxWidth / 13,
+                          controller: dayControllerMap[dayDate],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
