@@ -561,8 +561,8 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
 
     final newItem = await widget.onDateLongPress?.call(timestamp);
     if (newItem is T) {
-    events.add(newItem);
-    _initDailyEventsAndControllers();
+      events.add(newItem);
+      _initDailyEventsAndControllers();
     }
   }
 }

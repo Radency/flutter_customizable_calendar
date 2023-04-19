@@ -567,6 +567,16 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                     height: _eventBounds.height + (_resizing ? scrollDelta : 0),
                   );
                 }
+
+                if (!_dragging &&
+                    event.metrics.axis == Axis.horizontal &&
+                    widget.event.value != null &&
+                    scrollDelta.abs() < 1) {
+                  _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+                  _updateEventOriginAndStart();
+                  print("---------event: ${widget.event.value!.start}");
+                  _dayOffsets.clear();
+                }
                 return true;
               },
               child: widget.child,
