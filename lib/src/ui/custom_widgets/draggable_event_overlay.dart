@@ -333,13 +333,22 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   void _updateEventOriginAndStart() {
     bool isMonth = widget.viewType == CalendarView.month;
     DateTime dayDate = _getTargetDayAt(_pointerLocation)!; // <- temporary
+    double xOffset = 0;
+
     if (isMonth) {
       dayDate = dayDate.add(Duration(days: _dayOffsets.first));
     }
-    final layoutBox = widget.getLayoutBox(dayDate)!;
+    var layoutBox = widget.getLayoutBox(dayDate);
+    if (isMonth && layoutBox == null) {
+      int diff = 8 - dayDate.weekday;
+      dayDate = dayDate.add(Duration(days: diff));
+      layoutBox = widget.getLayoutBox(dayDate)!;
+      xOffset = layoutBox.size.width / 13 * diff;
+    }
+
     final timelineBox = widget.getTimelineBox();
     final layoutPosition =
-        layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+        layoutBox!.localToGlobal(Offset.zero, ancestor: timelineBox);
     final originTimePoint = _pointerTimePoint.subtract(_startDiff);
     final originDayDate = DateUtils.dateOnly(originTimePoint);
     final minutes = originTimePoint.minute +
@@ -349,7 +358,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     final offset = (minutes - roundedMinutes) * _minuteExtent;
 
     _eventBounds.update(
-      dx: layoutPosition.dx,
+      dx: layoutPosition.dx - xOffset,
       dy: isMonth
           ? layoutPosition.dy
           : _eventBounds.dy - offset,
