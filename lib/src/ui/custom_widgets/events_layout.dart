@@ -137,9 +137,15 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
               end: DateUtils.dateOnly(event.end),
             );
             int _eventDays = _range.days.length + 1;
+            if(event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
+              _eventDays -= 1;
+            }
             double eventWidth = dayWidth! * _eventDays;
             if(dayDate.weekday == 1) {
               int diff = event.end.weekday;
+              if(event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
+                diff -= 1;
+              }
               eventWidth = dayWidth! * diff;
             }
 
