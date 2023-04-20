@@ -126,7 +126,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     if (!_scrolling) return; // Scrollable isn't found
 
     final fingerPosition = timelineBox!.globalToLocal(_pointerLocation);
-    const detectionArea = 25;
+    const detectionArea = 15;
 
     final monthPickerPosition = _monthPickerController.position;
 
