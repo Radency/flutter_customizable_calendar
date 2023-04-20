@@ -550,10 +550,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                 });
               }
             },
-            // onPanCancel: () {
-            //   _resizing = false;
-            //   _dragging = false;
-            // },
             child: child,
           );
         },
@@ -627,7 +623,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         viewType: widget.viewType,
         theme: widget.timelineTheme.floatingEventsTheme
             .copyWith(elevation: _draggableEventTheme.elevation),
-        // onTap: () {},
       );
   }
 

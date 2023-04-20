@@ -107,8 +107,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   double get _hourExtent => widget.timelineTheme.timeScaleTheme.hourExtent;
   double get _dayExtent => _hourExtent * Duration.hoursPerDay;
 
-  // DraggableEventOverlayState<T>? get _overlay => _overlayKey.currentState;
-
   int get _cellExtent => widget.timelineTheme.cellExtent;
 
   RenderBox? _getTimelineBox() =>

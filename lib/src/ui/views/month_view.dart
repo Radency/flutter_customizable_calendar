@@ -126,68 +126,23 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     if (!_scrolling) return; // Scrollable isn't found
 
     final fingerPosition = timelineBox!.globalToLocal(_pointerLocation);
-    // final timelineScrollPosition = _timelineController!.position;
-    // var timelineScrollOffset = timelineScrollPosition.pixels;
-
     const detectionArea = 25;
-    const moveDistance = 25;
 
-    // if (fingerPosition.dy > timelineBox.size.height - detectionArea &&
-    //     timelineScrollOffset < timelineScrollPosition.maxScrollExtent) {
-    //   timelineScrollOffset = min(
-    //     timelineScrollOffset + moveDistance,
-    //     timelineScrollPosition.maxScrollExtent,
-    //   );
-    // } else if (fingerPosition.dy < detectionArea &&
-    //     timelineScrollOffset > timelineScrollPosition.minScrollExtent) {
-    //   timelineScrollOffset = max(
-    //     timelineScrollOffset - moveDistance,
-    //     timelineScrollPosition.minScrollExtent,
-    //   );
-    // } else {
-    //   final monthPickerPosition = _weekPickerController.position;
-    //
-    //   // Checking if scroll is finished
-    //   if (!monthPickerPosition.isScrollingNotifier.value) {
-    //     if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
-    //         monthPickerPosition.pixels < monthPickerPosition.maxScrollExtent) {
-    //       widget.controller.next();
-    //     } else if (fingerPosition.dx < detectionArea &&
-    //         monthPickerPosition.pixels > monthPickerPosition.minScrollExtent) {
-    //       widget.controller.prev();
-    //     }
-    //   }
-    //
-    //   _scrolling = false;
-    //   return;
-    // }
+    final monthPickerPosition = _monthPickerController.position;
 
-    // if (fingerPosition.dy < timelineBox.size.height - detectionArea &&
-    //     fingerPosition.dy > detectionArea) {
-      final monthPickerPosition = _monthPickerController.position;
-
-      // Checking if scroll is finished
-      if (!monthPickerPosition.isScrollingNotifier.value) {
-        if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
-            monthPickerPosition.pixels < monthPickerPosition.maxScrollExtent) {
-          widget.controller.next();
-        } else if (fingerPosition.dx < detectionArea &&
-            monthPickerPosition.pixels > monthPickerPosition.minScrollExtent) {
-          widget.controller.prev();
-        }
+    // Checking if scroll is finished
+    if (!monthPickerPosition.isScrollingNotifier.value) {
+      if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
+          monthPickerPosition.pixels < monthPickerPosition.maxScrollExtent) {
+        widget.controller.next();
+      } else if (fingerPosition.dx < detectionArea &&
+          monthPickerPosition.pixels > monthPickerPosition.minScrollExtent) {
+        widget.controller.prev();
       }
+    }
 
-      _scrolling = false;
-      return;
-    // }
-
-    // await timelineScrollPosition.animateTo(
-    //   timelineScrollOffset,
-    //   duration: const Duration(milliseconds: 100),
-    //   curve: Curves.linear,
-    // );
-
-    if (_scrolling) await _scrollIfNecessary();
+    _scrolling = false;
+    return;
   }
 
   void _stopAutoScrolling() {
