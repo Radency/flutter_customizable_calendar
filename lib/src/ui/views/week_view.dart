@@ -198,64 +198,51 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   Widget build(BuildContext context) {
     return BlocListener<WeekViewController, WeekViewState>(
       bloc: widget.controller,
-      listener: (context, state) async {
-        print("--------------widget.controller.listener start");
-        // WeekViewKeys.layouts.clear();
+      listener: (context, state) {
         final weeksOffset =
             state.displayedWeek.start.difference(_initialWeek.start).inWeeks;
 
         if (state is WeekViewCurrentWeekIsSet) {
-          // Future.wait([
-          //   if (weeksOffset != _weekPickerController.page?.round())
-          //     _weekPickerController.animateToPage(
-          //       weeksOffset,
-          //       duration: const Duration(milliseconds: 400),
-          //       curve: Curves.linearToEaseOut,
-          //     ),
-          // ]).whenComplete(() {
-          //   // Scroll the timeline just after current week is displayed
-          //   final timelineOffset = min(
-          //     state.focusedDate.hour * _hourExtent,
-          //     _timelineController!.position.maxScrollExtent,
-          //   );
-          //
-          //   if (timelineOffset != _timelineController!.offset) {
-          //     _timelineController!.animateTo(
-          //       timelineOffset,
-          //       duration: const Duration(milliseconds: 300),
-          //       curve: Curves.fastLinearToSlowEaseIn,
-          //     );
-          //   }
-          // });
-
-          if (weeksOffset != _weekPickerController.page?.round()) {
-            await _weekPickerController.animateToPage(
-              weeksOffset,
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.linearToEaseOut,
+          Future.wait([
+            if (weeksOffset != _weekPickerController.page?.round())
+              _weekPickerController.animateToPage(
+                weeksOffset,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.linearToEaseOut,
+              ),
+          ]).whenComplete(() {
+            // Scroll the timeline just after current week is displayed
+            final timelineOffset = min(
+              state.focusedDate.hour * _hourExtent,
+              _timelineController!.position.maxScrollExtent,
             );
-          }
-          final timelineOffset = min(
-            state.focusedDate.hour * _hourExtent,
-            _timelineController!.position.maxScrollExtent,
-          );
 
-          if (timelineOffset != _timelineController!.offset) {
-            _timelineController!.animateTo(
-              timelineOffset,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.fastLinearToSlowEaseIn,
-            );
-          }
+            if (timelineOffset != _timelineController!.offset) {
+              _timelineController!.animateTo(
+                timelineOffset,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.fastLinearToSlowEaseIn,
+              );
+            }
+            setState(() {
+
+            });
+          });
         } else if (state is WeekViewNextWeekSelected ||
             state is WeekViewPrevWeekSelected) {
-          await _weekPickerController.animateToPage(
-            weeksOffset,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.linearToEaseOut,
-          );
+          Future.wait([
+            _weekPickerController.animateToPage(
+              weeksOffset,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.linearToEaseOut,
+            ),
+          ]).whenComplete(() {
+            setState(() {
+
+            });
+          });
+
         }
-        print("--------------widget.controller.listener end");
       },
       child: Column(
         children: [
@@ -314,8 +301,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                 : widget.controller.next,
           );
         },
-        // buildWhen: (previous, current) =>
-        //     !current.focusedDate.isSameWeekAs(previous.focusedDate),
+        buildWhen: (previous, current) =>
+            !current.focusedDate.isSameWeekAs(previous.focusedDate),
       );
 
   Widget _weekTimeline() {

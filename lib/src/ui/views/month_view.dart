@@ -179,7 +179,11 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                 duration: const Duration(milliseconds: 400),
                 curve: Curves.linearToEaseOut,
               ),
-          ]);
+          ]).whenComplete(() {
+            setState(() {
+
+            });
+          });
         } else if (state is MonthViewNextMonthSelected ||
             state is MonthViewPrevMonthSelected) {
           _monthPickerController.animateToPage(
