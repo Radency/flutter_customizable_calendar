@@ -570,7 +570,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                     event.metrics.axis == Axis.horizontal &&
                     widget.event.value != null &&
                     ((widget.viewType == CalendarView.week && scrollDelta.abs() < 1) ||
-                    (widget.viewType == CalendarView.month && scrollDelta.abs() < 5))) {
+                    (widget.viewType == CalendarView.month && scrollDelta.abs() < 3))) {
                   _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
                   _updateEventOriginAndStart();
                   print("---------event: ${widget.event.value!.start}");
