@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -167,7 +168,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _boundsTween = RectTween(
       begin: Rect.fromLTWH(
         widget.viewType == CalendarView.month
-            ? eventPosition.dx + _dayWidth * _dayOffsets.first
+            ? eventPosition.dx + _dayWidth * (_dayOffsets.firstOrNull ?? 0)
             : eventPosition.dx,
         eventPosition.dy,
         eventBox.size.width,
@@ -175,7 +176,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       ),
       end: Rect.fromLTWH(
         widget.viewType == CalendarView.month
-            ? layoutPosition.dx + _dayWidth * _dayOffsets.first
+            ? layoutPosition.dx + _dayWidth * (_dayOffsets.firstOrNull ?? 0)
             : layoutPosition.dx,
         eventPosition.dy,
         widget.viewType == CalendarView.month
@@ -336,7 +337,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     double xOffset = 0;
 
     if (isMonth) {
-      dayDate = dayDate.add(Duration(days: _dayOffsets.first));
+      dayDate = dayDate.add(Duration(days: _dayOffsets.firstOrNull ?? 0));
     }
     var layoutBox = widget.getLayoutBox(dayDate);
     if (isMonth && layoutBox == null) {
@@ -494,6 +495,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                 widget.onDragDown?.call();
               } else if (ids.contains(Constants.elevatedEventId)) {
                 _dragging = true;
+                _dayOffsets.clear();
                 widget.onDragDown?.call();
               }
             },
@@ -571,11 +573,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                 if (!_dragging &&
                     event.metrics.axis == Axis.horizontal &&
                     widget.event.value != null &&
-                    scrollDelta.abs() < 1) {
+                    ((widget.viewType == CalendarView.week && scrollDelta.abs() < 1) ||
+                    (widget.viewType == CalendarView.month && scrollDelta.abs() < 5))) {
                   _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
                   _updateEventOriginAndStart();
                   print("---------event: ${widget.event.value!.start}");
-                  _dayOffsets.clear();
                 }
                 return true;
               },
