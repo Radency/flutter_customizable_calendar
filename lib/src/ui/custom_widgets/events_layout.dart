@@ -83,9 +83,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent> extends State<EventsLa
 
   @override
   void initState() {
-    if (!simpleView) {
-      widget.layoutsKeys[widget.dayDate] = GlobalKey();
-    }
+    widget.layoutsKeys[widget.dayDate] = GlobalKey();
     super.initState();
   }
 
