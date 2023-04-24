@@ -8,7 +8,7 @@ import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
 /// A day view which automatically creates views of given [breaks] and [events]
 /// and sets their positions on it.
-class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
+class EventsLayout<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Creates a layout for all [breaks] and [events] of given [dayDate].
   const EventsLayout({
     super.key,
@@ -61,35 +61,48 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
 
   final ScrollController? controller;
 
+  @override
+  State<EventsLayout<T>> createState() => _EventsLayoutState<T>();
+}
+
+class _EventsLayoutState<T extends FloatingCalendarEvent> extends State<EventsLayout<T>> {
   /// Defines if show events in simplified way
-  bool get simpleView => viewType == CalendarView.month;
+  bool get simpleView => widget.viewType == CalendarView.month;
 
   bool _eventPresentAtDay<E extends CalendarEvent>(E event) =>
-      DateUtils.isSameDay(event.start, dayDate) ||
-      (event.start.isBefore(dayDate) && event.end.isAfter(dayDate));
+      DateUtils.isSameDay(event.start, widget.dayDate) ||
+      (event.start.isBefore(widget.dayDate) && event.end.isAfter(widget.dayDate));
 
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) {
     // For month view, daily event list is passed in constructor
-    if (viewType == CalendarView.month) {
+    if (widget.viewType == CalendarView.month) {
       return list;
     }
     return list.where(_eventPresentAtDay).toList(growable: false);
   }
 
   @override
+  void initState() {
+    if (!simpleView) {
+      widget.layoutsKeys[widget.dayDate] = GlobalKey();
+    }
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final breaksToDisplay = _getEventsOnDay(breaks);
-    final eventsToDisplay = _getEventsOnDay(events);
+    final breaksToDisplay = _getEventsOnDay(widget.breaks);
+    final eventsToDisplay = _getEventsOnDay(widget.events);
 
     return RenderIdProvider(
       id: Constants.layoutId,
-      key: layoutsKeys[dayDate] ??= GlobalKey(),
+      key: widget.layoutsKeys[widget.dayDate] ??= GlobalKey(),
       child: !simpleView ? CustomMultiChildLayout(
         delegate: _EventsLayoutDelegate<T>(
-          date: dayDate,
+          date: widget.dayDate,
           breaks: breaksToDisplay,
           events: eventsToDisplay,
-          cellExtent: timelineTheme.cellExtent,
+          cellExtent: widget.timelineTheme.cellExtent,
         ),
         children: [
           if (!simpleView)
@@ -107,7 +120,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                   child: RenderIdProvider(
                     id: event,
                     child: ValueListenableBuilder(
-                      valueListenable: elevatedEvent,
+                      valueListenable: widget.elevatedEvent,
                       builder: (context, elevatedEvent, child) =>
                           Opacity(
                             opacity: (elevatedEvent?.id == event.id)
@@ -118,9 +131,9 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                       child: EventView(
                         // key: eventsKeys[event] ??= GlobalKey(),
                         event,
-                        theme: timelineTheme.floatingEventsTheme,
-                        viewType: viewType,
-                        onTap: () => onEventTap?.call(event),
+                        theme: widget.timelineTheme.floatingEventsTheme,
+                        viewType: widget.viewType,
+                        onTap: () => widget.onEventTap?.call(event),
                       ),
                     ),
                   ),
@@ -128,8 +141,8 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
           ),
         ],
       ) : ListView(
-        key: ValueKey(controller),
-        controller: controller,
+        key: ValueKey(widget.controller),
+        controller: widget.controller,
         children: [
           ...eventsToDisplay.map((event) {
             DateTimeRange _range = DateTimeRange(
@@ -140,17 +153,17 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
             if(event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
               _eventDays -= 1;
             }
-            double eventWidth = dayWidth! * _eventDays;
-            if(dayDate.weekday == 1) {
+            double eventWidth = widget.dayWidth! * _eventDays;
+            if(widget.dayDate.weekday == 1) {
               int diff = event.end.weekday;
               if(event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
                 diff -= 1;
               }
-              eventWidth = dayWidth! * diff;
+              eventWidth = widget.dayWidth! * diff;
             }
 
             return Visibility(
-              visible: DateUtils.dateOnly(event.start) == DateUtils.dateOnly(dayDate) || dayDate.weekday == 1,
+              visible: DateUtils.dateOnly(event.start) == DateUtils.dateOnly(widget.dayDate) || widget.dayDate.weekday == 1,
               maintainState: true,
               maintainAnimation: true,
               maintainSize: true,
@@ -165,7 +178,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                   child: RenderIdProvider(
                     id: event,
                     child: ValueListenableBuilder(
-                      valueListenable: elevatedEvent,
+                      valueListenable: widget.elevatedEvent,
                       builder: (context, elevatedEvent, child) =>
                           Opacity(
                             opacity: (elevatedEvent?.id == event.id)
@@ -176,10 +189,10 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatelessWidget {
                       child: EventView(
                         // key: eventsKeys[event] ??= GlobalKey(),
                         event,
-                        theme: timelineTheme.floatingEventsTheme,
-                        viewType: viewType,
+                        theme: widget.timelineTheme.floatingEventsTheme,
+                        viewType: widget.viewType,
                         onTap: () {
-                          onEventTap?.call(event);
+                          widget.onEventTap?.call(event);
                         },
                       ),
                     ),
