@@ -157,9 +157,9 @@ class _LinkedScrollController extends ScrollController {
       ? super.initialScrollOffset
       : _controllers.offset;
 
-  /// Take the last of positions
+  /// Take the first of positions
   @override
-  _LinkedScrollPosition get position => super.positions.last as _LinkedScrollPosition;
+  _LinkedScrollPosition get position => super.positions.first as _LinkedScrollPosition;
 
   Iterable<_LinkedScrollController> get _allPeersWithClients =>
       _controllers._attachedControllers.where((peer) => peer != this);
