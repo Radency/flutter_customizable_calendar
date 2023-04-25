@@ -168,23 +168,25 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   Widget build(BuildContext context) {
     return BlocListener<MonthViewController, MonthViewState>(
       bloc: widget.controller,
-      listener: (context, state) async {
+      listener: (context, state) {
         final displayedMonth = DateUtils.monthDelta(_initialDate, _monthDate);
 
         if (state is MonthViewCurrentMonthIsSet) {
-          if (displayedMonth != _monthPickerController.page?.round()) {
-            await _monthPickerController.animateToPage(
-              displayedMonth,
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.linearToEaseOut,
-            );
+          Future.wait([
+            if (displayedMonth != _monthPickerController.page?.round())
+              _monthPickerController.animateToPage(
+                displayedMonth,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.linearToEaseOut,
+              ),
+          ]).whenComplete(() {
             setState(() {
 
             });
-          }
+          });
         } else if (state is MonthViewNextMonthSelected ||
             state is MonthViewPrevMonthSelected) {
-          await _monthPickerController.animateToPage(
+          _monthPickerController.animateToPage(
             displayedMonth,
             duration: const Duration(milliseconds: 300),
             curve: Curves.linearToEaseOut,
