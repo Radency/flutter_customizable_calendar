@@ -287,6 +287,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               key: _overlayKey,
               viewType: CalendarView.days,
               timelineTheme: widget.timelineTheme,
+              onDateLongPress: _onDateLongPress,
               onDragDown: _stopTimelineScrolling,
               onDragUpdate: _autoScrolling,
               onDragEnd: _stopAutoScrolling,
@@ -427,52 +428,50 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               absorbing: elevatedEvent != null,
               child: child,
             ),
-            child: GestureDetector(
-              onLongPressStart: (details) {
-                final minutes = details.localPosition.dy ~/ _minuteExtent;
-                final roundedMinutes =
-                    (minutes / _cellExtent).round() * _cellExtent;
-                final timestamp =
-                    dayDate.add(Duration(minutes: roundedMinutes));
-
-                if (timestamp.isBefore(_initialDate)) return;
-                if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
-
-                widget.onDateLongPress?.call(timestamp);
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: theme.padding.left,
-                  right: theme.padding.right,
-                ),
-                child: Row(
-                  children: [
-                    TimeScale(
-                      showCurrentTimeMark: isToday,
-                      theme: theme.timeScaleTheme,
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: theme.padding.left,
+                right: theme.padding.right,
+              ),
+              child: Row(
+                children: [
+                  TimeScale(
+                    showCurrentTimeMark: isToday,
+                    theme: theme.timeScaleTheme,
+                  ),
+                  Expanded(
+                    child: EventsLayout<T>(
+                      dayDate: dayDate,
+                      viewType: CalendarView.days,
+                      overlayKey: _overlayKey,
+                      layoutsKeys: DaysViewKeys.layouts,
+                      eventsKeys: DaysViewKeys.events,
+                      timelineTheme: widget.timelineTheme,
+                      breaks: widget.breaks,
+                      events: widget.events,
+                      elevatedEvent: _elevatedEvent,
+                      onEventTap: widget.onEventTap,
                     ),
-                    Expanded(
-                      child: EventsLayout<T>(
-                        dayDate: dayDate,
-                        viewType: CalendarView.days,
-                        overlayKey: _overlayKey,
-                        layoutsKeys: DaysViewKeys.layouts,
-                        eventsKeys: DaysViewKeys.events,
-                        timelineTheme: widget.timelineTheme,
-                        breaks: widget.breaks,
-                        events: widget.events,
-                        elevatedEvent: _elevatedEvent,
-                        onEventTap: widget.onEventTap,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
         );
       },
     );
+  }
+
+  void _onDateLongPress(DateTime dayDate, LongPressStartDetails details) {
+    final minutes = details.localPosition.dy ~/ _minuteExtent;
+    final roundedMinutes =
+        (minutes / _cellExtent).round() * _cellExtent;
+    final timestamp =
+    dayDate.add(Duration(minutes: roundedMinutes));
+
+    if (timestamp.isBefore(_initialDate)) return;
+    if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
+
+    widget.onDateLongPress?.call(timestamp);
   }
 }

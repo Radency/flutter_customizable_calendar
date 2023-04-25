@@ -2,10 +2,10 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
+import 'package:flutter_customizable_calendar/src/custom/custom_linked_scroll_controller.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/month_day_theme.dart';
 import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.dart';
-import 'package:linked_scroll_controller/linked_scroll_controller.dart';
 
 /// A key holder of all MonthView keys
 @visibleForTesting
@@ -92,6 +92,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   final _elevatedEvent = FloatingEventNotifier<T>();
   late final PageController _monthPickerController;
   var _pointerLocation = Offset.zero;
+  var _scrolling = false;
   Map<DateTime, List<T>> dayEventMap = {};
   Map<DateTime, ScrollController> dayControllerMap = {};
   List<T> events = [];
@@ -116,6 +117,42 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   RenderBox? _getEventBox(T event) =>
       MonthViewKeys.events[event]?.currentContext?.findRenderObject()
       as RenderBox?;
+
+  Future<void> _scrollIfNecessary() async {
+    final timelineBox = _getTimelineBox();
+
+    _scrolling = timelineBox != null;
+
+    if (!_scrolling) return; // Scrollable isn't found
+
+    final fingerPosition = timelineBox!.globalToLocal(_pointerLocation);
+    const detectionArea = 15;
+
+    final monthPickerPosition = _monthPickerController.position;
+
+    // Checking if scroll is finished
+    if (!monthPickerPosition.isScrollingNotifier.value) {
+      if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
+          monthPickerPosition.pixels < monthPickerPosition.maxScrollExtent) {
+        widget.controller.next();
+      } else if (fingerPosition.dx < detectionArea &&
+          monthPickerPosition.pixels > monthPickerPosition.minScrollExtent) {
+        widget.controller.prev();
+      }
+    }
+
+    _scrolling = false;
+    return;
+  }
+
+  void _stopAutoScrolling() {
+    _scrolling = false;
+  }
+
+  void _autoScrolling(DragUpdateDetails details) {
+    _pointerLocation = details.globalPosition;
+    if (!_scrolling) _scrollIfNecessary();
+  }
 
   @override
   void initState() {
@@ -142,7 +179,11 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
                 duration: const Duration(milliseconds: 400),
                 curve: Curves.linearToEaseOut,
               ),
-          ]);
+          ]).whenComplete(() {
+            setState(() {
+
+            });
+          });
         } else if (state is MonthViewNextMonthSelected ||
             state is MonthViewPrevMonthSelected) {
           _monthPickerController.animateToPage(
@@ -168,6 +209,9 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
               padding: EdgeInsets.only(
                 top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
               ),
+              onDateLongPress: _onLongPressStart,
+              onDragUpdate: _autoScrolling,
+              onDragEnd: _stopAutoScrolling,
               onDropped: widget.onDiscardChanges,
               onChanged: (event) async {
                 events
@@ -335,87 +379,63 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
 
     return RenderIdProvider(
       id: dayDate,
-      child: ValueListenableBuilder(
-        valueListenable: _elevatedEvent,
-        builder: (context, elevatedEvent, child) => AbsorbPointer(
-          absorbing: elevatedEvent != null,
-          child: child,
-        ),
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onLongPressStart: (details) async {
-            // final timestamp = dayDate.add(Duration(hours: 12));
-            //
-            // if (timestamp.isBefore(_initialDate)) return;
-            // if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
-            //
-            // final newItem = await widget.onDateLongPress?.call(timestamp);
-            // if (newItem is T) {
-            //   events.add(newItem);
-            //   _initDailyEventsAndControllers();
-            // }
-            _onLongPressStart(dayDate);
-          },
-          child: Container(
-            color: Colors.transparent, // Needs for hitTesting
-            child: Column(
-              children: [
-                Container(
-                  padding: theme.dayNumberPadding,
-                  margin: theme.dayNumberMargin,
-                  height: theme.dayNumberHeight,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isToday
-                        ? theme.currentDayNumberBackgroundColor
-                        : theme.dayNumberBackgroundColor,
-                  ),
-                  child: Text(
-                    dayDate.day.toString(),
-                    style: isToday
-                        ? theme.currentDayNumberTextStyle
-                        : theme.dayNumberTextStyle,
-                  ),
-                ),
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) => Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          width: maxWidth,
-                          height: constraints.maxHeight,
-                          child: Container(
-                            constraints: BoxConstraints(
-                              maxHeight: constraints.maxHeight,
-                            ),
-                            child: EventsLayout<T>(
-                              dayDate: dayDate,
-                              overlayKey: _overlayKey,
-                              layoutsKeys: MonthViewKeys.layouts,
-                              eventsKeys: MonthViewKeys.events,
-                              timelineTheme: widget.timelineTheme,
-                              breaks: widget.breaks,
-                              events: dayEventMap[dayDate] ?? [],
-                              elevatedEvent: _elevatedEvent,
-                              onEventTap: widget.onEventTap,
-                              viewType: CalendarView.month,
-                              dayWidth: maxWidth / 13,
-                              controller: dayControllerMap[dayDate],
-                              onDateLongPress: _onLongPressStart,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+      child: Container(
+        color: Colors.transparent, // Needs for hitTesting
+        child: Column(
+          children: [
+            Container(
+              padding: theme.dayNumberPadding,
+              margin: theme.dayNumberMargin,
+              height: theme.dayNumberHeight,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isToday
+                    ? theme.currentDayNumberBackgroundColor
+                    : theme.dayNumberBackgroundColor,
+              ),
+              child: Text(
+                dayDate.day.toString(),
+                style: isToday
+                    ? theme.currentDayNumberTextStyle
+                    : theme.dayNumberTextStyle,
+              ),
             ),
-          ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) => Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      width: maxWidth,
+                      height: constraints.maxHeight,
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxHeight: constraints.maxHeight,
+                        ),
+                        child: EventsLayout<T>(
+                          dayDate: dayDate,
+                          overlayKey: _overlayKey,
+                          layoutsKeys: MonthViewKeys.layouts,
+                          eventsKeys: MonthViewKeys.events,
+                          timelineTheme: widget.timelineTheme,
+                          breaks: widget.breaks,
+                          events: dayEventMap[dayDate] ?? [],
+                          elevatedEvent: _elevatedEvent,
+                          onEventTap: widget.onEventTap,
+                          viewType: CalendarView.month,
+                          dayWidth: maxWidth / 13,
+                          controller: dayControllerMap[dayDate],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -492,7 +512,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     }
   }
 
-  void _onLongPressStart(DateTime dayDate) async {
+  void _onLongPressStart(DateTime dayDate, LongPressStartDetails details) async {
     final timestamp = dayDate.add(Duration(hours: 12));
 
     if (timestamp.isBefore(_initialDate)) return;
@@ -500,8 +520,8 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
 
     final newItem = await widget.onDateLongPress?.call(timestamp);
     if (newItem is T) {
-    events.add(newItem);
-    _initDailyEventsAndControllers();
+      events.add(newItem);
+      _initDailyEventsAndControllers();
     }
   }
 }

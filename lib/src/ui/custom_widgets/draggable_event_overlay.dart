@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -34,6 +35,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     this.onResizingEnd,
     this.onDropped,
     this.onChanged,
+    this.onDateLongPress,
     required this.getTimelineBox,
     required this.getLayoutBox,
     required this.getEventBox,
@@ -55,6 +57,9 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
 
   /// Is called just after user start to interact with the event view
   final void Function()? onDragDown;
+
+  /// Is called when user tap outside events
+  final void Function(DateTime, LongPressStartDetails)? onDateLongPress;
 
   /// Is called during user drags the event view
   final void Function(DragUpdateDetails)? onDragUpdate;
@@ -163,7 +168,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _boundsTween = RectTween(
       begin: Rect.fromLTWH(
         widget.viewType == CalendarView.month
-            ? eventPosition.dx + _dayWidth * _dayOffsets.first
+            ? eventPosition.dx + _dayWidth * (_dayOffsets.firstOrNull ?? 0)
             : eventPosition.dx,
         eventPosition.dy,
         eventBox.size.width,
@@ -171,7 +176,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       ),
       end: Rect.fromLTWH(
         widget.viewType == CalendarView.month
-            ? layoutPosition.dx + _dayWidth * _dayOffsets.first
+            ? layoutPosition.dx + _dayWidth * (_dayOffsets.firstOrNull ?? 0)
             : layoutPosition.dx,
         eventPosition.dy,
         widget.viewType == CalendarView.month
@@ -220,7 +225,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   /// Needs to make interaction between a timeline and the overlay
-  void onEventLongPressCancel() => _dragging = false;
+  void onEventLongPressCancel() {
+    _dragging = false;
+  }
 
   Rect _getEventBounds(T event) {
     final eventBox = widget.getEventBox(event);
@@ -327,13 +334,22 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   void _updateEventOriginAndStart() {
     bool isMonth = widget.viewType == CalendarView.month;
     DateTime dayDate = _getTargetDayAt(_pointerLocation)!; // <- temporary
+    double xOffset = 0;
+
     if (isMonth) {
-      dayDate = dayDate.add(Duration(days: _dayOffsets.first));
+      dayDate = dayDate.add(Duration(days: _dayOffsets.firstOrNull ?? 0));
     }
-    final layoutBox = widget.getLayoutBox(dayDate)!;
+    var layoutBox = widget.getLayoutBox(dayDate);
+    if (isMonth && layoutBox == null) {
+      int diff = 8 - dayDate.weekday;
+      dayDate = dayDate.add(Duration(days: diff));
+      layoutBox = widget.getLayoutBox(dayDate)!;
+      xOffset = layoutBox.size.width / 13 * diff;
+    }
+
     final timelineBox = widget.getTimelineBox();
     final layoutPosition =
-        layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+        layoutBox!.localToGlobal(Offset.zero, ancestor: timelineBox);
     final originTimePoint = _pointerTimePoint.subtract(_startDiff);
     final originDayDate = DateUtils.dateOnly(originTimePoint);
     final minutes = originTimePoint.minute +
@@ -343,7 +359,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     final offset = (minutes - roundedMinutes) * _minuteExtent;
 
     _eventBounds.update(
-      dx: layoutPosition.dx,
+      dx: layoutPosition.dx - xOffset,
       dy: isMonth
           ? layoutPosition.dy
           : _eventBounds.dy - offset,
@@ -364,7 +380,12 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       end: DateUtils.dateOnly(event.end),
     );
     int firstOffset = _range.start.difference(_pointerTimePoint).inDays;
-    _dayOffsets = List.generate(_range.days.length + 1, (index) => firstOffset + index);
+    int dayOffsetLength = _range.days.length + 1;
+    if (event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
+      dayOffsetLength -= 1;
+    }
+
+    _dayOffsets = List.generate(dayOffsetLength, (index) => firstOffset + index);
   }
 
   void _updateEventHeightAndDuration() {
@@ -442,126 +463,147 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: widget.event,
-      builder: (context, elevatedEvent, child) {
-        if (elevatedEvent == null) return child!;
-
-        return GestureDetector(
-          onTap: () {
-            _dropEvent(elevatedEvent);
-          },
-          onPanDown: (details) {
-            final renderIds = _globalHitTest(details.globalPosition);
-            final ids = renderIds.map((renderId) => renderId.id);
-
-            if (ids.contains(Constants.sizerId)) {
-              _resizing = true;
-              widget.onDragDown?.call();
-            } else if (ids.contains(Constants.elevatedEventId)) {
-              _dragging = true;
-              widget.onDragDown?.call();
-            }
-          },
-          onPanStart: (details) {
-            if (!_dragging) return;
-            final event = widget.event.value!;
-            _pointerLocation = details.globalPosition;
-            _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
-            _startDiff = _pointerTimePoint.difference(event.start);
-
-            // Prevent accident day addition on WeekView
-            if (widget.viewType == CalendarView.week) {
-              _startDiff -= Duration(days: _startDiff.inDays);
-              if (_startDiff.isNegative) {
-                _startDiff += Duration(days: 1);
-              }
-            }
-
-            _updateDayOffsets(event);
-          },
-          onPanUpdate: (details) {
-            if (_resizing) {
-              widget.onSizeUpdate?.call(details);
-              _eventBounds.height += details.delta.dy;
-            } else if (_dragging) {
-              widget.onDragUpdate?.call(details);
-              _eventBounds.origin += details.delta;
-              if (!_resetPointerLocation(details.globalPosition)) return;
-              _pointerTimePoint =
-                  _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
-            }
-          },
-          onPanEnd: (details) {
-            if (widget.event.value == null) {
-              return;
-            }
-            if (_resizing) {
-              _resizing = false;
-              widget.onResizingEnd?.call();
-              _updateEventHeightAndDuration();
-            } else if (_dragging) {
-              _dragging = false;
-              widget.onDragEnd?.call();
-              _pointerTimePoint =
-                  _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
-              _updateEventOriginAndStart();
-              _updateDayOffsets(widget.event.value!);
-            }
-            if (!_edited) {
-              setState((){
-                _edited = true;
-              });
-            }
-          },
-          onPanCancel: () {
-            _resizing = false;
-            _dragging = false;
-          },
-          child: child,
-        );
+    return GestureDetector(
+      onLongPressStart: (details) {
+        if (!_dragging && !onEventLongPressStart(details)) {
+          final _dayDate = _getTargetDayAt(details.globalPosition);
+          if (_dayDate != null) {
+            widget.onDateLongPress?.call(_dayDate, details);
+          }
+        }
       },
-      child: Stack(
-        children: [
-          NotificationListener<ScrollUpdateNotification>(
-            onNotification: (event) {
-              final scrollDelta = event.scrollDelta ?? 0;
+      onLongPressMoveUpdate: onEventLongPressMoveUpdate,
+      onLongPressEnd: onEventLongPressEnd,
+      child: ValueListenableBuilder(
+        valueListenable: widget.event,
+        builder: (context, elevatedEvent, child) {
+          if (elevatedEvent == null) return child!;
 
-              if (!_dragging && event.metrics.axis == Axis.vertical) {
-                _eventBounds.update(
-                  dy: _eventBounds.dy - scrollDelta,
-                  height: _eventBounds.height + (_resizing ? scrollDelta : 0),
-                );
+          return GestureDetector(
+            // Prevent parent's onLongPress reaction
+            onLongPress: (){},
+
+            onTap: () {
+              _dropEvent(elevatedEvent);
+            },
+            onPanDown: (details) {
+              final renderIds = _globalHitTest(details.globalPosition);
+              final ids = renderIds.map((renderId) => renderId.id);
+
+              if (ids.contains(Constants.sizerId)) {
+                _resizing = true;
+                widget.onDragDown?.call();
+              } else if (ids.contains(Constants.elevatedEventId)) {
+                _dragging = true;
+                _dayOffsets.clear();
+                widget.onDragDown?.call();
+              }
+            },
+            onPanStart: (details) {
+              if (!_dragging) return;
+              final event = widget.event.value!;
+              _pointerLocation = details.globalPosition;
+              _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
+              _startDiff = _pointerTimePoint.difference(event.start);
+
+              // Prevent accident day addition on WeekView
+              if (widget.viewType == CalendarView.week) {
+                _startDiff -= Duration(days: _startDiff.inDays);
+                if (_startDiff.isNegative) {
+                  _startDiff += Duration(days: 1);
+                }
               }
 
-              return true;
+              _updateDayOffsets(event);
             },
-            child: widget.child,
-          ),
-          Positioned.fill(
-            left: widget.padding.left,
-            top: widget.padding.top,
-            right: widget.padding.right,
-            bottom: widget.padding.bottom,
-            child: Overlay(key: _overlayKey),
-          ),
-          if (_edited)
-            Saver(
-              alignment: widget.saverConfig.alignment,
-              onPressed: () {
-                widget.onChanged?.call(widget.event.value!);
-                _dropEvent(widget.event.value!);
+            onPanUpdate: (details) {
+              if (_resizing) {
+                widget.onSizeUpdate?.call(details);
+                _eventBounds.height += details.delta.dy;
+              } else if (_dragging) {
+                widget.onDragUpdate?.call(details);
+                _eventBounds.origin += details.delta;
+                if (!_resetPointerLocation(details.globalPosition)) return;
+                _pointerTimePoint =
+                    _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+              }
+            },
+            onPanEnd: (details) {
+              if (widget.event.value == null) {
+                return;
+              }
+              if (_resizing) {
+                _resizing = false;
+                widget.onResizingEnd?.call();
+                _updateEventHeightAndDuration();
+              } else if (_dragging) {
+                _dragging = false;
+                widget.onDragEnd?.call();
+                _pointerTimePoint =
+                    _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+                _updateEventOriginAndStart();
+                _updateDayOffsets(widget.event.value!);
+              }
+              if (!_edited) {
                 setState((){
-                  _edited = false;
-                  _removeEntries();
-                  widget.event.value = null;
-                  _resizing = false;
-                  _dragging = false;
+                  _edited = true;
                 });
+              }
+            },
+            child: child,
+          );
+        },
+        child: Stack(
+          children: [
+            NotificationListener<ScrollUpdateNotification>(
+              onNotification: (event) {
+                final scrollDelta = event.scrollDelta ?? 0;
+
+                if (!_dragging && event.metrics.axis == Axis.vertical) {
+                  _eventBounds.update(
+                    dy: _eventBounds.dy - scrollDelta,
+                    height: _eventBounds.height + (_resizing ? scrollDelta : 0),
+                  );
+                }
+
+                if (!_dragging &&
+                    event.metrics.axis == Axis.horizontal &&
+                    widget.event.value != null &&
+                    ((widget.viewType == CalendarView.week && scrollDelta.abs() < 1) ||
+                    (widget.viewType == CalendarView.month && scrollDelta.abs() < 3))) {
+                  _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+                  _updateEventOriginAndStart();
+                  print("---------event: ${widget.event.value!.start}");
+                }
+                return true;
               },
-              child: widget.saverConfig.child,
-            )
-        ],
+              child: widget.child,
+            ),
+            Positioned.fill(
+              left: widget.padding.left,
+              top: widget.padding.top,
+              right: widget.padding.right,
+              bottom: widget.padding.bottom,
+              child: Overlay(key: _overlayKey),
+            ),
+            if (_edited)
+              Saver(
+                alignment: widget.saverConfig.alignment,
+                onPressed: () {
+                  widget.onChanged?.call(widget.event.value!);
+                  _dropEvent(widget.event.value!);
+                  setState((){
+                    _edited = false;
+                    _removeEntries();
+                    widget.event.value = null;
+                    _resizing = false;
+                    _dragging = false;
+                  });
+                },
+                child: widget.saverConfig.child,
+              )
+          ],
+        ),
       ),
     );
   }
@@ -581,7 +623,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         viewType: widget.viewType,
         theme: widget.timelineTheme.floatingEventsTheme
             .copyWith(elevation: _draggableEventTheme.elevation),
-        onTap: () {},
       );
   }
 
