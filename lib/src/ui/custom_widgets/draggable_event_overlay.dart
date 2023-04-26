@@ -132,6 +132,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   bool _edited = false;
   List<Rect> _rects = [];
+  bool _scrolling = false;
 
   /// Needs to make interaction between a timeline and the overlay
   bool onEventLongPressStart(LongPressStartDetails details) {
@@ -194,8 +195,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   /// Needs to make interaction between a timeline and the overlay
   void onEventLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
+    Offset _delta = details.globalPosition - _pointerLocation;
+    if (_scrolling) {
+      _delta = Offset.zero;
+    }
+
     final dragUpdateDetails = DragUpdateDetails(
-      delta: details.globalPosition - _pointerLocation,
+      delta: _delta,
       globalPosition: details.globalPosition,
       localPosition: details.localPosition,
     );
@@ -204,6 +210,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _eventBounds.origin += dragUpdateDetails.delta;
     if (!_resetPointerLocation(details.globalPosition)) return;
     _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+    _scrolling = false;
   }
 
   /// Needs to make interaction between a timeline and the overlay
@@ -558,6 +565,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             NotificationListener<ScrollUpdateNotification>(
               onNotification: (event) {
                 final scrollDelta = event.scrollDelta ?? 0;
+
+                if (_dragging && event.metrics.axis == Axis.vertical) {
+                  _scrolling = scrollDelta.abs() > 0;
+                }
 
                 if (!_dragging && event.metrics.axis == Axis.vertical) {
                   _eventBounds.update(
