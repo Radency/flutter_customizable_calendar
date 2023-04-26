@@ -107,6 +107,9 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   DateTimeRange get _displayedMonth => widget.controller.state.displayedMonth;
   DateTimeRange get _initialMonth => _initialDate.monthViewRange;
 
+  late final ScrollController _forward;
+  late final ScrollController _backward;
+
   RenderBox? _getTimelineBox() =>
       MonthViewKeys.timeline?.currentContext?.findRenderObject() as RenderBox?;
 
@@ -157,6 +160,9 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   @override
   void initState() {
     super.initState();
+    final _group = LinkedScrollControllerGroup();
+    _forward = _group.addAndGet();
+    _backward = _group.addAndGet();
     _monthPickerController = PageController(
       initialPage: DateUtils.monthDelta(_initialDate, _monthDate),
     );
@@ -230,6 +236,13 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _forward.dispose();
+    _backward.dispose();
+    super.dispose();
   }
 
   Widget _monthPicker() => BlocBuilder<MonthViewController, MonthViewState>(
@@ -313,9 +326,9 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final LinkedScrollControllerGroup _group = LinkedScrollControllerGroup();
-        ScrollController _forward = _group.addAndGet();
-        ScrollController _backward = _group.addAndGet();
+        // final LinkedScrollControllerGroup _group = LinkedScrollControllerGroup();
+        // ScrollController _forward = _group.addAndGet();
+        // ScrollController _backward = _group.addAndGet();
 
         double mainAxisSpacing = theme.mainAxisSpacing;
         double crossAxisSpacing = theme.crossAxisSpacing;
