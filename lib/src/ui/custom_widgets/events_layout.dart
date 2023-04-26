@@ -138,68 +138,79 @@ class _EventsLayoutState<T extends FloatingCalendarEvent> extends State<EventsLa
                 ),
           ),
         ],
-      ) : ListView(
-        key: ValueKey(widget.controller),
-        controller: widget.controller,
-        children: [
-          ...eventsToDisplay.map((event) {
-            DateTimeRange _range = DateTimeRange(
-              start: DateUtils.dateOnly(event.start),
-              end: DateUtils.dateOnly(event.end),
+      ) : ValueListenableBuilder(
+        valueListenable: widget.elevatedEvent,
+        builder: (context, _elevatedEvent, child){
+          if (_elevatedEvent != null) {
+            return IgnorePointer(
+              child: child,
             );
-            int _eventDays = _range.days.length + 1;
-            if(event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
-              _eventDays -= 1;
-            }
-            double eventWidth = widget.dayWidth! * _eventDays;
-            if(widget.dayDate.weekday == 1) {
-              int diff = event.end.weekday;
+          }
+          return child!;
+        },
+        child: ListView(
+          key: ValueKey(widget.controller),
+          controller: widget.controller,
+          children: [
+            ...eventsToDisplay.map((event) {
+              DateTimeRange _range = DateTimeRange(
+                start: DateUtils.dateOnly(event.start),
+                end: DateUtils.dateOnly(event.end),
+              );
+              int _eventDays = _range.days.length + 1;
               if(event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
-                diff -= 1;
+                _eventDays -= 1;
               }
-              eventWidth = widget.dayWidth! * diff;
-            }
+              double eventWidth = widget.dayWidth! * _eventDays;
+              if(widget.dayDate.weekday == 1) {
+                int diff = event.end.weekday;
+                if(event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
+                  diff -= 1;
+                }
+                eventWidth = widget.dayWidth! * diff;
+              }
 
-            return Visibility(
-              visible: DateUtils.dateOnly(event.start) == DateUtils.dateOnly(widget.dayDate) || widget.dayDate.weekday == 1,
-              maintainState: true,
-              maintainAnimation: true,
-              maintainSize: true,
-              maintainInteractivity: _eventPresentAtDay(event),
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Container(
-                  width: eventWidth,
-                  margin: const EdgeInsets.only(
-                    bottom: 2,
-                  ),
-                  child: RenderIdProvider(
-                    id: event,
-                    child: ValueListenableBuilder(
-                      valueListenable: widget.elevatedEvent,
-                      builder: (context, elevatedEvent, child) =>
-                          Opacity(
-                            opacity: (elevatedEvent?.id == event.id)
-                                ? 0.5
-                                : 1,
-                            child: child,
-                          ),
-                      child: EventView(
-                        // key: eventsKeys[event] ??= GlobalKey(),
-                        event,
-                        theme: widget.timelineTheme.floatingEventsTheme,
-                        viewType: widget.viewType,
-                        onTap: () {
-                          widget.onEventTap?.call(event);
-                        },
+              return Visibility(
+                visible: DateUtils.dateOnly(event.start) == DateUtils.dateOnly(widget.dayDate) || widget.dayDate.weekday == 1,
+                maintainState: true,
+                maintainAnimation: true,
+                maintainSize: true,
+                maintainInteractivity: _eventPresentAtDay(event),
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Container(
+                    width: eventWidth,
+                    margin: const EdgeInsets.only(
+                      bottom: 2,
+                    ),
+                    child: RenderIdProvider(
+                      id: event,
+                      child: ValueListenableBuilder(
+                        valueListenable: widget.elevatedEvent,
+                        builder: (context, elevatedEvent, child) =>
+                            Opacity(
+                              opacity: (elevatedEvent?.id == event.id)
+                                  ? 0.5
+                                  : 1,
+                              child: child,
+                            ),
+                        child: EventView(
+                          // key: eventsKeys[event] ??= GlobalKey(),
+                          event,
+                          theme: widget.timelineTheme.floatingEventsTheme,
+                          viewType: widget.viewType,
+                          onTap: () {
+                            widget.onEventTap?.call(event);
+                          },
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
-        ],
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
