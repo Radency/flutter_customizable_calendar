@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -129,23 +131,49 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     if (!_scrolling) return; // Scrollable isn't found
 
     final fingerPosition = timelineBox!.globalToLocal(_pointerLocation);
+    final monthListScrollPosition = _forward.position;
+    var monthListScrollOffset = monthListScrollPosition.pixels;
+
     const detectionArea = 15;
+    const moveDistance = 25;
 
-    final monthPickerPosition = _monthPickerController.position;
+    if (fingerPosition.dy > timelineBox.size.height - detectionArea &&
+        monthListScrollOffset < monthListScrollPosition.maxScrollExtent) {
+      monthListScrollOffset = min(
+        monthListScrollOffset + moveDistance,
+        monthListScrollPosition.maxScrollExtent,
+      );
+    } else if (fingerPosition.dy < detectionArea &&
+        monthListScrollOffset > monthListScrollPosition.minScrollExtent) {
+      monthListScrollOffset = max(
+        monthListScrollOffset - moveDistance,
+        monthListScrollPosition.minScrollExtent,
+      );
+    } else {
+      final monthPickerPosition = _monthPickerController.position;
 
-    // Checking if scroll is finished
-    if (!monthPickerPosition.isScrollingNotifier.value) {
-      if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
-          monthPickerPosition.pixels < monthPickerPosition.maxScrollExtent) {
-        widget.controller.next();
-      } else if (fingerPosition.dx < detectionArea &&
-          monthPickerPosition.pixels > monthPickerPosition.minScrollExtent) {
-        widget.controller.prev();
+      // Checking if scroll is finished
+      if (!monthPickerPosition.isScrollingNotifier.value) {
+        if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
+            monthPickerPosition.pixels < monthPickerPosition.maxScrollExtent) {
+          widget.controller.next();
+        } else if (fingerPosition.dx < detectionArea &&
+            monthPickerPosition.pixels > monthPickerPosition.minScrollExtent) {
+          widget.controller.prev();
+        }
       }
+
+      _scrolling = false;
+      return;
     }
 
-    _scrolling = false;
-    return;
+    await monthListScrollPosition.animateTo(
+      monthListScrollOffset,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.linear,
+    );
+
+    if (_scrolling) await _scrollIfNecessary();
   }
 
   void _stopAutoScrolling() {
