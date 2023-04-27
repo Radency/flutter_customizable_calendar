@@ -102,8 +102,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   double get _hourExtent => widget.timelineTheme.timeScaleTheme.hourExtent;
   double get _dayExtent => _hourExtent * Duration.hoursPerDay;
 
-  int get _cellExtent => widget.timelineTheme.cellExtent;
-
   RenderBox? _getTimelineBox() =>
       DaysViewKeys.timeline.currentContext?.findRenderObject() as RenderBox?;
 
@@ -465,13 +463,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     );
   }
 
-  void _onDateLongPress(DateTime dayDate, LongPressStartDetails details) {
-    final minutes = details.localPosition.dy ~/ _minuteExtent;
-    final roundedMinutes =
-        (minutes / _cellExtent).round() * _cellExtent;
-    final timestamp = dayDate;
-    // dayDate.add(Duration(minutes: roundedMinutes));
-
+  void _onDateLongPress(DateTime timestamp) {
     if (timestamp.isBefore(_initialDate)) return;
     if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 

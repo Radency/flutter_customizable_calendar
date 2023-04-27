@@ -105,9 +105,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   DateTime? get _endDate => widget.controller.endDate;
   DateTime get _monthDate => _displayedMonth.start
       .add(const Duration(days: 14));
-  DateTime get _focusedDate => widget.controller.state.focusedDate;
   DateTimeRange get _displayedMonth => widget.controller.state.displayedMonth;
-  DateTimeRange get _initialMonth => _initialDate.monthViewRange;
 
   late final ScrollController _forward;
   late final ScrollController _backward;
@@ -553,9 +551,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
     }
   }
 
-  void _onLongPressStart(DateTime dayDate, LongPressStartDetails details) async {
-    final timestamp = dayDate;
-
+  void _onLongPressStart(DateTime timestamp) async {
     if (timestamp.isBefore(_initialDate)) return;
     if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 

@@ -103,11 +103,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   DateTimeRange get _displayedWeek => widget.controller.state.displayedWeek;
   DateTimeRange get _initialWeek => _initialDate.weekRange;
 
-  double get _minuteExtent => _hourExtent / Duration.minutesPerHour;
   double get _hourExtent => widget.timelineTheme.timeScaleTheme.hourExtent;
   double get _dayExtent => _hourExtent * Duration.hoursPerDay;
-
-  int get _cellExtent => widget.timelineTheme.cellExtent;
 
   RenderBox? _getTimelineBox() =>
       WeekViewKeys.timeline?.currentContext?.findRenderObject() as RenderBox?;
@@ -470,13 +467,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     );
   }
 
-  void _onDateLongPress(DateTime dayDate, LongPressStartDetails details) {
-    // final minutes = details.localPosition.dy ~/ _minuteExtent;
-    // final roundedMinutes =
-    //     (minutes / _cellExtent).round() * _cellExtent;
-    // final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
-    final timestamp = dayDate;
-
+  void _onDateLongPress(DateTime timestamp) {
     if (timestamp.isBefore(_initialDate)) return;
     if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 

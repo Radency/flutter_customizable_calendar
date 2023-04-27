@@ -59,7 +59,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
   final void Function()? onDragDown;
 
   /// Is called when user tap outside events
-  final void Function(DateTime, LongPressStartDetails)? onDateLongPress;
+  final void Function(DateTime)? onDateLongPress;
 
   /// Is called during user drags the event view
   final void Function(DragUpdateDetails)? onDragUpdate;
@@ -475,7 +475,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         if (!_dragging && !onEventLongPressStart(details)) {
           final _dayDate = _getTimePointAt(details.globalPosition);
           if (_dayDate != null) {
-            widget.onDateLongPress?.call(_dayDate, details);
+            widget.onDateLongPress?.call(_dayDate);
           }
         }
       },
