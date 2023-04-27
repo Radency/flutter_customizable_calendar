@@ -554,7 +554,7 @@ class _MonthViewState<T extends FloatingCalendarEvent> extends State<MonthView<T
   }
 
   void _onLongPressStart(DateTime dayDate, LongPressStartDetails details) async {
-    final timestamp = dayDate.add(Duration(hours: 12));
+    final timestamp = dayDate;
 
     if (timestamp.isBefore(_initialDate)) return;
     if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
