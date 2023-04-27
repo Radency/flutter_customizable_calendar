@@ -471,10 +471,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   }
 
   void _onDateLongPress(DateTime dayDate, LongPressStartDetails details) {
-    final minutes = details.localPosition.dy ~/ _minuteExtent;
-    final roundedMinutes =
-        (minutes / _cellExtent).round() * _cellExtent;
-    final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
+    // final minutes = details.localPosition.dy ~/ _minuteExtent;
+    // final roundedMinutes =
+    //     (minutes / _cellExtent).round() * _cellExtent;
+    // final timestamp = dayDate.add(Duration(minutes: roundedMinutes));
+    final timestamp = dayDate;
 
     if (timestamp.isBefore(_initialDate)) return;
     if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
