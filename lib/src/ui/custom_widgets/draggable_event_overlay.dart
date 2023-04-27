@@ -59,7 +59,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
   final void Function()? onDragDown;
 
   /// Is called when user tap outside events
-  final void Function(DateTime, LongPressStartDetails)? onDateLongPress;
+  final void Function(DateTime)? onDateLongPress;
 
   /// Is called during user drags the event view
   final void Function(DragUpdateDetails)? onDragUpdate;
@@ -473,147 +473,150 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     return GestureDetector(
       onLongPressStart: (details) {
         if (!_dragging && !onEventLongPressStart(details)) {
-          final _dayDate = _getTargetDayAt(details.globalPosition);
+          final _dayDate = _getTimePointAt(details.globalPosition);
           if (_dayDate != null) {
-            widget.onDateLongPress?.call(_dayDate, details);
+            widget.onDateLongPress?.call(_dayDate);
           }
         }
       },
       onLongPressMoveUpdate: onEventLongPressMoveUpdate,
       onLongPressEnd: onEventLongPressEnd,
-      child: ValueListenableBuilder(
-        valueListenable: widget.event,
-        builder: (context, elevatedEvent, child) {
-          if (elevatedEvent == null) return child!;
+      child: Container(
+        color: Colors.transparent,
+        child: ValueListenableBuilder(
+          valueListenable: widget.event,
+          builder: (context, elevatedEvent, child) {
+            if (elevatedEvent == null) return child!;
 
-          return GestureDetector(
-            // Prevent parent's onLongPress reaction
-            onLongPress: (){},
+            return GestureDetector(
+              // Prevent parent's onLongPress reaction
+              onLongPress: (){},
 
-            onTap: () {
-              _dropEvent(elevatedEvent);
-            },
-            onPanDown: (details) {
-              final renderIds = _globalHitTest(details.globalPosition);
-              final ids = renderIds.map((renderId) => renderId.id);
-
-              if (ids.contains(Constants.sizerId)) {
-                _resizing = true;
-                widget.onDragDown?.call();
-              } else if (ids.contains(Constants.elevatedEventId)) {
-                _dragging = true;
-                _dayOffsets.clear();
-                widget.onDragDown?.call();
-              }
-            },
-            onPanStart: (details) {
-              if (!_dragging) return;
-              final event = widget.event.value!;
-              _pointerLocation = details.globalPosition;
-              _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
-              _startDiff = _pointerTimePoint.difference(event.start);
-
-              // Prevent accident day addition on WeekView
-              if (widget.viewType == CalendarView.week) {
-                _startDiff -= Duration(days: _startDiff.inDays);
-                if (_startDiff.isNegative) {
-                  _startDiff += Duration(days: 1);
-                }
-              }
-
-              _updateDayOffsets(event);
-            },
-            onPanUpdate: (details) {
-              if (_resizing) {
-                widget.onSizeUpdate?.call(details);
-                _eventBounds.height += details.delta.dy;
-              } else if (_dragging) {
-                widget.onDragUpdate?.call(details);
-                _eventBounds.origin += details.delta;
-                if (!_resetPointerLocation(details.globalPosition)) return;
-                _pointerTimePoint =
-                    _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
-              }
-            },
-            onPanEnd: (details) {
-              if (widget.event.value == null) {
-                return;
-              }
-              if (_resizing) {
-                _resizing = false;
-                widget.onResizingEnd?.call();
-                _updateEventHeightAndDuration();
-              } else if (_dragging) {
-                _dragging = false;
-                widget.onDragEnd?.call();
-                _pointerTimePoint =
-                    _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
-                _updateEventOriginAndStart();
-                _updateDayOffsets(widget.event.value!);
-              }
-              if (!_edited) {
-                setState((){
-                  _edited = true;
-                });
-              }
-            },
-            child: child,
-          );
-        },
-        child: Stack(
-          children: [
-            NotificationListener<ScrollUpdateNotification>(
-              onNotification: (event) {
-                final scrollDelta = event.scrollDelta ?? 0;
-
-                if (_dragging && event.metrics.axis == Axis.vertical) {
-                  _scrolling = scrollDelta.abs() > 0;
-                }
-
-                if (!_dragging && event.metrics.axis == Axis.vertical) {
-                  _eventBounds.update(
-                    dy: _eventBounds.dy - scrollDelta,
-                    height: _eventBounds.height + (_resizing ? scrollDelta : 0),
-                  );
-                }
-
-                if (!_dragging &&
-                    event.metrics.axis == Axis.horizontal &&
-                    widget.event.value != null &&
-                    ((widget.viewType == CalendarView.week && scrollDelta.abs() < 1) ||
-                    (widget.viewType == CalendarView.month && scrollDelta.abs() < 3))) {
-                  _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
-                  _updateEventOriginAndStart();
-                  print("---------event: ${widget.event.value!.start}");
-                }
-                return true;
+              onTap: () {
+                _dropEvent(elevatedEvent);
               },
-              child: widget.child,
-            ),
-            Positioned.fill(
-              left: widget.padding.left,
-              top: widget.padding.top,
-              right: widget.padding.right,
-              bottom: widget.padding.bottom,
-              child: Overlay(key: _overlayKey),
-            ),
-            if (_edited)
-              Saver(
-                alignment: widget.saverConfig.alignment,
-                onPressed: () {
-                  widget.onChanged?.call(widget.event.value!);
-                  _dropEvent(widget.event.value!);
+              onPanDown: (details) {
+                final renderIds = _globalHitTest(details.globalPosition);
+                final ids = renderIds.map((renderId) => renderId.id);
+
+                if (ids.contains(Constants.sizerId)) {
+                  _resizing = true;
+                  widget.onDragDown?.call();
+                } else if (ids.contains(Constants.elevatedEventId)) {
+                  _dragging = true;
+                  _dayOffsets.clear();
+                  widget.onDragDown?.call();
+                }
+              },
+              onPanStart: (details) {
+                if (!_dragging) return;
+                final event = widget.event.value!;
+                _pointerLocation = details.globalPosition;
+                _pointerTimePoint = _getTimePointAt(_pointerLocation)!;
+                _startDiff = _pointerTimePoint.difference(event.start);
+
+                // Prevent accident day addition on WeekView
+                if (widget.viewType == CalendarView.week) {
+                  _startDiff -= Duration(days: _startDiff.inDays);
+                  if (_startDiff.isNegative) {
+                    _startDiff += Duration(days: 1);
+                  }
+                }
+
+                _updateDayOffsets(event);
+              },
+              onPanUpdate: (details) {
+                if (_resizing) {
+                  widget.onSizeUpdate?.call(details);
+                  _eventBounds.height += details.delta.dy;
+                } else if (_dragging) {
+                  widget.onDragUpdate?.call(details);
+                  _eventBounds.origin += details.delta;
+                  if (!_resetPointerLocation(details.globalPosition)) return;
+                  _pointerTimePoint =
+                      _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+                }
+              },
+              onPanEnd: (details) {
+                if (widget.event.value == null) {
+                  return;
+                }
+                if (_resizing) {
+                  _resizing = false;
+                  widget.onResizingEnd?.call();
+                  _updateEventHeightAndDuration();
+                } else if (_dragging) {
+                  _dragging = false;
+                  widget.onDragEnd?.call();
+                  _pointerTimePoint =
+                      _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+                  _updateEventOriginAndStart();
+                  _updateDayOffsets(widget.event.value!);
+                }
+                if (!_edited) {
                   setState((){
-                    _edited = false;
-                    _removeEntries();
-                    widget.event.value = null;
-                    _resizing = false;
-                    _dragging = false;
+                    _edited = true;
                   });
+                }
+              },
+              child: child,
+            );
+          },
+          child: Stack(
+            children: [
+              NotificationListener<ScrollUpdateNotification>(
+                onNotification: (event) {
+                  final scrollDelta = event.scrollDelta ?? 0;
+
+                  if (_dragging && event.metrics.axis == Axis.vertical) {
+                    _scrolling = scrollDelta.abs() > 0;
+                  }
+
+                  if (!_dragging && event.metrics.axis == Axis.vertical) {
+                    _eventBounds.update(
+                      dy: _eventBounds.dy - scrollDelta,
+                      height: _eventBounds.height + (_resizing ? scrollDelta : 0),
+                    );
+                  }
+
+                  if (!_dragging &&
+                      event.metrics.axis == Axis.horizontal &&
+                      widget.event.value != null &&
+                      ((widget.viewType == CalendarView.week && scrollDelta.abs() < 1) ||
+                      (widget.viewType == CalendarView.month && scrollDelta.abs() < 3))) {
+                    _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+                    _updateEventOriginAndStart();
+                    print("---------event: ${widget.event.value!.start}");
+                  }
+                  return true;
                 },
-                child: widget.saverConfig.child,
-              )
-          ],
+                child: widget.child,
+              ),
+              Positioned.fill(
+                left: widget.padding.left,
+                top: widget.padding.top,
+                right: widget.padding.right,
+                bottom: widget.padding.bottom,
+                child: Overlay(key: _overlayKey),
+              ),
+              if (_edited)
+                Saver(
+                  alignment: widget.saverConfig.alignment,
+                  onPressed: () {
+                    widget.onChanged?.call(widget.event.value!);
+                    _dropEvent(widget.event.value!);
+                    setState((){
+                      _edited = false;
+                      _removeEntries();
+                      widget.event.value = null;
+                      _resizing = false;
+                      _dragging = false;
+                    });
+                  },
+                  child: widget.saverConfig.child,
+                )
+            ],
+          ),
         ),
       ),
     );

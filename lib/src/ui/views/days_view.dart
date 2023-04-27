@@ -102,8 +102,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   double get _hourExtent => widget.timelineTheme.timeScaleTheme.hourExtent;
   double get _dayExtent => _hourExtent * Duration.hoursPerDay;
 
-  int get _cellExtent => widget.timelineTheme.cellExtent;
-
   RenderBox? _getTimelineBox() =>
       DaysViewKeys.timeline.currentContext?.findRenderObject() as RenderBox?;
 
@@ -440,17 +438,20 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                     theme: theme.timeScaleTheme,
                   ),
                   Expanded(
-                    child: EventsLayout<T>(
-                      dayDate: dayDate,
-                      viewType: CalendarView.days,
-                      overlayKey: _overlayKey,
-                      layoutsKeys: DaysViewKeys.layouts,
-                      eventsKeys: DaysViewKeys.events,
-                      timelineTheme: widget.timelineTheme,
-                      breaks: widget.breaks,
-                      events: widget.events,
-                      elevatedEvent: _elevatedEvent,
-                      onEventTap: widget.onEventTap,
+                    child: Container(
+                      color: Colors.transparent, // Needs for hitTesting
+                      child: EventsLayout<T>(
+                        dayDate: dayDate,
+                        viewType: CalendarView.days,
+                        overlayKey: _overlayKey,
+                        layoutsKeys: DaysViewKeys.layouts,
+                        eventsKeys: DaysViewKeys.events,
+                        timelineTheme: widget.timelineTheme,
+                        breaks: widget.breaks,
+                        events: widget.events,
+                        elevatedEvent: _elevatedEvent,
+                        onEventTap: widget.onEventTap,
+                      ),
                     ),
                   ),
                 ],
@@ -462,13 +463,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     );
   }
 
-  void _onDateLongPress(DateTime dayDate, LongPressStartDetails details) {
-    final minutes = details.localPosition.dy ~/ _minuteExtent;
-    final roundedMinutes =
-        (minutes / _cellExtent).round() * _cellExtent;
-    final timestamp =
-    dayDate.add(Duration(minutes: roundedMinutes));
-
+  void _onDateLongPress(DateTime timestamp) {
     if (timestamp.isBefore(_initialDate)) return;
     if ((_endDate != null) && timestamp.isAfter(_endDate!)) return;
 
