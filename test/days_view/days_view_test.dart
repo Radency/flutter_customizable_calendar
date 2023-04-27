@@ -108,7 +108,10 @@ void main() {
           final view = DaysView(
             controller: controller,
             saverConfig: _saverConfig(),
-            onDateLongPress: (date) => pressedDate = date,
+            onDateLongPress: (date) {
+              pressedDate = date;
+              return Future(() => null);
+            },
           );
 
           when(() => controller.initialDate).thenReturn(currentMonth);
