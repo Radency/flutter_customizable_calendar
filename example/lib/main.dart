@@ -405,8 +405,8 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     divider: Divider(
       height: 2,
       thickness: 2,
-      // color: Colors.grey.withOpacity(0.33),
-      color: Colors.green,
+      color: Colors.grey.withOpacity(0.33),
+      // color: Colors.green,
     ),
     daysRowTheme: DaysRowTheme(
       weekdayStyle: _textStyle,
@@ -435,9 +435,9 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         color: Colors.white,
         fontWeight: FontWeight.bold,
       ),
-      currentDayColor: Colors.grey,
-      dayColor: Colors.white,
-      spacingColor: Colors.orange,
+      // currentDayColor: Colors.grey,
+      // dayColor: Colors.white,
+      // spacingColor: Colors.orange,
       dayNumberHeight: 23,
       dayNumberMargin: EdgeInsets.all(3),
       dayNumberBackgroundColor: Colors.grey.withOpacity(0.3),
