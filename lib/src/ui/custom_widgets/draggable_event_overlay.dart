@@ -8,7 +8,6 @@ import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
-import 'package:flutter_customizable_calendar/src/utils/extensions.dart';
 
 /// A key holder of all DraggableEventView keys
 @visibleForTesting
@@ -24,9 +23,14 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
   /// Creates an overlay for draggable event view over given [child] widget.
   const DraggableEventOverlay(
     this.event, {
-    super.key,
+    required this.getTimelineBox,
     required this.viewType,
     required this.timelineTheme,
+    required this.getLayoutBox,
+    required this.saverConfig,
+    required this.getEventBox,
+    required this.child,
+    super.key,
     this.padding = EdgeInsets.zero,
     this.onDragDown,
     this.onDragUpdate,
@@ -36,11 +40,6 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     this.onDropped,
     this.onChanged,
     this.onDateLongPress,
-    required this.getTimelineBox,
-    required this.getLayoutBox,
-    required this.getEventBox,
-    required this.saverConfig,
-    required this.child,
   });
 
   /// A notifier which needs to control elevated event
@@ -123,6 +122,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   OverlayState get _overlay => _overlayKey.currentState!;
 
   double get _minuteExtent => _hourExtent / Duration.minutesPerHour;
+
   double get _hourExtent => widget.timelineTheme.timeScaleTheme.hourExtent;
 
   int get _cellExtent => widget.timelineTheme.cellExtent;
@@ -165,11 +165,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     _updateDayOffsets(event);
 
-    double _dayWidth = layoutBox.size.width / 13;
+    final dayWidth = layoutBox.size.width / 13;
     _boundsTween = RectTween(
       begin: Rect.fromLTWH(
         widget.viewType == CalendarView.month
-            ? eventPosition.dx + _dayWidth * (_dayOffsets.firstOrNull ?? 0)
+            ? eventPosition.dx + dayWidth * (_dayOffsets.firstOrNull ?? 0)
             : eventPosition.dx,
         eventPosition.dy,
         eventBox.size.width,
@@ -177,11 +177,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       ),
       end: Rect.fromLTWH(
         widget.viewType == CalendarView.month
-            ? layoutPosition.dx + _dayWidth * (_dayOffsets.firstOrNull ?? 0)
+            ? layoutPosition.dx + dayWidth * (_dayOffsets.firstOrNull ?? 0)
             : layoutPosition.dx,
         eventPosition.dy,
         widget.viewType == CalendarView.month
-            ? _dayWidth * _dayOffsets.length
+            ? dayWidth * _dayOffsets.length
             : layoutBox.size.width,
         eventBox.size.height,
       ),
@@ -195,13 +195,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   /// Needs to make interaction between a timeline and the overlay
   void onEventLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
-    Offset _delta = details.globalPosition - _pointerLocation;
+    var delta = details.globalPosition - _pointerLocation;
     if (_scrolling) {
-      _delta = Offset.zero;
+      delta = Offset.zero;
     }
 
     final dragUpdateDetails = DragUpdateDetails(
-      delta: _delta,
+      delta: delta,
       globalPosition: details.globalPosition,
       localPosition: details.localPosition,
     );
@@ -236,18 +236,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _dragging = false;
   }
 
-  Rect _getEventBounds(T event) {
-    final eventBox = widget.getEventBox(event);
-
-    if (eventBox == null) return Rect.zero;
-
-    final timelineBox = widget.getTimelineBox();
-    final eventPosition =
-        eventBox.localToGlobal(Offset.zero, ancestor: timelineBox);
-
-    return eventPosition & eventBox.size;
-  }
-
   DateTime? _getTargetDayAt(Offset globalPosition) {
     final renderIds = _timelineHitTest(globalPosition);
     final targets = renderIds.whereType<RenderId<DateTime>>();
@@ -261,7 +249,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     if (dayDate == null) return null;
 
     if (widget.viewType == CalendarView.month) {
-      return dayDate.add(Duration(hours: 12));
+      return dayDate.add(const Duration(hours: 12));
     }
 
     final layoutBox = widget.getLayoutBox(dayDate)!;
@@ -273,7 +261,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   Iterable<RenderId<dynamic>> _globalHitTest(Offset globalPosition) {
     final result = HitTestResult();
 
-    WidgetsBinding.instance.hitTest(result, globalPosition);
+    WidgetsBinding.instance.hitTestInView(result, globalPosition, 0);
 
     return result.path
         .map((entry) => entry.target)
@@ -339,19 +327,20 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   void _updateEventOriginAndStart() {
-    bool isMonth = widget.viewType == CalendarView.month;
-    DateTime dayDate = _getTargetDayAt(_pointerLocation)!; // <- temporary
-    double xOffset = 0;
+    final isMonth = widget.viewType == CalendarView.month;
+    var dayDate = _getTargetDayAt(_pointerLocation)!; // <- temporary
+    var xOffset = 0.0;
 
     if (isMonth) {
       dayDate = dayDate.add(Duration(days: _dayOffsets.firstOrNull ?? 0));
     }
-    var layoutBox = widget.getLayoutBox(dayDate);
+    final layoutBox = widget.getLayoutBox(dayDate);
     if (isMonth && layoutBox == null) {
-      int diff = 8 - dayDate.weekday;
+      final diff = 8 - dayDate.weekday;
       dayDate = dayDate.add(Duration(days: diff));
-      layoutBox = widget.getLayoutBox(dayDate)!;
-      xOffset = layoutBox.size.width / 13 * diff;
+      if (layoutBox != null) {
+        xOffset = layoutBox.size.width / 13 * diff;
+      }
     }
 
     final timelineBox = widget.getTimelineBox();
@@ -367,32 +356,29 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     _eventBounds.update(
       dx: layoutPosition.dx - xOffset,
-      dy: isMonth
-          ? layoutPosition.dy
-          : _eventBounds.dy - offset,
+      dy: isMonth ? layoutPosition.dy : _eventBounds.dy - offset,
     );
 
     widget.event.value =
         widget.event.value!.copyWith(start: eventStartDate) as T;
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-      setState(() {
-
-      });
+      setState(() {});
     });
   }
 
-  void _updateDayOffsets(T event){
-    DateTimeRange _range = DateTimeRange(
+  void _updateDayOffsets(T event) {
+    final range = DateTimeRange(
       start: DateUtils.dateOnly(event.start),
       end: DateUtils.dateOnly(event.end),
     );
-    int firstOffset = _range.start.difference(_pointerTimePoint).inDays;
-    int dayOffsetLength = _range.days.length + 1;
+    final firstOffset = range.start.difference(_pointerTimePoint).inDays;
+    var dayOffsetLength = range.days.length + 1;
     if (event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
       dayOffsetLength -= 1;
     }
 
-    _dayOffsets = List.generate(dayOffsetLength, (index) => firstOffset + index);
+    _dayOffsets =
+        List.generate(dayOffsetLength, (index) => firstOffset + index);
   }
 
   void _updateEventHeightAndDuration() {
@@ -459,7 +445,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       if (layoutBox == null) return;
       final timelineBox = widget.getTimelineBox();
       final layoutPosition =
-      layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+          layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
 
       _eventBounds.update(
         dx: layoutPosition.dx,
@@ -473,15 +459,15 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     return GestureDetector(
       onLongPressStart: (details) {
         if (!_dragging && !onEventLongPressStart(details)) {
-          final _dayDate = _getTimePointAt(details.globalPosition);
-          if (_dayDate != null) {
-            widget.onDateLongPress?.call(_dayDate);
+          final dayDate = _getTimePointAt(details.globalPosition);
+          if (dayDate != null) {
+            widget.onDateLongPress?.call(dayDate);
           }
         }
       },
       onLongPressMoveUpdate: onEventLongPressMoveUpdate,
       onLongPressEnd: onEventLongPressEnd,
-      child: Container(
+      child: ColoredBox(
         color: Colors.transparent,
         child: ValueListenableBuilder(
           valueListenable: widget.event,
@@ -490,7 +476,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
             return GestureDetector(
               // Prevent parent's onLongPress reaction
-              onLongPress: (){},
+              onLongPress: () {},
 
               onTap: () {
                 _dropEvent(elevatedEvent);
@@ -519,7 +505,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                 if (widget.viewType == CalendarView.week) {
                   _startDiff -= Duration(days: _startDiff.inDays);
                   if (_startDiff.isNegative) {
-                    _startDiff += Duration(days: 1);
+                    _startDiff += const Duration(days: 1);
                   }
                 }
 
@@ -554,7 +540,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   _updateDayOffsets(widget.event.value!);
                 }
                 if (!_edited) {
-                  setState((){
+                  setState(() {
                     _edited = true;
                   });
                 }
@@ -575,18 +561,22 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   if (!_dragging && event.metrics.axis == Axis.vertical) {
                     _eventBounds.update(
                       dy: _eventBounds.dy - scrollDelta,
-                      height: _eventBounds.height + (_resizing ? scrollDelta : 0),
+                      height:
+                          _eventBounds.height + (_resizing ? scrollDelta : 0),
                     );
                   }
 
                   if (!_dragging &&
                       event.metrics.axis == Axis.horizontal &&
                       widget.event.value != null &&
-                      ((widget.viewType == CalendarView.week && scrollDelta.abs() < 1) ||
-                      (widget.viewType == CalendarView.month && scrollDelta.abs() < 3))) {
-                    _pointerTimePoint = _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+                      ((widget.viewType == CalendarView.week &&
+                              scrollDelta.abs() < 1) ||
+                          (widget.viewType == CalendarView.month &&
+                              scrollDelta.abs() < 3))) {
+                    _pointerTimePoint =
+                        _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
                     _updateEventOriginAndStart();
-                    print("---------event: ${widget.event.value!.start}");
+                    print('---------event: ${widget.event.value!.start}');
                   }
                   return true;
                 },
@@ -605,7 +595,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   onPressed: () {
                     widget.onChanged?.call(widget.event.value!);
                     _dropEvent(widget.event.value!);
-                    setState((){
+                    setState(() {
                       _edited = false;
                       _removeEntries();
                       widget.event.value = null;
@@ -614,7 +604,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                     });
                   },
                   child: widget.saverConfig.child,
-                )
+                ),
             ],
           ),
         ),
@@ -632,12 +622,12 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   Widget _elevatedEventView() {
     return EventView(
-        widget.event.value!,
-        key: DraggableEventOverlayKeys.elevatedEvent,
-        viewType: widget.viewType,
-        theme: widget.timelineTheme.floatingEventsTheme
-            .copyWith(elevation: _draggableEventTheme.elevation),
-      );
+      widget.event.value!,
+      key: DraggableEventOverlayKeys.elevatedEvent,
+      viewType: widget.viewType,
+      theme: widget.timelineTheme.floatingEventsTheme
+          .copyWith(elevation: _draggableEventTheme.elevation),
+    );
   }
 
   Widget _sizerView() {
@@ -659,35 +649,35 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
   }
 
-  List<Rect> _rectForDay(Rect bounds, DateTime dayDate) {
-    if(widget.event.value == null) {
+  List<Rect> _rectForDay(Rect bounds, DateTime initialDayDate) {
+    if (widget.event.value == null) {
       return [];
     }
 
-    dayDate = DateUtils.dateOnly(dayDate);
-    final _layoutBox = widget.getLayoutBox(dayDate);
-    if (_layoutBox == null) {
+    final dayDate = DateUtils.dateOnly(initialDayDate);
+    final layoutBox = widget.getLayoutBox(dayDate);
+    if (layoutBox == null) {
       return [];
     }
     final timelineBox = widget.getTimelineBox();
-    Offset _layoutPosition;
+    Offset layoutPosition;
     try {
-      _layoutPosition =
-          _layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+      layoutPosition =
+          layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
     } catch (e) {
-      _layoutPosition = bounds.topLeft;
+      layoutPosition = bounds.topLeft;
     }
-    final _delta = bounds.topLeft - _layoutPosition;
+    final delta = bounds.topLeft - layoutPosition;
 
-    List<Rect> result = [];
+    final result = <Rect>[];
 
     if (widget.viewType == CalendarView.week) {
-      DateTime _dateBefore = dayDate.copyWith();
-      DateTime _dateAfter = dayDate.add(Duration(days: 1));
+      var dateBefore = dayDate.copyWith();
+      var dateAfter = dayDate.add(const Duration(days: 1));
 
-      int i = 1;
+      var i = 1;
       while (i <= 7) {
-        final layoutBox = widget.getLayoutBox(_dateAfter);
+        final layoutBox = widget.getLayoutBox(dateAfter);
         if (layoutBox == null) {
           break;
         }
@@ -698,20 +688,22 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         } catch (e) {
           break;
         }
-        result.add(Rect.fromLTWH(
-          layoutPosition.dx + _delta.dx,
-          bounds.top - 24 * i * _hourExtent,
-          bounds.width,
-          bounds.height,
-        ));
+        result.add(
+          Rect.fromLTWH(
+            layoutPosition.dx + delta.dx,
+            bounds.top - 24 * i * _hourExtent,
+            bounds.width,
+            bounds.height,
+          ),
+        );
         i++;
-        _dateAfter = _dateAfter.add(Duration(days: 1));
+        dateAfter = dateAfter.add(const Duration(days: 1));
       }
 
       i = 1;
       while (i <= 7) {
-        _dateBefore = _dateBefore.subtract(Duration(days: 1));
-        final layoutBox = widget.getLayoutBox(_dateBefore);
+        dateBefore = dateBefore.subtract(const Duration(days: 1));
+        final layoutBox = widget.getLayoutBox(dateBefore);
         if (layoutBox == null) {
           break;
         }
@@ -722,26 +714,30 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         } catch (e) {
           break;
         }
-        result.add(Rect.fromLTWH(
-          layoutPosition.dx + _delta.dx,
-          bounds.top + 24 * i * _hourExtent,
-          bounds.width,
-          bounds.height,
-        ));
+        result.add(
+          Rect.fromLTWH(
+            layoutPosition.dx + delta.dx,
+            bounds.top + 24 * i * _hourExtent,
+            bounds.width,
+            bounds.height,
+          ),
+        );
         i++;
       }
     }
 
     if (widget.viewType == CalendarView.month) {
-      double _weekOffsetY = _layoutBox.size.height * 1.5;
-      double _dayWidth = _layoutBox.size.width / 13;
-      for (int i = -5; i <= 5; i++) {
-        result.add(Rect.fromLTWH(
-          _layoutPosition.dx + _delta.dx + i * _dayWidth * 7,
-          bounds.top - _weekOffsetY * i,
-          bounds.width,
-          bounds.height,
-        ));
+      final weekOffsetY = layoutBox.size.height * 1.5;
+      final dayWidth = layoutBox.size.width / 13;
+      for (var i = -5; i <= 5; i++) {
+        result.add(
+          Rect.fromLTWH(
+            layoutPosition.dx + delta.dx + i * dayWidth * 7,
+            bounds.top - weekOffsetY * i,
+            bounds.width,
+            bounds.height,
+          ),
+        );
       }
     }
 
@@ -749,7 +745,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   Widget _floatingEventBuilder(BuildContext context) {
-    final _event = widget.event.value;
+    final event = widget.event.value;
 
     return ValueListenableBuilder(
       valueListenable: _eventBounds,
@@ -765,14 +761,14 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               child: child!,
             ),
             if (widget.viewType != CalendarView.month &&
-                _event is EditableCalendarEvent)
+                event is EditableCalendarEvent)
               _sizerBuilder(context, rect.bottomCenter),
             if (mounted && widget.viewType != CalendarView.days)
-              for (Rect _rect in _rects) ...[
+              for (final Rect rect in _rects) ...[
                 Positioned.fromRect(
-                  rect: _rect,
+                  rect: rect,
                   child: CompositedTransformFollower(
-                    offset: _rect.topLeft - rect.topLeft,
+                    offset: rect.topLeft - rect.topLeft,
                     link: _layerLink,
                     child: RenderIdProvider(
                       id: Constants.elevatedEventId,
@@ -781,8 +777,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   ),
                 ),
                 if (widget.viewType != CalendarView.month &&
-                    _event is EditableCalendarEvent)
-                  _sizerBuilder(context, _rect.bottomCenter),
+                    event is EditableCalendarEvent)
+                  _sizerBuilder(context, rect.bottomCenter),
               ],
           ],
         );
@@ -797,18 +793,19 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
   }
 
-  Widget _sizerBuilder(BuildContext context, Offset offset) => ValueListenableBuilder(
+  Widget _sizerBuilder(BuildContext context, Offset offset) =>
+      ValueListenableBuilder(
         valueListenable: _animation,
         builder: (context, scale, child) {
           final theme = _draggableEventTheme.sizerTheme;
-          final _width = theme.size.width * scale + theme.extraSpace * 2;
-          final _height = theme.size.height * scale + theme.extraSpace * 2;
+          final width = theme.size.width * scale + theme.extraSpace * 2;
+          final height = theme.size.height * scale + theme.extraSpace * 2;
 
           return Positioned(
-            top: offset.dy - _height / 2,
-            left: offset.dx - _width / 2,
-            width: _width,
-            height: _height,
+            top: offset.dy - height / 2,
+            left: offset.dx - width / 2,
+            width: width,
+            height: height,
             child: child!,
           );
         },

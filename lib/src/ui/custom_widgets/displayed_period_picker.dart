@@ -9,8 +9,8 @@ import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 class DisplayedPeriodPicker extends StatelessWidget {
   /// Creates a view of a displayed period picker.
   const DisplayedPeriodPicker({
-    super.key,
     required this.period,
+    super.key,
     this.theme = const DisplayedPeriodPickerTheme(),
     this.reverseAnimation = false,
     this.onLeftButtonPressed,

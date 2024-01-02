@@ -1,5 +1,3 @@
-library utils;
-
 export 'clock_notifier.dart';
 export 'constants.dart';
 export 'enums.dart';

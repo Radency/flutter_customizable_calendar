@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
-import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
-import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 
 class TaskDueView extends StatelessWidget {
   const TaskDueView(
@@ -21,11 +19,11 @@ class TaskDueView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: viewType == CalendarView.month
-          ? EdgeInsets.symmetric(
+          ? const EdgeInsets.symmetric(
               vertical: 4,
               horizontal: 8,
             )
-          : EdgeInsets.symmetric(horizontal: 6),
+          : const EdgeInsets.symmetric(horizontal: 6),
       child: Text(
         'Task Due',
         style: theme.titleStyle,

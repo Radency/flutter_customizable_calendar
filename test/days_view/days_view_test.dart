@@ -1,7 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/controllers/days_view_controller.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/views/days_view.dart';
@@ -18,7 +17,6 @@ void main() {
     'DaysView test',
     () {
       final now = DateTime(2022, DateTime.november, 10, 9, 45);
-      final today = DateUtils.dateOnly(now);
       final daysInCurrentMonth = DateUtils.getDaysInMonth(now.year, now.month);
       final currentMonth = DateTime(now.year, now.month);
       final currentMonthEnd = DateTime(now.year, now.month, daysInCurrentMonth);
@@ -110,7 +108,7 @@ void main() {
             saverConfig: _saverConfig(),
             onDateLongPress: (date) {
               pressedDate = date;
-              return Future(() => null);
+              return Future.value();
             },
           );
 
@@ -119,7 +117,6 @@ void main() {
           when(() => controller.state).thenReturn(initialStateWithDate(now));
 
           await widgetTester.pumpWidget(runTestApp(view));
-
 
           final padding = view.timelineTheme.padding;
           final currentHourOrigin = Offset(padding.left, padding.top);
@@ -290,8 +287,8 @@ void main() {
       //
       //     expect(elevatedEventFinder, findsOneWidget);
       //
-      //     final tapLocation = widgetTester.getBottomLeft(elevatedEventFinder) +
-      //         const Offset(1, 1);
+      //     final tapLocation = widgetTester.getBottomLeft(elevatedEventFinder)
+      //         + const Offset(1, 1);
       //
       //     await widgetTester.tapAt(tapLocation);
       //     await widgetTester.pumpAndSettle();
@@ -421,8 +418,8 @@ void main() {
 }
 
 SaverConfig _saverConfig() => SaverConfig(
-  child: Container(
-      padding: EdgeInsets.all(15),
-      child: Icon(Icons.done)
-  ),
-);
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        child: const Icon(Icons.done),
+      ),
+    );

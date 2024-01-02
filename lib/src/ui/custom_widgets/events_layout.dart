@@ -11,16 +11,16 @@ import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 class EventsLayout<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Creates a layout for all [breaks] and [events] of given [dayDate].
   const EventsLayout({
-    super.key,
     required this.dayDate,
     required this.overlayKey,
     required this.layoutsKeys,
     required this.eventsKeys,
     required this.timelineTheme,
     required this.viewType,
+    required this.elevatedEvent,
+    super.key,
     this.breaks = const [],
     this.events = const [],
-    required this.elevatedEvent,
     this.onEventTap,
     this.dayWidth,
     this.controller,
@@ -65,13 +65,15 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatefulWidget {
   State<EventsLayout<T>> createState() => _EventsLayoutState<T>();
 }
 
-class _EventsLayoutState<T extends FloatingCalendarEvent> extends State<EventsLayout<T>> {
+class _EventsLayoutState<T extends FloatingCalendarEvent>
+    extends State<EventsLayout<T>> {
   /// Defines if show events in simplified way
   bool get simpleView => widget.viewType == CalendarView.month;
 
   bool _eventPresentAtDay<E extends CalendarEvent>(E event) =>
       DateUtils.isSameDay(event.start, widget.dayDate) ||
-      (event.start.isBefore(widget.dayDate) && event.end.isAfter(widget.dayDate));
+      (event.start.isBefore(widget.dayDate) &&
+          event.end.isAfter(widget.dayDate));
 
   List<E> _getEventsOnDay<E extends CalendarEvent>(List<E> list) {
     // For month view, daily event list is passed in constructor
@@ -95,123 +97,123 @@ class _EventsLayoutState<T extends FloatingCalendarEvent> extends State<EventsLa
     return RenderIdProvider(
       id: Constants.layoutId,
       key: widget.layoutsKeys[widget.dayDate] ??= GlobalKey(),
-      child: !simpleView ? CustomMultiChildLayout(
-        delegate: _EventsLayoutDelegate<T>(
-          date: widget.dayDate,
-          breaks: breaksToDisplay,
-          events: eventsToDisplay,
-          cellExtent: widget.timelineTheme.cellExtent,
-        ),
-        children: [
-          if (!simpleView)
-            ...breaksToDisplay.map(
-                  (event) =>
-                  LayoutId(
-                    id: event,
-                    child: BreakView(event),
-                  ),
-            ),
-          ...eventsToDisplay.map(
-                (event) =>
-                LayoutId(
-                  id: event,
-                  child: RenderIdProvider(
-                    id: event,
-                    child: ValueListenableBuilder(
-                      valueListenable: widget.elevatedEvent,
-                      builder: (context, elevatedEvent, child) =>
-                          Opacity(
-                            opacity: (elevatedEvent?.id == event.id)
-                                ? 0.5
-                                : 1,
-                            child: child,
-                          ),
-                      child: EventView(
-                        // key: eventsKeys[event] ??= GlobalKey(),
-                        event,
-                        theme: widget.timelineTheme.floatingEventsTheme,
-                        viewType: widget.viewType,
-                        onTap: () => widget.onEventTap?.call(event),
-                      ),
+      child: !simpleView
+          ? CustomMultiChildLayout(
+              delegate: _EventsLayoutDelegate<T>(
+                date: widget.dayDate,
+                breaks: breaksToDisplay,
+                events: eventsToDisplay,
+                cellExtent: widget.timelineTheme.cellExtent,
+              ),
+              children: [
+                if (!simpleView)
+                  ...breaksToDisplay.map(
+                    (event) => LayoutId(
+                      id: event,
+                      child: BreakView(event),
                     ),
                   ),
-                ),
-          ),
-        ],
-      ) : ValueListenableBuilder(
-        valueListenable: widget.elevatedEvent,
-        builder: (context, _elevatedEvent, child){
-          if (_elevatedEvent != null) {
-            return IgnorePointer(
-              child: child,
-            );
-          }
-          return child!;
-        },
-        child: ListView(
-          key: ValueKey(widget.controller),
-          controller: widget.controller,
-          children: [
-            ...eventsToDisplay.map((event) {
-              DateTimeRange _range = DateTimeRange(
-                start: DateUtils.dateOnly(event.start),
-                end: DateUtils.dateOnly(event.end),
-              );
-              int _eventDays = _range.days.length + 1;
-              if(event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
-                _eventDays -= 1;
-              }
-              double eventWidth = widget.dayWidth! * _eventDays;
-              if(widget.dayDate.weekday == 1) {
-                int diff = event.end.weekday;
-                if(event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
-                  diff -= 1;
-                }
-                eventWidth = widget.dayWidth! * diff;
-              }
-
-              return Visibility(
-                visible: DateUtils.dateOnly(event.start) == DateUtils.dateOnly(widget.dayDate) || widget.dayDate.weekday == 1,
-                maintainState: true,
-                maintainAnimation: true,
-                maintainSize: true,
-                maintainInteractivity: _eventPresentAtDay(event),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Container(
-                    width: eventWidth,
-                    margin: const EdgeInsets.only(
-                      bottom: 2,
-                    ),
+                ...eventsToDisplay.map(
+                  (event) => LayoutId(
+                    id: event,
                     child: RenderIdProvider(
                       id: event,
                       child: ValueListenableBuilder(
                         valueListenable: widget.elevatedEvent,
-                        builder: (context, elevatedEvent, child) =>
-                            Opacity(
-                              opacity: (elevatedEvent?.id == event.id)
-                                  ? 0.5
-                                  : 1,
-                              child: child,
-                            ),
+                        builder: (context, elevatedEvent, child) => Opacity(
+                          opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
+                          child: child,
+                        ),
                         child: EventView(
                           // key: eventsKeys[event] ??= GlobalKey(),
                           event,
                           theme: widget.timelineTheme.floatingEventsTheme,
                           viewType: widget.viewType,
-                          onTap: () {
-                            widget.onEventTap?.call(event);
-                          },
+                          onTap: () => widget.onEventTap?.call(event),
                         ),
                       ),
                     ),
                   ),
                 ),
-              );
-            }),
-          ],
-        ),
-      ),
+              ],
+            )
+          : ValueListenableBuilder(
+              valueListenable: widget.elevatedEvent,
+              builder: (context, elevatedEvent, child) {
+                if (elevatedEvent != null) {
+                  return IgnorePointer(
+                    child: child,
+                  );
+                }
+                return child!;
+              },
+              child: ListView(
+                key: ValueKey(widget.controller),
+                controller: widget.controller,
+                children: [
+                  ...eventsToDisplay.map((event) {
+                    final range = DateTimeRange(
+                      start: DateUtils.dateOnly(event.start),
+                      end: DateUtils.dateOnly(event.end),
+                    );
+                    var eventDays = range.days.length + 1;
+                    if (event.end
+                        .isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
+                      eventDays -= 1;
+                    }
+                    var eventWidth = widget.dayWidth! * eventDays;
+                    if (widget.dayDate.weekday == 1) {
+                      var diff = event.end.weekday;
+                      if (event.end
+                          .isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
+                        diff -= 1;
+                      }
+                      eventWidth = widget.dayWidth! * diff;
+                    }
+
+                    return Visibility(
+                      visible: DateUtils.dateOnly(event.start) ==
+                              DateUtils.dateOnly(widget.dayDate) ||
+                          widget.dayDate.weekday == 1,
+                      maintainState: true,
+                      maintainAnimation: true,
+                      maintainSize: true,
+                      maintainInteractivity: _eventPresentAtDay(event),
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: Container(
+                          width: eventWidth,
+                          margin: const EdgeInsets.only(
+                            bottom: 2,
+                          ),
+                          child: RenderIdProvider(
+                            id: event,
+                            child: ValueListenableBuilder(
+                              valueListenable: widget.elevatedEvent,
+                              builder: (context, elevatedEvent, child) =>
+                                  Opacity(
+                                opacity:
+                                    (elevatedEvent?.id == event.id) ? 0.5 : 1,
+                                child: child,
+                              ),
+                              child: EventView(
+                                // key: eventsKeys[event] ??= GlobalKey(),
+                                event,
+                                theme: widget.timelineTheme.floatingEventsTheme,
+                                viewType: widget.viewType,
+                                onTap: () {
+                                  widget.onEventTap?.call(event);
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
     );
   }
 }

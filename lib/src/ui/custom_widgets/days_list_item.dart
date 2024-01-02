@@ -5,8 +5,8 @@ import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 class DaysListItem extends StatefulWidget {
   /// Creates view of a days list's item.
   const DaysListItem({
-    super.key,
     required this.dayDate,
+    super.key,
     this.isFocused = false,
     this.theme = const DaysListItemTheme(),
     this.onTap,

@@ -4,10 +4,10 @@ part of 'displayed_period_picker_theme.dart';
 class DisplayedPeriodPickerButtonTheme extends Equatable {
   /// Customize the DisplayedPeriodPicker button with the parameters
   const DisplayedPeriodPickerButtonTheme({
+    required this.child,
     this.color,
     this.padding = EdgeInsets.zero,
     this.borderRadius,
-    required this.child,
   });
 
   /// Color of the button
@@ -24,11 +24,11 @@ class DisplayedPeriodPickerButtonTheme extends Equatable {
 
   @override
   List<Object?> get props => [
-    color,
-    padding,
-    borderRadius,
-    child,
-  ];
+        color,
+        padding,
+        borderRadius,
+        child,
+      ];
 
   /// Creates a copy of this theme but with the given fields replaced with
   /// the new values
