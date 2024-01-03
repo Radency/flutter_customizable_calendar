@@ -5,8 +5,8 @@ import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group("WeekViewController test", () {
-    final now = DateTime(2024, DateTime.january, 3, 12, 0);
+  group('WeekViewController test', () {
+    final now = DateTime(2024, DateTime.january, 3, 12);
     final mockClock = Clock.fixed(now);
     final prevWeek = DateUtils.addDaysToDate(now, -7);
     final nextWeek = DateUtils.addDaysToDate(now, 7);

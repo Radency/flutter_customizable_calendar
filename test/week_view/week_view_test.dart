@@ -11,13 +11,10 @@ class MockWeekViewController extends MockCubit<WeekViewState>
 void main() {
   MaterialApp runTestApp(Widget view) => MaterialApp(home: view);
 
-  group('WekkView test', () {
-    final now = DateTime(2024, DateTime.january, 3, 12, 0);
-    final mockClock = Clock.fixed(now);
+  group('WeekView test', () {
+    final now = DateTime(2024, DateTime.january, 3, 12);
     final currentWeek = DateTime(now.year, now.month);
     final currentWeekEnd = DateTime(now.year, now.month, 7);
-    final prevWeek = DateUtils.addDaysToDate(now, -7);
-    final nextWeek = DateUtils.addDaysToDate(now, 7);
 
     late WeekViewController controller;
 

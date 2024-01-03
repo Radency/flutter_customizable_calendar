@@ -11,17 +11,11 @@ class MockMonthViewController extends MockCubit<MonthViewState>
 void main() {
   MaterialApp runTestApp(Widget view) => MaterialApp(home: view);
 
-  group("MonthView test", () {
-    final now = DateTime(2024, DateTime.january, 3, 12, 0);
+  group('MonthView test', () {
+    final now = DateTime(2024, DateTime.january, 3, 12);
     final daysInCurrentMonth = DateUtils.getDaysInMonth(now.year, now.month);
     final currentMonth = DateTime(now.year, now.month);
     final currentMonthEnd = DateTime(now.year, now.month, daysInCurrentMonth);
-    final currentMonthDay = DateTime(now.year, now.month, now.day);
-    final nextMonth = DateTime(now.year, now.month + 1);
-    final daysInNextMonth =
-        DateUtils.getDaysInMonth(nextMonth.year, nextMonth.month);
-    final nextMonthEnd =
-        DateTime(nextMonth.year, nextMonth.month, daysInNextMonth);
 
     late MonthViewController controller;
 
@@ -49,7 +43,7 @@ void main() {
           saverConfig: _saverConfig(),
         );
 
-        when(() => controller.initialDate).thenReturn(DateTime(year, month));
+        when(() => controller.initialDate).thenReturn(DateTime(year));
         when(() => controller.endDate)
             .thenReturn(DateTime(year, month, daysInMonth));
         when(() => controller.state)
@@ -97,10 +91,49 @@ void main() {
       skip: false,
     );
 
+    testWidgets(
+      'On tap event',
+      (widgetTester) async {
+        FloatingCalendarEvent? tappedEvent;
+
+        final event = SimpleEvent(
+          id: const ValueKey('event1'),
+          title: 'Event 1',
+          start: DateTime(now.year, now.month, 5),
+          duration: const Duration(days: 1),
+        );
+
+        final view = MonthView<SimpleEvent>(
+          controller: controller,
+          saverConfig: _saverConfig(),
+          events: [event],
+          onEventTap: (event) {
+            tappedEvent = event;
+          },
+        );
+
+        when(() => controller.initialDate).thenReturn(currentMonth);
+        when(() => controller.endDate).thenReturn(currentMonthEnd);
+        when(() => controller.state).thenReturn(initialStateWithDate(now));
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        final eventWidget =
+            find.widgetWithText(SimpleEventView, 'Event 1').first;
+
+        await widgetTester.tap(eventWidget);
+
+        expect(tappedEvent, event);
+      },
+      skip: false,
+    );
+
     // testWidgets(
-    //   'Change event date',
+    //   'On event changed date',
     //   (widgetTester) async {
-    //     SimpleEvent event = SimpleEvent(
+    //     FloatingCalendarEvent? updatedEvent;
+    //
+    //     final event = SimpleEvent(
     //       id: const ValueKey('event1'),
     //       title: 'Event 1',
     //       start: DateTime(now.year, now.month, 5),
@@ -112,40 +145,45 @@ void main() {
     //       saverConfig: _saverConfig(),
     //       events: [event],
     //       breaks: [],
-    //       onEventUpdated: (updatedEvent) {
-    //         event = updatedEvent;
+    //       onEventTap: (e) {
+    //         print(e);
+    //       },
+    //       onEventUpdated: (event) {
+    //         updatedEvent = event;
     //       },
     //     );
-    //
-    //     print(view.events);
     //
     //     when(() => controller.initialDate).thenReturn(currentMonth);
     //     when(() => controller.endDate).thenReturn(currentMonthEnd);
     //     when(() => controller.state).thenReturn(initialStateWithDate(now));
     //
     //     await widgetTester.pumpWidget(runTestApp(view));
-    //     await widgetTester.pumpAndSettle();
     //
-    //     print(MonthViewKeys.events);
-    //     print(MonthViewKeys.events[event.id]);
-    //     final eventKey = MonthViewKeys.events[event.id];
-    //     final eventFinder = find.byKey(eventKey!);
+    //     final eventWidget = find.widgetWithText(SimpleEventView, 'Event 1')
+    //          .first;
     //
-    //     final eventPosition = widgetTester.getCenter(eventFinder);
-    //     // await widgetTester.longPressAt(eventPosition);
+    //     print("before");
+    //     final from = widgetTester.getCenter(eventWidget);
+    //     print(from);
+    //     print("to");
+    //     final to = const Offset(0, 100) + from;
+    //     print(to);
     //
-    //     // final seventhDayPosition = widgetTester.getCenter(find.text('7'));
-    //     //
-    //     // await widgetTester.drag(
-    //     //     find.bySubtype<Draggable>(), seventhDayPosition);
-    //     //
-    //     // final saverPosition = widgetTester.getCenter(eventFinder);
-    //     // await widgetTester.tapAt(saverPosition);
-    //     //
-    //     // expect(
-    //     //   event.start,
-    //     //   DateTime(now.year, now.month, 7),
-    //     // );
+    //     await widgetTester.longPressAt(widgetTester.getCenter(eventWidget));
+    //
+    //     await widgetTester.dragFrom(
+    //       from,
+    //       to,
+    //     );
+    //
+    //     print("after");
+    //     print(widgetTester.getCenter(eventWidget));
+    //
+    //     final saverWidget = find.byType(Saver);
+    //
+    //     await widgetTester.tapAt(widgetTester.getCenter(saverWidget));
+    //
+    //     expect(updatedEvent, event);
     //   },
     //   skip: false,
     // );

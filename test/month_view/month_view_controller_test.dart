@@ -5,8 +5,8 @@ import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group("MonthViewController test", () {
-    final now = DateTime(2024, DateTime.january, 3, 12, 0);
+  group('MonthViewController test', () {
+    final now = DateTime(2024, DateTime.january, 3, 12);
     final mockClock = Clock.fixed(now);
     final currentMonth = DateTime(now.year, now.month);
     final prevMonth = DateUtils.addMonthsToMonthDate(currentMonth, -1);

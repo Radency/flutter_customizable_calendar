@@ -225,9 +225,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _updateEventOriginAndStart();
     _updateDayOffsets(widget.event.value!);
     if (!_edited) {
-      setState(() {
-        _edited = true;
-      });
+      if (mounted) {
+        setState(() {
+          _edited = true;
+        });
+      }
     }
   }
 
@@ -312,9 +314,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   void _dropEvent(T event) {
-    setState(() {
-      _edited = false;
-    });
+    if (mounted) {
+      setState(() {
+        _edited = false;
+      });
+    }
 
     if (_animationController.isAnimating) _animationController.stop();
 
@@ -362,7 +366,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     widget.event.value =
         widget.event.value!.copyWith(start: eventStartDate) as T;
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     });
   }
 
@@ -540,9 +546,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   _updateDayOffsets(widget.event.value!);
                 }
                 if (!_edited) {
-                  setState(() {
-                    _edited = true;
-                  });
+                  if (mounted) {
+                    setState(() {
+                      _edited = true;
+                    });
+                  }
                 }
               },
               child: child,
@@ -595,13 +603,15 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   onPressed: () {
                     widget.onChanged?.call(widget.event.value!);
                     _dropEvent(widget.event.value!);
-                    setState(() {
-                      _edited = false;
-                      _removeEntries();
-                      widget.event.value = null;
-                      _resizing = false;
-                      _dragging = false;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        _edited = false;
+                        _removeEntries();
+                        widget.event.value = null;
+                        _resizing = false;
+                        _dragging = false;
+                      });
+                    }
                   },
                   child: widget.saverConfig.child,
                 ),

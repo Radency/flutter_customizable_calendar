@@ -4,20 +4,22 @@
 
 ---
 
-<div style="display: flex; flex-direction: row; justify-content: space-around; align-items: center; gap: 4px">
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/DaysView.gif" width="280" title="Basic Days view">
-        <p>Days View</p>
-    </div>
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/WeekView.gif" width="280" title="Basic Week view">
-        <p>Week View</p>
-    </div>
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/MonthView.gif" width="280" title="Basic Month view">
-        <p>Month View</p>
-    </div>
-</div>
+<table>
+    <tr>
+        <th>
+            <img src="doc/assets/DaysView.gif" width="250" title="Basic Days view">
+            <p>Days View</p>
+        </th>
+        <th>
+            <img src="doc/assets/WeekView.gif" width="250" title="Basic Week view">
+            <p>Week View</p>
+        </th>
+        <th>
+            <img src="doc/assets/MonthView.gif" width="250" title="Basic Month view">
+            <p>Month View</p>
+        </th>
+    </tr>
+</table>
 
 ---
 ## Structure
@@ -86,20 +88,23 @@ Configure the `SaverConfig` for a customized appearance:
 
 Display basic views with `DaysView`, `WeekView`, an `MonthView` widgets:
 
-<div style="display: flex; flex-direction: row; justify-content: space-around; align-items: center; gap: 4px">
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/BasicDaysView.png" width="280" title="Basic Days view">
-        <p>Basic Days View</p>
-    </div>
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/BasicWeekView.png" width="280" title="Basic Week view">
-        <p>Basic Week View</p>
-    </div>
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/BasicMonthView.png" width="280" title="Basic Month view">
-        <p>Basic Month View</p>
-    </div>
-</div>
+<table>
+    <tr>
+        <th>
+            <img src="doc/assets/BasicDaysView.png" width="280" title="Basic Days view">
+            <p>Basic Days View</p>
+        </th>
+        <th>
+            <img src="doc/assets/BasicWeekView.png" width="280" title="Basic Week view">
+            <p>Basic Week View</p>
+        </th>
+        <th>
+            <img src="doc/assets/BasicMonthView.png" width="280" title="Basic Month view">
+            <p>Basic Month View</p>
+        </th>
+    </tr>
+</table>
+
 
 ```dart
 final _daysViewController = DaysViewController(
@@ -141,20 +146,22 @@ MonthView<T>(
 
 ### Adding events dynamically
 
-<div style="display: flex; flex-direction: row; justify-content: space-around; align-items: center; gap: 4px">
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/DaysViewAddEventDynamically.gif" width="280" title="Basic Days view">
-        <p>Days View</p>
-    </div>
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/WeekViewAddEventDynamically.gif" width="280" title="Basic Week view">
-        <p>Week View</p>
-    </div>
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/MonthViewAddEventDynamically.gif" width="280" title="Basic Month view">
-        <p>Month View</p>
-    </div>
-</div>
+<table>
+    <tr>
+        <th>
+            <img src="doc/assets/DaysViewAddEventDynamically.gif" width="250" title="Basic Days view">
+            <p>Days View</p>
+        </th>
+        <th>
+            <img src="doc/assets/WeekViewAddEventDynamically.gif" width="250" title="Basic Week view">
+            <p>Week View</p>
+        </th>
+        <th>
+            <img src="doc/assets/MonthViewAddEventDynamically.gif" width="250" title="Basic Month view">
+            <p>Month View</p>
+        </th>
+    </tr>
+</table>
 
 You can dynamically add events to the calendar by handling long presses on dates in the `DaysView`. 
 This code snippet showcases how to handle long presses on dates in the `DaysView` and dynamically add different types of events such as Simple Event, Task Due, and Break. The provided callback (`_onDateLongPress`) creates a bottom sheet with options,and based on the user's selection, it adds the corresponding event to the calendar.
@@ -231,21 +238,23 @@ This code snippet showcases how to handle long presses on dates in the `DaysView
 
 Enhance the visual appeal of your calendar views by customizing various themes for the `DaysView`, `WeekView`, and `MonthView` widgets. The flexibility of `flutter_customizable_calendar` allows you to achieve a personalized look for each view. Below are examples showcasing the visual changes applied to each view along with the corresponding code snippets:
 
+<table>
+    <tr>
+        <th>
+            <img src="doc/assets/DaysViewTheme.png" width="280" title="Basic Days view">
+            <p>Days View</p>
+        </th>
+        <th>
+            <img src="doc/assets/WeekViewTheme.png" width="280" title="Basic Week view">
+            <p>Week View</p>
+        </th>
+        <th>
+            <img src="doc/assets/MonthViewTheme.png" width="280" title="Basic Month view">
+            <p>Month View</p>
+        </th>
+    </tr>
+</table>
 
-<div style="display: flex; flex-direction: row; justify-content: space-around; align-items: center; gap: 4px">
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/DaysViewTheme.png" width="280" title="Basic Days view">
-        <p>Days View</p>
-    </div>
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/WeekViewTheme.png" width="280" title="Basic Week view">
-        <p>Week View</p>
-    </div>
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/MonthViewTheme.png" width="280" title="Basic Month view">
-        <p>Month View</p>
-    </div>
-</div>
 
 ```dart
 DaysView<T>(
@@ -421,20 +430,23 @@ These code snippets provide examples of how to customize the appearance of each 
 
 Effortlessly edit events dynamically in the calendar by utilizing the provided callbacks for each view: `DaysView`, `WeekView`, and `MonthView`. The visual representation below illustrates the dynamic editing feature across different views:
 
-<div style="display: flex; flex-direction: row; justify-content: space-around; align-items: center; gap: 4px">
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/DaysViewEditEvent.gif" width="280" title="Basic Days view">
-        <p>Days View</p>
-    </div>
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/WeekViewEditEvent.gif" width="280" title="Basic Week view">
-        <p>Week View</p>
-    </div>
-    <div style="display: flex; flex-direction: column; justify-content: cetner; align-items: center">
-        <img src="./docs/assets/MonthViewEditEvent.gif" width="280" title="Basic Month view">
-        <p>Month View</p>
-    </div>
-</div>
+
+<table>
+    <tr>
+        <th>
+            <img src="doc/assets/DaysViewEditEvent.gif" width="250" title="Basic Days view">
+            <p>Days View</p>
+        </th>
+        <th>
+            <img src="doc/assets/WeekViewEditEvent.gif" width="250" title="Basic Week view">
+            <p>Week View</p>
+        </th>
+        <th>
+            <img src="doc/assets/MonthViewEditEvent.gif" width="250" title="Basic Month view">
+            <p>Month View</p>
+        </th>
+    </tr>
+</table>
 
 To enable dynamic editing, you need to utilize the provided callbacks for each view. By implementing these callbacks, you can capture events when they are updated or discarded, allowing for seamless dynamic editing within your calendar views. The following code snippets demonstrate how to integrate the event editing functionality using the `onEventUpdated` and `onDiscardChanges` callbacks:
 
