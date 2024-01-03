@@ -39,7 +39,6 @@ class SimpleEventView extends StatelessWidget {
       case CalendarView.week:
         return const EdgeInsets.symmetric(
           vertical: 4,
-          horizontal: 0,
         );
       case CalendarView.month:
         return const EdgeInsets.symmetric(

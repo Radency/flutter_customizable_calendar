@@ -37,7 +37,7 @@ class DisplayedPeriodPicker extends StatelessWidget {
     return Card(
       color: theme.backgroundColor,
       margin: theme.margin,
-      elevation: theme.elevation,
+      elevation: 0,
       shape: theme.shape,
       child: SizedBox(
         width: theme.width,
