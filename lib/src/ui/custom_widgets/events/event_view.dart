@@ -50,6 +50,7 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
         SimpleEvent: (context) => SimpleEventView(
               event as SimpleEvent,
               theme: _viewEventTheme,
+              viewType: viewType,
             ),
         TaskDue: (context) => TaskDueView(
               event as TaskDue,

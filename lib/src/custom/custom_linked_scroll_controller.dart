@@ -238,6 +238,7 @@ class _LinkedScrollPosition extends ScrollPositionWithSingleContext {
     super.beginActivity(newActivity);
   }
 
+  // We override this method to make it public (overridden method is protected)
   @override
   void updateUserScrollDirection(ScrollDirection value) {
     super.updateUserScrollDirection(value);
@@ -301,9 +302,6 @@ class _LinkedScrollPosition extends ScrollPositionWithSingleContext {
   void unlink(_LinkedScrollActivity activity) {
     _peerActivities.remove(activity);
   }
-
-  // We override this method to make it public (overridden method is protected)
-
   @override
   void debugFillDescription(List<String> description) {
     super.debugFillDescription(description);
