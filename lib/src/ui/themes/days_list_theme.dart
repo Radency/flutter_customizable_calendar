@@ -13,7 +13,11 @@ class DaysListTheme extends Equatable {
     this.physics,
     this.itemExtent = 56,
     this.itemTheme = const DaysListItemTheme(),
+    this.padding = const EdgeInsets.only(bottom: 4),
   });
+
+  /// List item padding
+  final EdgeInsetsGeometry padding;
 
   /// The list height
   final double height;

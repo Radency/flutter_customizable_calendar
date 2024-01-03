@@ -381,12 +381,15 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
                     return BlocBuilder<DaysViewController, DaysViewState>(
                       bloc: widget.controller,
-                      builder: (context, state) => DaysListItem(
-                        dayDate: dayDate,
-                        isFocused:
-                            DateUtils.isSameDay(state.focusedDate, dayDate),
-                        theme: theme.itemTheme,
-                        onTap: () => widget.controller.selectDay(dayDate),
+                      builder: (context, state) => Padding(
+                        padding: theme.padding,
+                        child: DaysListItem(
+                          dayDate: dayDate,
+                          isFocused:
+                              DateUtils.isSameDay(state.focusedDate, dayDate),
+                          theme: theme.itemTheme,
+                          onTap: () => widget.controller.selectDay(dayDate),
+                        ),
                       ),
                       buildWhen: (previous, current) =>
                           DateUtils.isSameDay(current.focusedDate, dayDate) ||
