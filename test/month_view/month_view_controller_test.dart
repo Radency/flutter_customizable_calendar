@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group("MonthViewController test", () {
-    final now = DateTime(2022, DateTime.november, 10, 9, 45);
+    final now = DateTime(2024, DateTime.january, 3, 12, 0);
     final mockClock = Clock.fixed(now);
     final currentMonth = DateTime(now.year, now.month);
     final prevMonth = DateUtils.addMonthsToMonthDate(currentMonth, -1);
