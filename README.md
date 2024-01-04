@@ -22,16 +22,6 @@
 </table>
 
 ---
-## Structure
-* [Key Features](##Key-Features)
-* [Getting Started](##Getting-started)
-* [Usage](##Usage)
-    * [Saver Config](###Saver-Config)
-    * [Basic Views](###Basic-views)
-    * [Adding events dynamically](###Adding-events-dynamically)
-    * [Custom Themes](###Custom-Themes)
-    * [Editing Events Dynamically](###Editing-Events-Dynamically)
----
 
 ## Key Features
 **Various Views**: The package provides three main views: `DaysView`, `WeekView`, and `MonthView`, each catering to different time spans.
