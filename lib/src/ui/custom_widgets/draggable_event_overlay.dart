@@ -43,6 +43,10 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     this.onDateLongPress,
   });
 
+  /// Stream which allows to request event view's data update
+  static final StreamController<int> eventUpdatesStreamController =
+      StreamController.broadcast();
+
   /// A notifier which needs to control elevated event
   final FloatingEventNotifier<T> event;
 
@@ -257,7 +261,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       return dayDate.add(const Duration(hours: 12));
     }
 
-    final layoutBox = widget.getLayoutBox(dayDate)!;
+    final layoutBox = widget.getLayoutBox(dayDate);
+    if (layoutBox == null) return null;
+
     final minutes = layoutBox.globalToLocal(globalPosition).dy ~/ _minuteExtent;
 
     return dayDate.add(Duration(minutes: minutes));
@@ -335,7 +341,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   void _updateEventOriginAndStart() {
     final isMonth = widget.viewType == CalendarView.month;
-    var dayDate = _getTargetDayAt(_pointerLocation)!; // <- temporary
+    var dayDate = _getTargetDayAt(_pointerLocation); // <- temporary
+    if (dayDate == null) return;
+
     var xOffset = 0.0;
 
     if (isMonth) {
@@ -349,6 +357,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         xOffset = layoutBox.size.width / 13 * diff;
       }
     }
+    if (layoutBox == null) return;
 
     final timelineBox = widget.getTimelineBox();
     final layoutPosition =
@@ -367,7 +376,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
 
     widget.event.value =
-        widget.event.value!.copyWith(start: eventStartDate) as T;
+        widget.event.value?.copyWith(start: eventStartDate) as T?;
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
       if (mounted) {
         setState(() {});
@@ -391,7 +400,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   void _updateEventHeightAndDuration() {
-    final event = widget.event.value!;
+    final event = widget.event.value;
+    if (event == null) return;
+
     final dayDate = DateUtils.dateOnly(event.start);
     final minutes = event.start.minute +
         (event.start.hour * Duration.minutesPerHour) +
@@ -423,13 +434,25 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   void _eventHeightLimiter() => _eventBounds.height =
       max(_eventBounds.height, _minuteExtent * _cellExtent);
 
+  late StreamSubscription<int> _streamSubscription;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _initEventStreamSubscription();
     _initAnimationController();
     _initAnimation();
     _eventBounds.addListener(_eventHeightLimiter);
+  }
+
+  void _initEventStreamSubscription() {
+    _streamSubscription = DraggableEventOverlay
+        .eventUpdatesStreamController.stream
+        .listen((event) {
+      _updateEventOriginAndStart();
+      _updateEventHeightAndDuration();
+    });
   }
 
   @override
@@ -632,6 +655,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
     _eventBounds.dispose();
+    _streamSubscription.cancel();
     super.dispose();
   }
 

@@ -220,11 +220,17 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             );
 
             if (timelineOffset != _timelineController?.offset) {
-              _timelineController?.animateTo(
+              _timelineController
+                  ?.animateTo(
                 timelineOffset,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.fastLinearToSlowEaseIn,
-              );
+              )
+                  .then((value) {
+                _requestDraggableEventOverlayUpdate();
+              });
+            } else {
+              _requestDraggableEventOverlayUpdate();
             }
             setState(() {});
           });
@@ -237,6 +243,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               curve: Curves.linearToEaseOut,
             ),
           ]).whenComplete(() {
+            _requestDraggableEventOverlayUpdate();
             setState(() {});
           });
         }
@@ -271,6 +278,12 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         ],
       ),
     );
+  }
+
+  void _requestDraggableEventOverlayUpdate() {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      DraggableEventOverlay.eventUpdatesStreamController.add(0);
+    });
   }
 
   @override
