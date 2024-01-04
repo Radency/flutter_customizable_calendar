@@ -1,3 +1,5 @@
+library custom_widgets;
+
 export 'days_list_item.dart';
 export 'displayed_period_picker.dart';
 export 'draggable_event_overlay.dart';

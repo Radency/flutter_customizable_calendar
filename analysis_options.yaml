@@ -6,3 +6,4 @@ linter:
     avoid_print: false
     sort_pub_dependencies: false
     unnecessary_overrides: false
+    unnecessary_library_directive: false

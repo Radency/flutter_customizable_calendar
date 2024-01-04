@@ -125,7 +125,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
                           child: child,
                         ),
                         child: EventView(
-                          // key: eventsKeys[event] ??= GlobalKey(),
+                          key: _getEventKey(event),
                           event,
                           theme: widget.timelineTheme.floatingEventsTheme,
                           viewType: widget.viewType,
@@ -197,7 +197,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
                                 child: child,
                               ),
                               child: EventView(
-                                // key: eventsKeys[event] ??= GlobalKey(),
+                                key: _getEventKey(event),
                                 event,
                                 theme: widget.timelineTheme.floatingEventsTheme,
                                 viewType: widget.viewType,
@@ -215,6 +215,13 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
               ),
             ),
     );
+  }
+
+  GlobalKey<State<StatefulWidget>> _getEventKey(CalendarEvent event) {
+    if(widget.eventsKeys.containsKey(event)) {
+      widget.eventsKeys.remove(event);
+    }
+    return widget.eventsKeys[event] ??= GlobalKey();
   }
 }
 

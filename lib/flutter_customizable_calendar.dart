@@ -1,3 +1,4 @@
+library flutter_customizable_calendar;
 
 export 'src/domain/models/models.dart';
 export 'src/ui/controllers/controllers.dart';

@@ -9,7 +9,11 @@ class MockMonthViewController extends MockCubit<MonthViewState>
     implements MonthViewController {}
 
 void main() {
-  MaterialApp runTestApp(Widget view) => MaterialApp(home: view);
+  MaterialApp runTestApp(Widget view) => MaterialApp(
+        home: Scaffold(
+          body: view,
+        ),
+      );
 
   group('MonthView test', () {
     final now = DateTime(2024, DateTime.january, 3, 12);
@@ -92,7 +96,7 @@ void main() {
     );
 
     testWidgets(
-      'On tap event',
+      'Tap on an event view returns the event',
       (widgetTester) async {
         FloatingCalendarEvent? tappedEvent;
 
@@ -159,27 +163,35 @@ void main() {
     //
     //     await widgetTester.pumpWidget(runTestApp(view));
     //
-    //     final eventWidget = find.widgetWithText(SimpleEventView, 'Event 1')
-    //          .first;
+    //     final eventWidget = find.byKey(MonthViewKeys.events[event]!);
     //
-    //     print("before");
+    //     print("from");
     //     final from = widgetTester.getCenter(eventWidget);
     //     print(from);
     //     print("to");
-    //     final to = const Offset(0, 100) + from;
+    //     final to = widgetTester.getCenter(find.text("19"));
     //     print(to);
     //
-    //     await widgetTester.longPressAt(widgetTester.getCenter(eventWidget));
+    //     await widgetTester.longPressAt(from, pointer: 7);
+    //     await widgetTester.pump();
+    //     await widgetTester.pump(const Duration(seconds: 1));
     //
-    //     await widgetTester.dragFrom(
-    //       from,
-    //       to,
-    //     );
+    //     final gesture = await widgetTester.startGesture(from, pointer: 7);
+    //     await widgetTester.pump();
+    //     await widgetTester.pump(const Duration(seconds: 1));
+    //
+    //     await gesture.moveTo(to);
+    //     await widgetTester.pump();
+    //     await widgetTester.pump(const Duration(seconds: 1));
+    //
+    //     await gesture.up();
+    //     await widgetTester.pump();
+    //     await widgetTester.pump(const Duration(seconds: 1));
     //
     //     print("after");
     //     print(widgetTester.getCenter(eventWidget));
     //
-    //     final saverWidget = find.byType(Saver);
+    //     final saverWidget = find.byKey(const ValueKey("saver"));
     //
     //     await widgetTester.tapAt(widgetTester.getCenter(saverWidget));
     //
@@ -192,6 +204,7 @@ void main() {
 
 SaverConfig _saverConfig() => SaverConfig(
       child: Container(
+        key: const ValueKey('saver'),
         padding: const EdgeInsets.all(15),
         child: const Icon(Icons.done),
       ),

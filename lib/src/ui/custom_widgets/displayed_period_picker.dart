@@ -7,6 +7,7 @@ import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 /// A view of a toggle which allows to switch between displayed periods.
 /// The [period] value mustn't be null.
 class DisplayedPeriodPicker extends StatelessWidget {
+
   /// Creates a view of a displayed period picker.
   const DisplayedPeriodPicker({
     required this.period,

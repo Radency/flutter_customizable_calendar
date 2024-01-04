@@ -13,8 +13,13 @@ void main() {
 
   group('WeekView test', () {
     final now = DateTime(2024, DateTime.january, 3, 12);
+
     final currentWeek = DateTime(now.year, now.month);
     final currentWeekEnd = DateTime(now.year, now.month, 7);
+    final nextWeek = DateTime(now.year, now.month, 14);
+    final currentMonth = DateTime(now.year, now.month);
+    final daysInCurrentMonth = DateUtils.getDaysInMonth(now.year, now.month);
+    final currentMonthEnd = DateTime(now.year, now.month, daysInCurrentMonth);
 
     late WeekViewController controller;
 
@@ -85,6 +90,70 @@ void main() {
         expect(
           DateTime(pressedDate!.year, pressedDate!.month, pressedDate!.day),
           DateTime(now.year, now.month),
+        );
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'Tap on an event view returns the event',
+      (widgetTester) async {
+        FloatingCalendarEvent? tappedEvent;
+
+        final event = SimpleEvent(
+          id: 'SimpleEvent1',
+          start: now,
+          duration: const Duration(hours: 1),
+          title: '',
+        );
+        final view = WeekView<FloatingCalendarEvent>(
+          controller: controller,
+          saverConfig: _saverConfig(),
+          onEventTap: (event) => tappedEvent = event,
+          events: [event],
+        );
+
+        when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.endDate).thenReturn(currentWeekEnd);
+        when(() => controller.state)
+            .thenReturn(initialStateWithDate(event.start));
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        final eventKey = WeekViewKeys.events[event]!;
+
+        await widgetTester.tap(find.byKey(eventKey));
+
+        expect(tappedEvent, event);
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'Switching to another week changes period picker text',
+      (widgetTester) async {
+        final view = WeekView(
+          controller: controller,
+          saverConfig: _saverConfig(),
+        );
+
+        when(() => controller.initialDate).thenReturn(currentMonth);
+        when(() => controller.endDate).thenReturn(currentMonthEnd);
+        when(() => controller.state).thenReturn(
+          withClock(
+            clock,
+                () => WeekViewNextWeekSelected(focusedDate: nextWeek),
+          ),
+        );
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        await widgetTester.pumpAndSettle();
+
+        expect(
+          find.widgetWithText(DisplayedPeriodPicker, '8 - 14 Jan, 2024'),
+          findsOneWidget,
+          reason: 'Week picker should display ‘next week',
         );
       },
       skip: false,
