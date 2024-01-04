@@ -17,10 +17,14 @@ class ListCubit extends Cubit<ListState> {
 
   void saveAll({List<FloatingCalendarEvent>? events, List<Break>? breaks}) {
     if (events != null) {
-      emit(state.copyWith(events: state.events..addEntries(events.map((e) => MapEntry(e.id, e)))));
+      emit(state.copyWith(
+          events: state.events
+            ..addEntries(events.map((e) => MapEntry(e.id, e)))));
     }
     if (breaks != null) {
-      emit(state.copyWith(breaks: state.breaks..addEntries(breaks.map((e) => MapEntry(e.id, e)))));
+      emit(state.copyWith(
+          breaks: state.breaks
+            ..addEntries(breaks.map((e) => MapEntry(e.id, e)))));
     }
   }
 }

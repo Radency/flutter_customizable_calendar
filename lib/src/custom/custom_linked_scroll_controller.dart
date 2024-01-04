@@ -302,6 +302,7 @@ class _LinkedScrollPosition extends ScrollPositionWithSingleContext {
   void unlink(_LinkedScrollActivity activity) {
     _peerActivities.remove(activity);
   }
+
   @override
   void debugFillDescription(List<String> description) {
     super.debugFillDescription(description);

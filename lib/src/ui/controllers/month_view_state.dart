@@ -13,9 +13,9 @@ abstract class MonthViewState extends Equatable {
 
   @override
   List<Object?> get props => [
-    focusedDate,
-    reverseAnimation,
-  ];
+        focusedDate,
+        reverseAnimation,
+      ];
 }
 
 class MonthViewInitial extends MonthViewState {

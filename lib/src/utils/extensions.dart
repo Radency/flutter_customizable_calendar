@@ -38,8 +38,8 @@ extension MonthUtils on DateTime {
     /// In case of clock change, set end day to 12:00
     return DateTimeRange(
       start: startDate,
-      end: DateUtils.addDaysToDate(startDate, 42)
-          .add(const Duration(hours: 12)),
+      end:
+          DateUtils.addDaysToDate(startDate, 42).add(const Duration(hours: 12)),
     );
   }
 }

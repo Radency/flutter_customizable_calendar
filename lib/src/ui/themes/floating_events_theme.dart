@@ -27,13 +27,13 @@ class FloatingEventsTheme extends Equatable {
 
   @override
   List<Object?> get props => [
-    elevation,
-    shape,
-    margin,
-    dayTheme,
-    weekTheme,
-    monthTheme,
-  ];
+        elevation,
+        shape,
+        margin,
+        dayTheme,
+        weekTheme,
+        monthTheme,
+      ];
 
   /// Creates a copy of this theme but with the given fields replaced with
   /// the new values

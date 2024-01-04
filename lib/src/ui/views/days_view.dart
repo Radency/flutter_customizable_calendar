@@ -25,7 +25,6 @@ abstract class DaysViewKeys {
 
 /// Days view displays a timeline and has ability to move to a specific date.
 class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
-
   /// Creates a Days view, Parameters [controller]
   /// and [saverConfig] are required.
   const DaysView({

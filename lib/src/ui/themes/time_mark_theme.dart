@@ -30,11 +30,11 @@ class TimeMarkTheme extends Equatable {
 
   @override
   List<Object?> get props => [
-    length,
-    color,
-    strokeWidth,
-    strokeCap,
-  ];
+        length,
+        color,
+        strokeWidth,
+        strokeCap,
+      ];
 
   /// Creates a copy of this theme but with the given fields replaced with
   /// the new values

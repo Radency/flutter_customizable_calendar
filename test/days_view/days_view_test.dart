@@ -286,8 +286,8 @@ void main() {
 
           expect(elevatedEventFinder, findsOneWidget);
 
-          final tapLocation = widgetTester.getBottomLeft(elevatedEventFinder)
-              + const Offset(1, 1);
+          final tapLocation = widgetTester.getBottomLeft(elevatedEventFinder) +
+              const Offset(1, 1);
 
           await widgetTester.tapAt(tapLocation);
           await widgetTester.pumpAndSettle();

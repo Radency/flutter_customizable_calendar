@@ -142,7 +142,7 @@ void main() {
         when(() => controller.state).thenReturn(
           withClock(
             clock,
-                () => WeekViewNextWeekSelected(focusedDate: nextWeek),
+            () => WeekViewNextWeekSelected(focusedDate: nextWeek),
           ),
         );
 

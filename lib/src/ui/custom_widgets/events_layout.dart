@@ -218,7 +218,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
   }
 
   GlobalKey<State<StatefulWidget>> _getEventKey(CalendarEvent event) {
-    if(widget.eventsKeys.containsKey(event)) {
+    if (widget.eventsKeys.containsKey(event)) {
       widget.eventsKeys.remove(event);
     }
     return widget.eventsKeys[event] ??= GlobalKey();

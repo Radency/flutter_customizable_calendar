@@ -39,7 +39,6 @@ class App extends StatelessWidget {
         start: today.add(const Duration(hours: 70)),
         duration: const Duration(hours: 26),
         title: 'Event 4',
-
       ),
       SimpleEvent(
         id: 'Event 3',
@@ -224,8 +223,8 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       );
 
   Widget _daysView() => Stack(
-    children: [
-      DaysView<T>(
+        children: [
+          DaysView<T>(
             saverConfig: _saverConfig(),
             controller: _daysViewController,
             monthPickerTheme: _periodPickerTheme,
@@ -418,7 +417,6 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       ),
     );
   }
-
 
   SaverConfig _saverConfig() => SaverConfig(
         child: Container(
