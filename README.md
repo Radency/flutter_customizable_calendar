@@ -7,15 +7,15 @@
 <table>
     <tr>
         <th>
-            <img src="doc/assets/DaysView.gif" width="250" title="Basic Days view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/DaysView.gif" width="250" title="Basic Days view">
             <p>Days View</p>
         </th>
         <th>
-            <img src="doc/assets/WeekView.gif" width="250" title="Basic Week view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/WeekView.gif" width="250" title="Basic Week view">
             <p>Week View</p>
         </th>
         <th>
-            <img src="doc/assets/MonthView.gif" width="250" title="Basic Month view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/MonthView.gif" width="250" title="Basic Month view">
             <p>Month View</p>
         </th>
     </tr>
@@ -91,15 +91,15 @@ Display basic views with `DaysView`, `WeekView`, an `MonthView` widgets:
 <table>
     <tr>
         <th>
-            <img src="doc/assets/BasicDaysView.png" width="280" title="Basic Days view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/BasicDaysView.png" width="280" title="Basic Days view">
             <p>Basic Days View</p>
         </th>
         <th>
-            <img src="doc/assets/BasicWeekView.png" width="280" title="Basic Week view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/BasicWeekView.png" width="280" title="Basic Week view">
             <p>Basic Week View</p>
         </th>
         <th>
-            <img src="doc/assets/BasicMonthView.png" width="280" title="Basic Month view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/BasicMonthView.png" width="280" title="Basic Month view">
             <p>Basic Month View</p>
         </th>
     </tr>
@@ -149,15 +149,15 @@ MonthView<T>(
 <table>
     <tr>
         <th>
-            <img src="doc/assets/DaysViewAddEventDynamically.gif" width="250" title="Basic Days view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/DaysViewAddEventDynamically.gif" width="250" title="Basic Days view">
             <p>Days View</p>
         </th>
         <th>
-            <img src="doc/assets/WeekViewAddEventDynamically.gif" width="250" title="Basic Week view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/WeekViewAddEventDynamically.gif" width="250" title="Basic Week view">
             <p>Week View</p>
         </th>
         <th>
-            <img src="doc/assets/MonthViewAddEventDynamically.gif" width="250" title="Basic Month view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/MonthViewAddEventDynamically.gif" width="250" title="Basic Month view">
             <p>Month View</p>
         </th>
     </tr>
@@ -241,15 +241,15 @@ Enhance the visual appeal of your calendar views by customizing various themes f
 <table>
     <tr>
         <th>
-            <img src="doc/assets/DaysViewTheme.png" width="280" title="Basic Days view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/DaysViewTheme.png" width="280" title="Basic Days view">
             <p>Days View</p>
         </th>
         <th>
-            <img src="doc/assets/WeekViewTheme.png" width="280" title="Basic Week view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/WeekViewTheme.png" width="280" title="Basic Week view">
             <p>Week View</p>
         </th>
         <th>
-            <img src="doc/assets/MonthViewTheme.png" width="280" title="Basic Month view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/MonthViewTheme.png" width="280" title="Basic Month view">
             <p>Month View</p>
         </th>
     </tr>
@@ -434,15 +434,15 @@ Effortlessly edit events dynamically in the calendar by utilizing the provided c
 <table>
     <tr>
         <th>
-            <img src="doc/assets/DaysViewEditEvent.gif" width="250" title="Basic Days view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/DaysViewEditEvent.gif" width="250" title="Basic Days view">
             <p>Days View</p>
         </th>
         <th>
-            <img src="doc/assets/WeekViewEditEvent.gif" width="250" title="Basic Week view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/WeekViewEditEvent.gif" width="250" title="Basic Week view">
             <p>Week View</p>
         </th>
         <th>
-            <img src="doc/assets/MonthViewEditEvent.gif" width="250" title="Basic Month view">
+            <img src="https://raw.githubusercontent.com/Radency/flutter_customizable_calendar/doc/assets/MonthViewEditEvent.gif" width="250" title="Basic Month view">
             <p>Month View</p>
         </th>
     </tr>

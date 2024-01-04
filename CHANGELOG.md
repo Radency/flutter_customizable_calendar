@@ -8,3 +8,8 @@
     * More tests.
     * More documentation.
     * More examples.
+
+## 0.1.1
+
+* Fix linter warnings.
+* Fix README images links.
