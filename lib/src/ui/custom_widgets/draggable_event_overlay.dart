@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
@@ -186,6 +187,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         eventBox.size.height,
       ),
     );
+    final rect = _boundsTween.end!;
+    _eventBounds.update(
+        dx: rect.left, dy: rect.top, width: rect.width, height: rect.height);
     _createEntriesFor(event);
     _animationController.forward();
 
@@ -402,8 +406,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         (event as EditableCalendarEvent).copyWith(duration: eventDuration) as T;
   }
 
-  void _animateBounds() =>
-      _eventBounds.value = _boundsTween.transform(_animation.value)!;
+  void _animateBounds() {
+    _eventBounds.value = _boundsTween.transform(_animation.value)!;
+  }
 
   void _initAnimationController() => _animationController = AnimationController(
         duration: _draggableEventTheme.animationDuration,
@@ -443,29 +448,24 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     super.didChangeMetrics();
 
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-      try {
-        final event = widget.event.value;
-        if (event == null) return;
-        final dayDate = DateUtils.dateOnly(event.start);
-        final layoutBox = widget.getLayoutBox(dayDate);
-        if (layoutBox == null) return;
-        final timelineBox = widget.getTimelineBox();
-        final layoutPosition =
-        layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+      final event = widget.event.value;
+      if (event == null) return;
+      final dayDate = DateUtils.dateOnly(event.start);
+      final layoutBox = widget.getLayoutBox(dayDate);
+      if (layoutBox == null) return;
+      final timelineBox = widget.getTimelineBox();
+      final layoutPosition =
+          layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
 
-        _eventBounds.update(
-          dx: layoutPosition.dx,
-          width: layoutBox.size.width,
-        );
-      } catch(Exception) {
-        print('---------Exception: $Exception');
-      }
+      _eventBounds.update(
+        dx: layoutPosition.dx,
+        width: layoutBox.size.width,
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    print(widget.getTimelineBox());
     return GestureDetector(
       onLongPressStart: (details) {
         if (!_dragging && !onEventLongPressStart(details)) {
@@ -473,6 +473,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
           if (dayDate != null) {
             widget.onDateLongPress?.call(dayDate);
           }
+        }
+        if (mounted) {
+          setState(() {});
         }
       },
       onLongPressMoveUpdate: onEventLongPressMoveUpdate,
@@ -605,13 +608,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   alignment: widget.saverConfig.alignment,
                   onPressed: () {
                     widget.onChanged?.call(widget.event.value!);
-                    _dropEvent(widget.event.value!);
+                    // _dropEvent(widget.event.value!);
+                    _edited = false;
+                    _removeEntries();
+                    widget.event.value = null;
+                    _resizing = false;
+                    _dragging = false;
                     if (mounted) {
-                      _edited = false;
-                      _removeEntries();
-                      widget.event.value = null;
-                      _resizing = false;
-                      _dragging = false;
                       setState(() {});
                     }
                   },

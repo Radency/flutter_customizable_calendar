@@ -59,7 +59,8 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
 
   @override
   void initState() {
-    widget.controller.timelineOffset = widget.controller.timelineOffset ?? _focusedDate.hour * _hourExtent;
+    widget.controller.timelineOffset =
+        widget.controller.timelineOffset ?? _focusedDate.hour * _hourExtent;
     _timelineController = ScrollController(
       initialScrollOffset:
           widget.controller.timelineOffset ?? _focusedDate.hour * _hourExtent,
