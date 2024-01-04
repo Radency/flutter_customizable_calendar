@@ -13,3 +13,7 @@
 
 * Fix linter warnings.
 * Fix README images links.
+
+## 0.1.3
+
+* Fix README images links.
