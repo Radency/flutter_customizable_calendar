@@ -29,7 +29,10 @@ class TimeScaleTheme extends Equatable {
     this.drawQuarterHourMarks = true,
     this.quarterHourMarkTheme = const TimeMarkTheme(length: 8),
     this.hourFormatter = _defaultHourFormatter,
-    this.textStyle,
+    this.textStyle = const TextStyle(
+      fontSize: 12,
+      color: Colors.black,
+    ),
     this.marksAlign = MarksAlign.left,
   });
 

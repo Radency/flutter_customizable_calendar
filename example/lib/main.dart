@@ -15,17 +15,16 @@ class App extends StatelessWidget {
     final today = DateUtils.dateOnly(DateTime.now());
     final breaks = List.generate(
       7,
-          (index) {
+      (index) {
         final dayDate =
-        DateUtils.addDaysToDate(today, index - today.weekday + 1);
+            DateUtils.addDaysToDate(today, index - today.weekday + 1);
         final isSunday = dayDate.weekday == DateTime.sunday;
 
         return Break(
           id: 'Break $index',
-          start:
-          isSunday ? dayDate : dayDate.add(const Duration(hours: 13)),
+          start: isSunday ? dayDate : dayDate.add(const Duration(hours: 13)),
           duration:
-          isSunday ? const Duration(days: 1) : const Duration(hours: 1),
+              isSunday ? const Duration(days: 1) : const Duration(hours: 1),
           color: Colors.grey.withOpacity(0.25),
         );
       },
@@ -70,18 +69,21 @@ class App extends StatelessWidget {
         ),
       child: MaterialApp(
         title: 'Flutter customizable calendar',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
           scaffoldBackgroundColor: Colors.blue.shade50,
         ),
-        home: CalendarPage(),
+        home: CalendarPage<FloatingCalendarEvent>(),
       ),
     );
   }
 }
 
 class CalendarPage<T extends FloatingCalendarEvent> extends StatefulWidget {
-  const CalendarPage({super.key,});
+  const CalendarPage({
+    super.key,
+  });
 
   @override
   State<CalendarPage<T>> createState() => _CalendarPageState<T>();
@@ -106,6 +108,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
 
   // The initial date is 1970-01-01 in local time
   static DateTime get _initialDate => DateTime(1970);
+
   static DateTime? get _endDate => null;
 
   Map<int, CalendarController> get _controllers => {
@@ -140,37 +143,36 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ListCubit, ListState>(
-      builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('Schedule'),
-            actions: [
-              CupertinoButton(
-                onPressed: () => _controllers[_tabController.index]?.reset(),
-                child: Text(
-                  'Now',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
+    return BlocBuilder<ListCubit, ListState>(builder: (context, state) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Schedule'),
+          backgroundColor: _theme.scaffoldBackgroundColor,
+          actions: [
+            CupertinoButton(
+              onPressed: () => _controllers[_tabController.index]?.reset(),
+              child: Text(
+                'Now',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
                 ),
               ),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              _calendarViewPicker(),
+              Expanded(child: _calendarViews()),
             ],
           ),
-          body: SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-                _calendarViewPicker(),
-                Expanded(child: _calendarViews()),
-              ],
-            ),
-          ),
-        );
-      }
-    );
+        ),
+      );
+    });
   }
 
   @override
@@ -247,268 +249,183 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
             ),
             breaks: listCubit.state.breaks.values.toList(),
             events: listCubit.state.events.values.cast<T>().toList(),
-            onDateLongPress: (timestamp) async {
-              print(timestamp);
-              final _minute = timestamp.minute;
-              return await showModalBottomSheet(
-                context: context,
-                builder: (context) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ListTile(
-                      title: Text("Simple Event"),
-                      onTap: (){
-                        T newItem = SimpleEvent(
-                          id: const Uuid().v1(),
-                          start: timestamp.subtract(Duration(minutes: _minute)),
-                          duration: Duration(hours: 1),
-                          title: "Simple event",
-                        ) as T;
-                        listCubit.save(newItem);
-                        Navigator.of(context).pop(newItem);
-                      },
-                    ),
-                    ListTile(
-                      title: Text("Task Due"),
-                      onTap: (){
-                        T newItem = TaskDue(
-                          id: const Uuid().v1(),
-                          start: timestamp.subtract(Duration(minutes: _minute)),
-                        ) as T;
-                        listCubit.save(newItem);
-                        Navigator.of(context).pop(newItem);
-                      },
-                    ),
-                    ListTile(
-                      title: Text("Break"),
-                      onTap: (){
-                        Break newItem = Break(
-                          id: const Uuid().v1(),
-                          start: timestamp.subtract(Duration(minutes: _minute)),
-                          duration: Duration(hours: 1),
-                        );
-                        listCubit.save(newItem);
-                        Navigator.of(context).pop(newItem);
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
+            onDateLongPress: _onDateLongPress,
             onEventTap: print,
-            onEventUpdated: (obj){
+            onEventUpdated: (obj) {
               print(obj);
               context.read<ListCubit>().save(obj);
             },
-            onDiscardChanges: (obj){
+            onDiscardChanges: (obj) {
               print(obj);
             },
           ),
-    ],
-  );
-
-  Widget _weekView() => WeekView<T>(
-        saverConfig: _saverConfig(),
-        controller: _weekViewController,
-        weekPickerTheme: _periodPickerTheme,
-        divider: Divider(
-          height: 2,
-          thickness: 2,
-          color: Colors.grey.withOpacity(0.33),
-        ),
-        daysRowTheme: DaysRowTheme(
-          weekdayStyle: _textStyle,
-          numberStyle: _textStyle.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: _theme.primaryColor,
-          ),
-        ),
-        timelineTheme: TimelineTheme(
-          padding: const EdgeInsets.symmetric(vertical: 32),
-          timeScaleTheme: TimeScaleTheme(
-            width: 48,
-            currentTimeMarkTheme: _currentTimeMarkTheme,
-            drawHalfHourMarks: false,
-            drawQuarterHourMarks: false,
-            hourFormatter: (time) => time.hour.toString(),
-            textStyle: _textStyle,
-            marksAlign: MarksAlign.center,
-          ),
-          floatingEventsTheme: _floatingEventsTheme,
-          draggableEventTheme: _draggableEventTheme,
-        ),
-        breaks: listCubit.state.breaks.values.toList(),
-        events: listCubit.state.events.values.cast<T>().toList(),
-        onDateLongPress: (timestamp) async {
-          print(timestamp);
-          final _minute = timestamp.minute;
-          return await showModalBottomSheet(
-            context: context,
-            builder: (context) => Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ListTile(
-                  title: Text("Simple Event"),
-                  onTap: (){
-                    T newItem = SimpleEvent(
-                      id: const Uuid().v1(),
-                      start: timestamp.subtract(Duration(minutes: _minute)),
-                      duration: Duration(hours: 1),
-                      title: "Simple event",
-                    ) as T;
-                    listCubit.save(newItem);
-                    Navigator.of(context).pop(newItem);
-                  },
-                ),
-                ListTile(
-                  title: Text("Task Due"),
-                  onTap: (){
-                    T newItem = TaskDue(
-                      id: const Uuid().v1(),
-                      start: timestamp.subtract(Duration(minutes: _minute)),
-                    ) as T;
-                    listCubit.save(newItem);
-                    Navigator.of(context).pop(newItem);
-                  },
-                ),
-                ListTile(
-                  title: Text("Break"),
-                  onTap: (){
-                    Break newItem = Break(
-                      id: const Uuid().v1(),
-                      start: timestamp.subtract(Duration(minutes: _minute)),
-                      duration: Duration(hours: 1),
-                    );
-                    listCubit.save(newItem);
-                    Navigator.of(context).pop(newItem);
-                  },
-                ),
-              ],
-            ),
-          );
-        },
-        onEventTap: print,
-        onEventUpdated: (obj){
-          print(obj);
-          context.read<ListCubit>().save(obj);
-        },
-        onDiscardChanges: (obj){
-          print(obj);
-        },
+        ],
       );
 
-  Widget _monthView() => MonthView<T>(
-    saverConfig: _saverConfig(),
-    controller: _monthViewController,
-    monthPickerTheme: _periodPickerTheme,
-    divider: Divider(
-      height: 2,
-      thickness: 2,
-      color: Colors.grey.withOpacity(0.33),
-      // color: Colors.green,
-    ),
-    daysRowTheme: DaysRowTheme(
-      weekdayStyle: _textStyle,
-      numberStyle: _textStyle.copyWith(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: _theme.primaryColor,
+  Widget _weekView() {
+    return WeekView<T>(
+      saverConfig: _saverConfig(),
+      controller: _weekViewController,
+      weekPickerTheme: _periodPickerTheme,
+      divider: Divider(
+        height: 2,
+        thickness: 2,
+        color: Colors.grey.withOpacity(0.33),
       ),
-    ),
-    timelineTheme: TimelineTheme(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      timeScaleTheme: TimeScaleTheme(
-        width: 48,
-        currentTimeMarkTheme: _currentTimeMarkTheme,
-        drawHalfHourMarks: false,
-        drawQuarterHourMarks: false,
-        hourFormatter: (time) => time.hour.toString(),
-        textStyle: _textStyle,
-        marksAlign: MarksAlign.center,
-      ),
-      floatingEventsTheme: _floatingEventsTheme,
-      draggableEventTheme: _draggableEventTheme,
-    ),
-    monthDayTheme: MonthDayTheme(
-      currentDayNumberTextStyle: TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
-      // currentDayColor: Colors.grey,
-      // dayColor: Colors.white,
-      // spacingColor: Colors.orange,
-      dayNumberHeight: 23,
-      dayNumberMargin: EdgeInsets.all(3),
-      dayNumberBackgroundColor: Colors.grey.withOpacity(0.3),
-    ),
-    breaks: listCubit.state.breaks.values.toList(),
-    events: listCubit.state.events.values.cast<T>().toList(),
-    onDateLongPress: (timestamp) async {
-      print(timestamp);
-      final _minute = timestamp.minute;
-      return await showModalBottomSheet(
-        context: context,
-        builder: (context) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ListTile(
-              title: Text("Simple Event"),
-              onTap: (){
-                T newItem = SimpleEvent(
-                  id: const Uuid().v1(),
-                  start: timestamp.subtract(Duration(minutes: _minute)),
-                  duration: Duration(hours: 1),
-                  title: "Simple event",
-                ) as T;
-                listCubit.save(newItem);
-                Navigator.of(context).pop(newItem);
-              },
-            ),
-            ListTile(
-              title: Text("Task Due"),
-              onTap: (){
-                T newItem = TaskDue(
-                  id: const Uuid().v1(),
-                  start: timestamp.subtract(Duration(minutes: _minute)),
-                ) as T;
-                listCubit.save(newItem);
-                Navigator.of(context).pop(newItem);
-              },
-            ),
-            ListTile(
-              title: Text("Break"),
-              onTap: (){
-                Break newItem = Break(
-                  id: const Uuid().v1(),
-                  start: timestamp.subtract(Duration(minutes: _minute)),
-                  duration: Duration(hours: 1),
-                );
-                listCubit.save(newItem);
-                Navigator.of(context).pop(newItem);
-              },
-            ),
-          ],
+      daysRowTheme: DaysRowTheme(
+        weekdayStyle: _textStyle,
+        numberStyle: _textStyle.copyWith(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: _theme.primaryColor,
         ),
-      );
-    },
-    onEventTap: print,
-    onEventUpdated: (obj){
-      print(obj);
-      context.read<ListCubit>().save(obj);
-    },
-    onDiscardChanges: (obj){
-      print(obj);
-    },
-  );
+      ),
+      timelineTheme: TimelineTheme(
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        timeScaleTheme: TimeScaleTheme(
+          width: 48,
+          currentTimeMarkTheme: _currentTimeMarkTheme,
+          drawHalfHourMarks: false,
+          drawQuarterHourMarks: false,
+          hourFormatter: (time) => time.hour.toString(),
+          textStyle: _textStyle,
+          marksAlign: MarksAlign.center,
+        ),
+        floatingEventsTheme: _floatingEventsTheme,
+        draggableEventTheme: _draggableEventTheme,
+      ),
+      breaks: listCubit.state.breaks.values.toList(),
+      events: listCubit.state.events.values.cast<T>().toList(),
+      onDateLongPress: _onDateLongPress,
+      onEventTap: print,
+      onEventUpdated: (obj) {
+        print(obj);
+        context.read<ListCubit>().save(obj);
+      },
+      onDiscardChanges: (obj) {
+        print(obj);
+      },
+    );
+  }
+
+  Widget _monthView() {
+    return MonthView<T>(
+      saverConfig: _saverConfig(),
+      controller: _monthViewController,
+      monthPickerTheme: _periodPickerTheme,
+      divider: Divider(
+        height: 2,
+        thickness: 2,
+        color: Colors.grey.withOpacity(0.33),
+        // color: Colors.green,
+      ),
+      daysRowTheme: DaysRowTheme(
+        weekdayStyle: _textStyle,
+        numberStyle: _textStyle.copyWith(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: _theme.primaryColor,
+        ),
+      ),
+      timelineTheme: TimelineTheme(
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        timeScaleTheme: TimeScaleTheme(
+          width: 48,
+          currentTimeMarkTheme: _currentTimeMarkTheme,
+          drawHalfHourMarks: false,
+          drawQuarterHourMarks: false,
+          hourFormatter: (time) => time.hour.toString(),
+          textStyle: _textStyle,
+          marksAlign: MarksAlign.center,
+        ),
+        floatingEventsTheme: _floatingEventsTheme,
+        draggableEventTheme: _draggableEventTheme,
+      ),
+      monthDayTheme: MonthDayTheme(
+        currentDayNumberTextStyle: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+        // currentDayColor: Colors.grey,
+        // dayColor: Colors.white,
+        // spacingColor: Colors.orange,
+        dayNumberHeight: 23,
+        dayNumberMargin: EdgeInsets.all(3),
+        dayNumberBackgroundColor: Colors.grey.withOpacity(0.3),
+      ),
+      breaks: listCubit.state.breaks.values.toList(),
+      events: listCubit.state.events.values.cast<T>().toList(),
+      onDateLongPress: _onDateLongPress,
+      onEventTap: print,
+      onEventUpdated: (obj) {
+        print(obj);
+        context.read<ListCubit>().save(obj);
+      },
+      onDiscardChanges: (obj) {
+        print(obj);
+      },
+    );
+  }
+
+  Future<CalendarEvent?> _onDateLongPress(DateTime timestamp) async {
+    print(timestamp);
+    final _minute = timestamp.minute;
+    return await showModalBottomSheet(
+      context: context,
+      builder: (context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(
+            height: 32,
+          ),
+          ListTile(
+            title: Text("Simple Event"),
+            onTap: () {
+              final T newItem = SimpleEvent(
+                id: const Uuid().v1(),
+                start: timestamp.subtract(Duration(minutes: _minute)),
+                duration: Duration(hours: 1),
+                title: "Simple event",
+              ) as T;
+              listCubit.save(newItem);
+              Navigator.of(context).pop(newItem);
+            },
+          ),
+          ListTile(
+            title: Text("Task Due"),
+            onTap: () {
+              final T newItem = TaskDue(
+                id: const Uuid().v1(),
+                start: timestamp.subtract(Duration(minutes: _minute)),
+              ) as T;
+              listCubit.save(newItem);
+              Navigator.of(context).pop(newItem);
+            },
+          ),
+          ListTile(
+            title: Text("Break"),
+            onTap: () {
+              final Break newItem = Break(
+                id: const Uuid().v1(),
+                start: timestamp.subtract(Duration(minutes: _minute)),
+                duration: Duration(hours: 1),
+              );
+              listCubit.save(newItem);
+              Navigator.of(context).pop(newItem);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
 
   SaverConfig _saverConfig() => SaverConfig(
-    child: Container(
-      color: Colors.transparent,
-      padding: EdgeInsets.all(15),
-      child: Icon(Icons.done)
-    ),
-  );
+        child: Container(
+            color: Colors.transparent,
+            padding: EdgeInsets.all(15),
+            child: Icon(Icons.done)),
+      );
 
   TextStyle get _textStyle => TextStyle(
         fontSize: 12,
@@ -526,6 +443,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         textStyle: TextStyle(
           color: _theme.primaryColor,
           fontWeight: FontWeight.w600,
+          backgroundColor: Colors.transparent,
         ),
       );
 

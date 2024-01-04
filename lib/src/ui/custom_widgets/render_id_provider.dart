@@ -5,8 +5,8 @@ import 'package:flutter/widgets.dart';
 class RenderIdProvider<T> extends SingleChildRenderObjectWidget {
   /// Creates [RenderId] object with given [id] which wraps the [child].
   const RenderIdProvider({
-    super.key,
     required this.id,
+    super.key,
     super.child,
   });
 

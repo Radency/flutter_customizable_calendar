@@ -6,7 +6,7 @@ part 'list_state.dart';
 class ListCubit extends Cubit<ListState> {
   ListCubit() : super(ListState(events: {}, breaks: {}));
 
-  void save(event) {
+  void save(CalendarEvent event) {
     if (event is Break) {
       emit(state.copyWith(breaks: state.breaks..[event.id] = event));
     }

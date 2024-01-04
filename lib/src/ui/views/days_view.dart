@@ -25,10 +25,13 @@ abstract class DaysViewKeys {
 
 /// Days view displays a timeline and has ability to move to a specific date.
 class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
-  /// Creates a Days view, [controller] is required.
+
+  /// Creates a Days view, Parameters [controller]
+  /// and [saverConfig] are required.
   const DaysView({
-    super.key,
+    required this.saverConfig,
     required this.controller,
+    super.key,
     this.monthPickerTheme = const DisplayedPeriodPickerTheme(),
     this.daysListTheme = const DaysListTheme(),
     this.timelineTheme = const TimelineTheme(),
@@ -39,7 +42,6 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onEventTap,
     this.onEventUpdated,
     this.onDiscardChanges,
-    required this.saverConfig,
   });
 
   /// Controller which allows to control the view
@@ -379,12 +381,15 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
                     return BlocBuilder<DaysViewController, DaysViewState>(
                       bloc: widget.controller,
-                      builder: (context, state) => DaysListItem(
-                        dayDate: dayDate,
-                        isFocused:
-                            DateUtils.isSameDay(state.focusedDate, dayDate),
-                        theme: theme.itemTheme,
-                        onTap: () => widget.controller.selectDay(dayDate),
+                      builder: (context, state) => Padding(
+                        padding: theme.padding,
+                        child: DaysListItem(
+                          dayDate: dayDate,
+                          isFocused:
+                              DateUtils.isSameDay(state.focusedDate, dayDate),
+                          theme: theme.itemTheme,
+                          onTap: () => widget.controller.selectDay(dayDate),
+                        ),
                       ),
                       buildWhen: (previous, current) =>
                           DateUtils.isSameDay(current.focusedDate, dayDate) ||
@@ -438,7 +443,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                     theme: theme.timeScaleTheme,
                   ),
                   Expanded(
-                    child: Container(
+                    child: ColoredBox(
                       color: Colors.transparent, // Needs for hitTesting
                       child: EventsLayout<T>(
                         dayDate: dayDate,

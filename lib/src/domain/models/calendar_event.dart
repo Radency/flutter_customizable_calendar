@@ -2,7 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
 /// Basic interface for all calendar events
-abstract class CalendarEvent extends Equatable with Comparable<CalendarEvent> {
+abstract class CalendarEvent extends Equatable
+    implements Comparable<CalendarEvent> {
   /// Create a calendar event with given unique [id] and params
   const CalendarEvent({
     required this.id,
@@ -111,8 +112,8 @@ class SimpleEvent extends EditableCalendarEvent {
     required super.id,
     required super.start,
     required super.duration,
-    super.color = Colors.white,
     required this.title,
+    super.color = Colors.white,
   });
 
   final String title;

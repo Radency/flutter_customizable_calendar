@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class Saver extends StatelessWidget {
   const Saver({
-    super.key,
     required this.onPressed,
     required this.child,
-    this.alignment = Alignment.bottomRight
+    super.key,
+    this.alignment = Alignment.bottomRight,
   });
 
   final Widget child;
@@ -26,8 +26,8 @@ class Saver extends StatelessWidget {
 
 class SaverConfig {
   const SaverConfig({
+    required this.child,
     this.alignment = Alignment.bottomRight,
-    required this.child
   });
 
   final Widget child;

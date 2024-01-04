@@ -10,9 +10,9 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
   /// Creates a view of given [event].
   const EventView(
     this.event, {
-    super.key,
     required this.theme,
     required this.viewType,
+    super.key,
     this.onTap,
   });
 
@@ -48,18 +48,19 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
 
   Map<Type, WidgetBuilder> get _createBody => {
         SimpleEvent: (context) => SimpleEventView(
-          event as SimpleEvent,
-          theme: _viewEventTheme,
-        ),
+              event as SimpleEvent,
+              theme: _viewEventTheme,
+              viewType: viewType,
+            ),
         TaskDue: (context) => TaskDueView(
-          event as TaskDue,
-          viewType: viewType,
-          theme: _viewEventTheme,
-        ),
+              event as TaskDue,
+              viewType: viewType,
+              theme: _viewEventTheme,
+            ),
       };
 
   ViewEventTheme get _viewEventTheme {
-    switch(viewType) {
+    switch (viewType) {
       case CalendarView.days:
         return theme.dayTheme;
       case CalendarView.week:

@@ -26,8 +26,9 @@ abstract class WeekViewKeys {
 class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Creates a Week view, [controller] is required.
   const WeekView({
-    super.key,
     required this.controller,
+    required this.saverConfig,
+    super.key,
     this.weekPickerTheme = const DisplayedPeriodPickerTheme(),
     this.divider,
     this.daysRowTheme = const DaysRowTheme(),
@@ -39,7 +40,6 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onEventTap,
     this.onEventUpdated,
     this.onDiscardChanges,
-    required this.saverConfig,
   });
 
   /// Controller which allows to control the view
@@ -98,12 +98,17 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   static DateTime get _now => clock.now();
 
   DateTime get _initialDate => widget.controller.initialDate;
+
   DateTime? get _endDate => widget.controller.endDate;
+
   DateTime get _focusedDate => widget.controller.state.focusedDate;
+
   DateTimeRange get _displayedWeek => widget.controller.state.displayedWeek;
+
   DateTimeRange get _initialWeek => _initialDate.weekRange;
 
   double get _hourExtent => widget.timelineTheme.timeScaleTheme.hourExtent;
+
   double get _dayExtent => _hourExtent * Duration.hoursPerDay;
 
   RenderBox? _getTimelineBox() =>
@@ -221,9 +226,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
                 curve: Curves.fastLinearToSlowEaseIn,
               );
             }
-            setState(() {
-
-            });
+            setState(() {});
           });
         } else if (state is WeekViewNextWeekSelected ||
             state is WeekViewPrevWeekSelected) {
@@ -234,11 +237,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               curve: Curves.linearToEaseOut,
             ),
           ]).whenComplete(() {
-            setState(() {
-
-            });
+            setState(() {});
           });
-
         }
       },
       child: Column(

@@ -2,4 +2,8 @@ include: package:very_good_analysis/analysis_options.yaml
 
 linter:
   rules:
+    public_member_api_docs: false
+    avoid_print: false
     sort_pub_dependencies: false
+    unnecessary_overrides: false
+    unnecessary_library_directive: false

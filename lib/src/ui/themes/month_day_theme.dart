@@ -57,19 +57,19 @@ class MonthDayTheme extends Equatable {
 
   @override
   List<Object?> get props => [
-    dayColor,
-    currentDayColor,
-    dayNumberBackgroundColor,
-    currentDayNumberBackgroundColor,
-    dayNumberTextStyle,
-    currentDayNumberTextStyle,
-    spacingColor,
-    crossAxisSpacing,
-    mainAxisSpacing,
-    dayNumberHeight,
-    dayNumberMargin,
-    dayNumberPadding,
-  ];
+        dayColor,
+        currentDayColor,
+        dayNumberBackgroundColor,
+        currentDayNumberBackgroundColor,
+        dayNumberTextStyle,
+        currentDayNumberTextStyle,
+        spacingColor,
+        crossAxisSpacing,
+        mainAxisSpacing,
+        dayNumberHeight,
+        dayNumberMargin,
+        dayNumberPadding,
+      ];
 
   /// Creates a copy of this theme but with the given fields replaced with
   /// the new values
@@ -90,10 +90,13 @@ class MonthDayTheme extends Equatable {
     return MonthDayTheme(
       dayColor: dayColor ?? this.dayColor,
       currentDayColor: currentDayColor ?? this.currentDayColor,
-      dayNumberBackgroundColor: dayNumberBackgroundColor ?? this.dayNumberBackgroundColor,
-      currentDayNumberBackgroundColor: currentDayNumberBackgroundColor ?? this.currentDayNumberBackgroundColor,
+      dayNumberBackgroundColor:
+          dayNumberBackgroundColor ?? this.dayNumberBackgroundColor,
+      currentDayNumberBackgroundColor: currentDayNumberBackgroundColor ??
+          this.currentDayNumberBackgroundColor,
       dayNumberTextStyle: dayNumberTextStyle ?? this.dayNumberTextStyle,
-      currentDayNumberTextStyle: currentDayNumberTextStyle ?? this.currentDayNumberTextStyle,
+      currentDayNumberTextStyle:
+          currentDayNumberTextStyle ?? this.currentDayNumberTextStyle,
       spacingColor: spacingColor ?? this.spacingColor,
       crossAxisSpacing: crossAxisSpacing ?? this.crossAxisSpacing,
       mainAxisSpacing: mainAxisSpacing ?? this.mainAxisSpacing,
