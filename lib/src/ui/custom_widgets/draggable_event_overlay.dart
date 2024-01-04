@@ -786,10 +786,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                     ),
                   ),
                 ),
-                if (widget.viewType != CalendarView.month &&
-                    event is EditableCalendarEvent)
-                  _sizerBuilder(context, rect.bottomCenter),
               ],
+            if (widget.viewType != CalendarView.month &&
+                event is EditableCalendarEvent)
+              _sizerBuilder(context, rect.bottomCenter)
           ],
         );
       },
