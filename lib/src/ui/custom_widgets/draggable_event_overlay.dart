@@ -328,6 +328,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       _removeEntries();
       widget.onDropped?.call(event);
     });
+    _dragging = false;
   }
 
   void _updateEventOriginAndStart() {
