@@ -225,10 +225,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _updateEventOriginAndStart();
     _updateDayOffsets(widget.event.value!);
     if (!_edited) {
+      _edited = true;
       if (mounted) {
-        setState(() {
-          _edited = true;
-        });
+        setState(() {});
       }
     }
   }
@@ -314,10 +313,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   void _dropEvent(T event) {
+    _edited = false;
     if (mounted) {
-      setState(() {
-        _edited = false;
-      });
+      setState(() {});
     }
 
     if (_animationController.isAnimating) _animationController.stop();
@@ -445,24 +443,29 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     super.didChangeMetrics();
 
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-      final event = widget.event.value;
-      if (event == null) return;
-      final dayDate = DateUtils.dateOnly(event.start);
-      final layoutBox = widget.getLayoutBox(dayDate);
-      if (layoutBox == null) return;
-      final timelineBox = widget.getTimelineBox();
-      final layoutPosition =
-          layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
+      try {
+        final event = widget.event.value;
+        if (event == null) return;
+        final dayDate = DateUtils.dateOnly(event.start);
+        final layoutBox = widget.getLayoutBox(dayDate);
+        if (layoutBox == null) return;
+        final timelineBox = widget.getTimelineBox();
+        final layoutPosition =
+        layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
 
-      _eventBounds.update(
-        dx: layoutPosition.dx,
-        width: layoutBox.size.width,
-      );
+        _eventBounds.update(
+          dx: layoutPosition.dx,
+          width: layoutBox.size.width,
+        );
+      } catch(Exception) {
+        print('---------Exception: $Exception');
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    print(widget.getTimelineBox());
     return GestureDetector(
       onLongPressStart: (details) {
         if (!_dragging && !onEventLongPressStart(details)) {
@@ -547,10 +550,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   _updateDayOffsets(widget.event.value!);
                 }
                 if (!_edited) {
+                  _edited = true;
                   if (mounted) {
-                    setState(() {
-                      _edited = true;
-                    });
+                    setState(() {});
                   }
                 }
               },
@@ -605,13 +607,12 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                     widget.onChanged?.call(widget.event.value!);
                     _dropEvent(widget.event.value!);
                     if (mounted) {
-                      setState(() {
-                        _edited = false;
-                        _removeEntries();
-                        widget.event.value = null;
-                        _resizing = false;
-                        _dragging = false;
-                      });
+                      _edited = false;
+                      _removeEntries();
+                      widget.event.value = null;
+                      _resizing = false;
+                      _dragging = false;
+                      setState(() {});
                     }
                   },
                   child: widget.saverConfig.child,

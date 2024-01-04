@@ -18,4 +18,7 @@ mixin CalendarController {
 
   /// Switches the view to display the next period
   void next();
+
+  /// Switches the view to display specific period
+  void setPage(int page);
 }
