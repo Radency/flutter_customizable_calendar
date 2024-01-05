@@ -65,7 +65,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatefulWidget {
   final MonthShowMoreTheme? showMoreTheme;
 
   /// The callback which is called when user taps on show more button
-  final void Function(List<T> events)? onShowMoreTap;
+  final void Function(List<T> events, DateTime day)? onShowMoreTap;
 
   final double? dayWidth;
 
@@ -82,15 +82,13 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
 
   double _eventsContainerHeight = 0;
 
-  static const double eventHeight = 24;
-
   MonthShowMoreTheme get _getShowMoreButtonTheme =>
       widget.showMoreTheme ?? const MonthShowMoreTheme();
 
   int get maxEvents => max(
         0,
         ((_eventsContainerHeight - _getShowMoreButtonTheme.height) /
-                eventHeight)
+                _getShowMoreButtonTheme.height)
             .floor(),
       );
 
@@ -177,6 +175,8 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
   }
 
   Widget _buildMonthViewEvents(List<T> eventsToDisplay) {
+    final filteredEventsToDisplay =
+        _getFilteredEventsToDisplay(eventsToDisplay);
     if (widget.onShowMoreTap != null) {
       return WidgetSize(
         onChange: (size) {
@@ -193,8 +193,8 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
           key: ValueKey(widget.controller),
           children: [
             ...eventsToDisplay.take(maxEvents).map(_buildMonthViewEventItem),
-            if (eventsToDisplay.length > maxEvents)
-              _buildShowMoreButton(eventsToDisplay),
+            if (filteredEventsToDisplay.length > maxEvents)
+              _buildShowMoreButton(filteredEventsToDisplay),
           ],
         ),
       );
@@ -207,6 +207,14 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
           _buildMonthViewEventItem(eventsToDisplay[index]),
       itemCount: eventsToDisplay.length,
     );
+  }
+
+  List<T> _getFilteredEventsToDisplay(List<T> eventsToDisplay) {
+    return eventsToDisplay.where((element) {
+      return DateUtils.dateOnly(element.start) ==
+              DateUtils.dateOnly(widget.dayDate) ||
+          widget.dayDate.weekday == 1;
+    }).toList();
   }
 
   Visibility _buildMonthViewEventItem(T event) {
@@ -238,7 +246,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
         alignment: Alignment.topLeft,
         child: Container(
           width: eventWidth,
-          height: 24,
+          height: _getShowMoreButtonTheme.eventHeight,
           margin: const EdgeInsets.only(
             bottom: 2,
           ),
@@ -267,10 +275,14 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
   }
 
   Widget _buildShowMoreButton(List<T> eventsToDisplay) {
+    if (eventsToDisplay.isEmpty) {
+      return Container();
+    }
+
     final theme = _getShowMoreButtonTheme;
     return InkWell(
       onTap: () {
-        widget.onShowMoreTap?.call(eventsToDisplay);
+        widget.onShowMoreTap?.call(eventsToDisplay, widget.dayDate);
       },
       child: Align(
         alignment: Alignment.topLeft,

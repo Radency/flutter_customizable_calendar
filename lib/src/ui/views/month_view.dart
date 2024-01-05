@@ -57,7 +57,7 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final MonthShowMoreTheme? showMoreTheme;
 
   /// The callback which is called when user taps on show more button
-  final void Function(List<T> events)? onShowMoreTap;
+  final void Function(List<T> events, DateTime day)? onShowMoreTap;
 
   /// A divider which separates the weekdays list and the month section.
   /// You can set it to null if you don't need it.

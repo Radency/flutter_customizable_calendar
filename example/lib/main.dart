@@ -313,8 +313,13 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       saverConfig: _saverConfig(),
       controller: _monthViewController,
       monthPickerTheme: _periodPickerTheme,
-      onShowMoreTap: (events) {
-        print(events);
+      eventBuilders: _getEventBuilders(),
+      onShowMoreTap: (events, day) {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => EventsListPage(
+                  events: events,
+                  day: day,
+                )));
       },
       divider: Divider(
         height: 2,
