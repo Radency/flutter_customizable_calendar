@@ -42,6 +42,7 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onEventTap,
     this.onEventUpdated,
     this.onDiscardChanges,
+    this.eventBuilders = const {},
   });
 
   /// Controller which allows to control the view
@@ -49,6 +50,9 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// The month picker customization params
   final DisplayedPeriodPickerTheme monthPickerTheme;
+
+  /// Event builders
+  final Map<Type, EventBuilder> eventBuilders;
 
   /// The days list customization params
   final DaysRowTheme daysRowTheme;
@@ -246,6 +250,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
               key: _overlayKey,
+              eventBuilders: widget.eventBuilders,
               viewType: CalendarView.month,
               timelineTheme: widget.timelineTheme,
               padding: EdgeInsets.only(
@@ -479,6 +484,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                           timelineTheme: widget.timelineTheme,
                           breaks: widget.breaks,
                           events: dayEventMap[dayDate] ?? [],
+                          eventBuilders: widget.eventBuilders,
                           elevatedEvent: _elevatedEvent,
                           onEventTap: widget.onEventTap,
                           viewType: CalendarView.month,

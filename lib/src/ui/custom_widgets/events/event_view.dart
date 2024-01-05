@@ -14,7 +14,11 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
     required this.viewType,
     super.key,
     this.onTap,
+    this.eventBuilders = const {},
   });
+
+  /// Custom event builders
+  final Map<Type, EventBuilder> eventBuilders;
 
   /// Calendar event
   final T event;
@@ -39,11 +43,20 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Builder(
-          builder: _createBody[event.runtimeType] ??
-              (context) => const SizedBox.shrink(),
+          builder: _getEventBuilder(event.runtimeType),
         ),
       ),
     );
+  }
+
+  WidgetBuilder _getEventBuilder(Type type) {
+    if (eventBuilders[type] == null) {
+      return _createBody[type]!;
+    }
+
+    return (context) {
+      return eventBuilders[type]!.call(context, event);
+    };
   }
 
   Map<Type, WidgetBuilder> get _createBody => {

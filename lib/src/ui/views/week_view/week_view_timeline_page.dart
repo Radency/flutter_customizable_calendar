@@ -20,6 +20,7 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
     required this.timelineKey,
     required this.layoutKeys,
     required this.eventKeys,
+    this.eventBuilders = const {},
     this.onEventTap,
     this.divider,
     super.key,
@@ -33,6 +34,8 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
   final FloatingEventNotifier<T> elevatedEvent;
   final List<Break> breaks;
   final List<T> events;
+
+  final Map<Type, EventBuilder> eventBuilders;
   final GlobalKey<DraggableEventOverlayState<T>> overlayKey;
   final WeekViewController controller;
   final List<DateTime> weekDays;
@@ -206,6 +209,7 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
           child: EventsLayout<T>(
             // key: ValueKey(dayDate),
             dayDate: dayDate,
+            eventBuilders: widget.eventBuilders,
             viewType: CalendarView.week,
             overlayKey: widget.overlayKey,
             layoutsKeys: widget.layoutKeys,

@@ -55,6 +55,12 @@ abstract class FloatingCalendarEvent extends CalendarEvent {
   FloatingCalendarEvent copyWith({DateTime? start});
 }
 
+/// Function definition which allows to use custom [T] events builders
+typedef EventBuilder<T extends CalendarEvent> = Widget Function(
+  BuildContext context,
+  T event,
+);
+
 /// Interface which allows to modify an event [start] date and it's [duration]
 abstract class EditableCalendarEvent extends FloatingCalendarEvent {
   /// Create a calendar event which allows to modify

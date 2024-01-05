@@ -42,6 +42,7 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onEventUpdated,
     this.onDiscardChanges,
     this.pageViewPhysics,
+    this.eventBuilders = const {},
   });
 
   /// Enable page view physics
@@ -49,6 +50,9 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Controller which allows to control the view
   final WeekViewController controller;
+
+  /// Event builders
+  final Map<Type, EventBuilder> eventBuilders;
 
   /// The month picker customization params
   final DisplayedPeriodPickerTheme weekPickerTheme;
@@ -260,6 +264,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               padding: EdgeInsets.only(
                 top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
               ),
+              eventBuilders: widget.eventBuilders,
               onDateLongPress: _onDateLongPress,
               onDragDown: _stopTimelineScrolling,
               onDragUpdate: _autoScrolling,
@@ -333,6 +338,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               timelineKey: WeekViewKeys.timeline = GlobalKey(),
               layoutKeys: WeekViewKeys.layouts,
               eventKeys: WeekViewKeys.events,
+              eventBuilders: widget.eventBuilders,
               constraints: constraints,
               weekDays: weekdays,
               theme: theme,

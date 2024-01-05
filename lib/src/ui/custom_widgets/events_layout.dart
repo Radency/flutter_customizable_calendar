@@ -23,12 +23,16 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatefulWidget {
     super.key,
     this.breaks = const [],
     this.events = const [],
+    this.eventBuilders = const {},
     this.showMoreTheme,
     this.onShowMoreTap,
     this.onEventTap,
     this.dayWidth,
     this.controller,
   });
+
+  /// Events builder
+  final Map<Type, EventBuilder> eventBuilders;
 
   /// A day which needs to be displayed
   final DateTime dayDate;
@@ -147,6 +151,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
                           child: child,
                         ),
                         child: EventView(
+                          eventBuilders: widget.eventBuilders,
                           key: _getEventKey(event),
                           event,
                           theme: widget.timelineTheme.floatingEventsTheme,
@@ -260,6 +265,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
               ),
               child: EventView(
                 key: _getEventKey(event),
+                eventBuilders: widget.eventBuilders,
                 event,
                 theme: widget.timelineTheme.floatingEventsTheme,
                 viewType: widget.viewType,

@@ -66,21 +66,22 @@ class EventsListPage extends StatelessWidget {
                                 )),
                           ],
                         ),
-                        Container(
-                          padding: EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              )
-                            ],
-                          ),
-                          child: Text(_formatEventDuration(event)),
-                        )
+                        if (event is SimpleEvent || event is ImageCalendarEvent)
+                          Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            child: Text(_formatEventDuration(event)),
+                          )
                       ],
                     )),
               );
@@ -94,7 +95,6 @@ class EventsListPage extends StatelessWidget {
 
     return '$hours h $minutes${minutes < 10 ? "0" : ""} min';
   }
-
 
   String _formatDateTime(DateTime dateTime) {
     final day = dateTime.day;
