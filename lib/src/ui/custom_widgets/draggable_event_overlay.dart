@@ -33,6 +33,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     required this.child,
     super.key,
     this.padding = EdgeInsets.zero,
+    this.eventBuilders = const {},
     this.onDragDown,
     this.onDragUpdate,
     this.onDragEnd,
@@ -42,6 +43,9 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     this.onChanged,
     this.onDateLongPress,
   });
+
+  /// Event builders
+  final Map<Type, EventBuilder> eventBuilders;
 
   /// Stream which allows to request event view's data update
   static final StreamController<int> eventUpdatesStreamController =
@@ -679,6 +683,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       widget.event.value!,
       key: DraggableEventOverlayKeys.elevatedEvent,
       viewType: widget.viewType,
+      eventBuilders: widget.eventBuilders,
       theme: widget.timelineTheme.floatingEventsTheme
           .copyWith(elevation: _draggableEventTheme.elevation),
     );

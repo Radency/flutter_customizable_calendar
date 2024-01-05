@@ -1,4 +1,6 @@
 import 'package:example/bloc/list_cubit/list_cubit.dart';
+import 'package:example/events_list_page.dart';
+import 'package:example/image_calendar_event.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,7 +31,16 @@ class App extends StatelessWidget {
         );
       },
     );
+
     final events = [
+      ImageCalendarEvent(
+        id: "Task1",
+        title: "Workout",
+        imgAsset: 'assets/images/gym.jpg',
+        start: today.add(Duration(hours: 13)),
+        duration: Duration(hours: 1),
+        color: Colors.black,
+      ),
       TaskDue(
         id: 'TaskDue 1',
         start: today.add(const Duration(hours: 13)),
@@ -55,7 +66,7 @@ class App extends StatelessWidget {
       SimpleEvent(
         id: 'Event 1',
         start: today.add(const Duration(hours: 38)),
-        duration: const Duration(hours: 4),
+        duration: const Duration(hours: 70),
         title: 'Event 1',
       ),
     ];
@@ -228,6 +239,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
             saverConfig: _saverConfig(),
             controller: _daysViewController,
             monthPickerTheme: _periodPickerTheme,
+            eventBuilders: _getEventBuilders(),
             daysListTheme: DaysListTheme(
               itemTheme: DaysListItemTheme(
                 foreground: _theme.primaryColor,
@@ -261,10 +273,48 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         ],
       );
 
+  Map<Type, EventBuilder<CalendarEvent>> _getEventBuilders() {
+    return {
+      ImageCalendarEvent: <CustomEvent>(context, event) => Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              image: DecorationImage(
+                image: AssetImage(event.imgAsset),
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+              ),
+            ),
+            child: Container(
+              color: Colors.black.withOpacity(0.1),
+              padding: const EdgeInsets.all(4),
+              child: Text(
+                event.title,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black,
+                      blurRadius: 8,
+                    ),
+                    Shadow(
+                      color: Colors.black45,
+                      blurRadius: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+    };
+  }
+
   Widget _weekView() {
     return WeekView<T>(
       saverConfig: _saverConfig(),
       controller: _weekViewController,
+      eventBuilders: _getEventBuilders(),
       pageViewPhysics: const BouncingScrollPhysics(),
       weekPickerTheme: _periodPickerTheme,
       divider: Divider(
@@ -313,8 +363,13 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       saverConfig: _saverConfig(),
       controller: _monthViewController,
       monthPickerTheme: _periodPickerTheme,
-      onShowMoreTap: (events) {
-        print(events);
+      eventBuilders: _getEventBuilders(),
+      onShowMoreTap: (events, day) {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => EventsListPage(
+                  events: events,
+                  day: day,
+                )));
       },
       divider: Divider(
         height: 2,
@@ -413,6 +468,21 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
                 start: timestamp.subtract(Duration(minutes: _minute)),
                 duration: Duration(hours: 1),
               );
+              listCubit.save(newItem);
+              Navigator.of(context).pop(newItem);
+            },
+          ),
+          ListTile(
+            title: Text("Image Event"),
+            onTap: () {
+              final T newItem = ImageCalendarEvent(
+                id: const Uuid().v1(),
+                start: timestamp.subtract(Duration(minutes: _minute)),
+                duration: Duration(hours: 1),
+                title: "Image event",
+                imgAsset: 'assets/images/gym.jpg',
+                color: Colors.black,
+              ) as T;
               listCubit.save(newItem);
               Navigator.of(context).pop(newItem);
             },

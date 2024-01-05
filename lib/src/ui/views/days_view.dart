@@ -37,6 +37,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.floatingEventTheme = const FloatingEventsTheme(),
     this.breaks = const [],
     this.events = const [],
+    this.eventBuilders = const {},
     this.onDateLongPress,
     this.onEventTap,
     this.onEventUpdated,
@@ -63,6 +64,9 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Events list to display
   final List<T> events;
+
+  /// Event builders
+  final Map<Type, EventBuilder> eventBuilders;
 
   /// Returns selected timestamp
   final Future<CalendarEvent?> Function(DateTime)? onDateLongPress;
@@ -96,11 +100,15 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   static DateTime get _now => clock.now();
 
   DateTime get _initialDate => widget.controller.initialDate;
+
   DateTime? get _endDate => widget.controller.endDate;
+
   DateTime get _displayedDate => widget.controller.state.displayedDate;
 
   double get _minuteExtent => _hourExtent / Duration.minutesPerHour;
+
   double get _hourExtent => widget.timelineTheme.timeScaleTheme.hourExtent;
+
   double get _dayExtent => _hourExtent * Duration.hoursPerDay;
 
   RenderBox? _getTimelineBox() =>
@@ -285,6 +293,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               _elevatedEvent,
               key: _overlayKey,
               viewType: CalendarView.days,
+              eventBuilders: widget.eventBuilders,
               timelineTheme: widget.timelineTheme,
               onDateLongPress: _onDateLongPress,
               onDragDown: _stopTimelineScrolling,
@@ -455,6 +464,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                         events: widget.events,
                         elevatedEvent: _elevatedEvent,
                         onEventTap: widget.onEventTap,
+                        eventBuilders: widget.eventBuilders,
                       ),
                     ),
                   ),
