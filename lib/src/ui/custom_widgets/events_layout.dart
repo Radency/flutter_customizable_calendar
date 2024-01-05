@@ -122,7 +122,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
 
     return RenderIdProvider(
       id: Constants.layoutId,
-      key: widget.layoutsKeys[widget.dayDate] ??= GlobalKey(),
+      key: _getLayoutKey(),
       child: !simpleView
           ? CustomMultiChildLayout(
               delegate: _EventsLayoutDelegate<T>(
@@ -177,6 +177,13 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
               child: _buildMonthViewEvents(eventsToDisplay),
             ),
     );
+  }
+
+  GlobalKey<State<StatefulWidget>> _getLayoutKey() {
+    if(widget.layoutsKeys.containsKey(widget.dayDate)) {
+      widget.layoutsKeys.remove(widget.dayDate);
+    }
+    return widget.layoutsKeys[widget.dayDate] ??= GlobalKey();
   }
 
   Widget _buildMonthViewEvents(List<T> eventsToDisplay) {

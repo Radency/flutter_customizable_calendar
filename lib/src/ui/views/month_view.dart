@@ -43,7 +43,11 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onEventUpdated,
     this.onDiscardChanges,
     this.eventBuilders = const {},
+    this.pageViewPhysics
   });
+
+  /// Enable page view physics
+  final ScrollPhysics? pageViewPhysics;
 
   /// Controller which allows to control the view
   final MonthViewController controller;
@@ -228,15 +232,22 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                 curve: Curves.linearToEaseOut,
               ),
           ]).whenComplete(() {
+            _requestDraggableEventOverlayUpdate();
             setState(() {});
           });
         } else if (state is MonthViewNextMonthSelected ||
             state is MonthViewPrevMonthSelected) {
-          _monthPickerController.animateToPage(
+          _monthPickerController
+              .animateToPage(
             displayedMonth,
             duration: const Duration(milliseconds: 300),
             curve: Curves.linearToEaseOut,
-          );
+          )
+              .then((value) {
+            _requestDraggableEventOverlayUpdate();
+          });
+        } else {
+          _requestDraggableEventOverlayUpdate();
         }
 
         if (displayedMonth != _monthPickerController.page?.round()) {
@@ -286,6 +297,12 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     super.dispose();
   }
 
+  void _requestDraggableEventOverlayUpdate() {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      DraggableEventOverlay.eventUpdatesStreamController.add(0);
+    });
+  }
+
   Widget _monthPicker() => BlocBuilder<MonthViewController, MonthViewState>(
         bloc: widget.controller,
         builder: (context, state) => DisplayedPeriodPicker(
@@ -312,9 +329,16 @@ class _MonthViewState<T extends FloatingCalendarEvent>
 
     return PageView.builder(
       controller: _monthPickerController,
-      physics: const NeverScrollableScrollPhysics(),
+      physics: widget.pageViewPhysics ?? const NeverScrollableScrollPhysics(),
+      onPageChanged: (pageIndex) {
+        widget.controller.setPage(pageIndex);
+      },
       itemBuilder: (context, pageIndex) {
-        final monthDays = _displayedMonth.days;
+        // final focusedMonthDays = _displayedMonth.days;
+        final monthDays = DateUtils.addMonthsToMonthDate(
+          widget.controller.initialDate,
+          pageIndex,
+        ).monthViewRange.days;
 
         return Padding(
           padding: EdgeInsets.only(
