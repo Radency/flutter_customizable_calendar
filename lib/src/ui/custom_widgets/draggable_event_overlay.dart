@@ -118,10 +118,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   late AnimationController _animationController;
   late Animation<double> _animation;
   late RectTween _boundsTween;
-  late DateTime _pointerTimePoint;
+  late DateTime _pointerTimePoint = DateTime.now();
   late Duration _startDiff = Duration.zero;
   var _pointerLocation = Offset.zero;
-  var _lastPointerLocation = Offset.zero;
   var _dragging = false;
   var _resizing = false;
   OverlayEntry? _eventEntry;
@@ -198,7 +197,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     );
     final rect = _boundsTween.end!;
     _eventBounds.update(
-        dx: rect.left, dy: rect.top, width: rect.width, height: rect.height);
+      dx: rect.left,
+      dy: rect.top,
+      width: rect.width,
+      height: rect.height,
+    );
     _createEntriesFor(event);
     _animationController.forward();
 
@@ -366,7 +369,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     final timelineBox = widget.getTimelineBox();
     final layoutPosition =
-        layoutBox!.localToGlobal(Offset.zero, ancestor: timelineBox);
+        layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
     final originTimePoint = _pointerTimePoint.subtract(_startDiff);
     final originDayDate = DateUtils.dateOnly(originTimePoint);
     final minutes = originTimePoint.minute +
@@ -464,9 +467,11 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         _pointerTimePoint =
             _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
         _updateEventOriginAndStart();
-        _updateDayOffsets(widget.event.value!);
+        if (widget.event.value != null) {
+          _updateDayOffsets(widget.event.value!);
+        }
         _updateEventHeightAndDuration();
-      } catch (Exception) {
+      } on Exception {
         // ignore
       }
     });
@@ -502,7 +507,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
           dx: layoutPosition.dx,
           width: layoutBox.size.width,
         );
-      } catch (Exception) {
+      } on Exception {
         // ignore
       }
     });
@@ -838,7 +843,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               ],
             if (widget.viewType != CalendarView.month &&
                 event is EditableCalendarEvent)
-              _sizerBuilder(context, rect.bottomCenter)
+              _sizerBuilder(context, rect.bottomCenter),
           ],
         );
       },

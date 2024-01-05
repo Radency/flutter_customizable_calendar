@@ -362,6 +362,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     return MonthView<T>(
       saverConfig: _saverConfig(),
       controller: _monthViewController,
+      pageViewPhysics: BouncingScrollPhysics(),
       monthPickerTheme: _periodPickerTheme,
       eventBuilders: _getEventBuilders(),
       onShowMoreTap: (events, day) {

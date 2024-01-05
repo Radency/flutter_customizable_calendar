@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
@@ -99,7 +98,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     with SingleTickerProviderStateMixin {
   final _overlayKey = GlobalKey<DraggableEventOverlayState<T>>();
   final _elevatedEvent = FloatingEventNotifier<T>();
-  late final PageController _weekPickerController;
+  PageController? _weekPickerController;
   var _pointerLocation = Offset.zero;
   var _scrolling = false;
   ScrollController? _timelineController;
@@ -156,7 +155,12 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         timelineScrollPosition.minScrollExtent,
       );
     } else {
-      final weekPickerPosition = _weekPickerController.position;
+      final weekPickerPosition = _weekPickerController?.position;
+
+      if (weekPickerPosition == null) {
+        _scrolling = false;
+        return;
+      }
 
       // Checking if scroll is finished
       if (!weekPickerPosition.isScrollingNotifier.value) {
@@ -210,8 +214,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
         if (state is WeekViewCurrentWeekIsSet) {
           Future.wait([
-            if (weeksOffset != _weekPickerController.page?.round())
-              _weekPickerController.animateToPage(
+            if (weeksOffset != _weekPickerController?.page?.round())
+              _weekPickerController!.animateToPage(
                 weeksOffset,
                 duration: const Duration(milliseconds: 400),
                 curve: Curves.linearToEaseOut,
@@ -241,7 +245,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         } else if (state is WeekViewNextWeekSelected ||
             state is WeekViewPrevWeekSelected) {
           Future.wait([
-            _weekPickerController.animateToPage(
+            _weekPickerController!.animateToPage(
               weeksOffset,
               duration: const Duration(milliseconds: 300),
               curve: Curves.linearToEaseOut,
@@ -294,7 +298,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   @override
   void dispose() {
     _elevatedEvent.dispose();
-    _weekPickerController.dispose();
+    _weekPickerController?.dispose();
     _timelineController?.dispose();
     super.dispose();
   }
@@ -323,6 +327,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   Widget _weekTimeline() {
     final theme = widget.timelineTheme;
 
+    _weekPickerController?.dispose();
+    _weekPickerController = PageController(
+      initialPage: _displayedWeek.start.difference(_initialWeek.start).inWeeks,
+    );
+
     return PageView.builder(
       controller: _weekPickerController,
       onPageChanged: (pageIndex) {
@@ -330,7 +339,10 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
       },
       physics: widget.pageViewPhysics ?? const NeverScrollableScrollPhysics(),
       itemBuilder: (context, pageIndex) {
-        final weekdays = widget.controller.state.displayedWeek.days;
+        final weekdays = DateUtils.addDaysToDate(
+          widget.controller.initialDate,
+          pageIndex * 7,
+        ).weekRange.days;
 
         return LayoutBuilder(
           builder: (context, constraints) {

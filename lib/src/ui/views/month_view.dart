@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:clock/clock.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
@@ -43,7 +44,11 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onEventUpdated,
     this.onDiscardChanges,
     this.eventBuilders = const {},
+    this.pageViewPhysics,
   });
+
+  /// Enable page view physics
+  final ScrollPhysics? pageViewPhysics;
 
   /// Controller which allows to control the view
   final MonthViewController controller;
@@ -105,7 +110,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     extends State<MonthView<T>> {
   final _overlayKey = GlobalKey<DraggableEventOverlayState<T>>();
   final _elevatedEvent = FloatingEventNotifier<T>();
-  late final PageController _monthPickerController;
+  PageController? _monthPickerController;
   var _pointerLocation = Offset.zero;
   var _scrolling = false;
   Map<DateTime, List<T>> dayEventMap = {};
@@ -164,8 +169,12 @@ class _MonthViewState<T extends FloatingCalendarEvent>
         monthListScrollPosition.minScrollExtent,
       );
     } else {
-      final monthPickerPosition = _monthPickerController.position;
+      final monthPickerPosition = _monthPickerController?.position;
 
+      if (monthPickerPosition == null) {
+        _scrolling = false;
+        return;
+      }
       // Checking if scroll is finished
       if (!monthPickerPosition.isScrollingNotifier.value) {
         if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
@@ -217,29 +226,39 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     return BlocListener<MonthViewController, MonthViewState>(
       bloc: widget.controller,
       listener: (context, state) {
-        final displayedMonth = DateUtils.monthDelta(_initialDate, _monthDate);
+        final displayedMonth = DateUtils.monthDelta(
+          widget.controller.initialDate,
+          state.focusedDate,
+        );
 
         if (state is MonthViewCurrentMonthIsSet) {
           Future.wait([
-            if (displayedMonth != _monthPickerController.page?.round())
-              _monthPickerController.animateToPage(
+            if (displayedMonth != _monthPickerController?.page?.round())
+              _monthPickerController!.animateToPage(
                 displayedMonth,
                 duration: const Duration(milliseconds: 400),
                 curve: Curves.linearToEaseOut,
               ),
           ]).whenComplete(() {
+            _requestDraggableEventOverlayUpdate();
             setState(() {});
           });
         } else if (state is MonthViewNextMonthSelected ||
             state is MonthViewPrevMonthSelected) {
-          _monthPickerController.animateToPage(
+          _monthPickerController
+              ?.animateToPage(
             displayedMonth,
             duration: const Duration(milliseconds: 300),
             curve: Curves.linearToEaseOut,
-          );
+          )
+              .then((value) {
+            _requestDraggableEventOverlayUpdate();
+          });
+        } else {
+          _requestDraggableEventOverlayUpdate();
         }
 
-        if (displayedMonth != _monthPickerController.page?.round()) {
+        if (displayedMonth != _monthPickerController?.page?.round()) {
           _initDailyEventsAndControllers();
         }
       },
@@ -283,7 +302,14 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   void dispose() {
     _forward.dispose();
     _backward.dispose();
+    _monthPickerController?.dispose();
     super.dispose();
+  }
+
+  void _requestDraggableEventOverlayUpdate() {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      DraggableEventOverlay.eventUpdatesStreamController.add(0);
+    });
   }
 
   Widget _monthPicker() => BlocBuilder<MonthViewController, MonthViewState>(
@@ -310,13 +336,26 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   Widget _monthSection() {
     final theme = widget.timelineTheme;
 
+    _monthPickerController?.dispose();
+    _monthPickerController = PageController(
+      initialPage: DateUtils.monthDelta(_initialDate, _monthDate),
+    );
+
     return PageView.builder(
       controller: _monthPickerController,
-      physics: const NeverScrollableScrollPhysics(),
+      physics: widget.pageViewPhysics ?? const NeverScrollableScrollPhysics(),
+      onPageChanged: (pageIndex) {
+        widget.controller.setPage(pageIndex);
+      },
+      dragStartBehavior: DragStartBehavior.down,
       itemBuilder: (context, pageIndex) {
-        final monthDays = _displayedMonth.days;
+        final monthDays = DateUtils.addMonthsToMonthDate(
+          widget.controller.initialDate,
+          pageIndex,
+        ).monthViewRange.days;
 
         return Padding(
+          key: ValueKey(widget.controller.state.focusedDate),
           padding: EdgeInsets.only(
             left: theme.padding.left,
             right: theme.padding.right,

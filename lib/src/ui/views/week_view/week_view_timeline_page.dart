@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
@@ -55,8 +53,6 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
   DateTime get _focusedDate => widget.controller.state.focusedDate;
 
   double get _hourExtent => widget.theme.timeScaleTheme.hourExtent;
-
-  double get _dayExtent => _hourExtent * Duration.hoursPerDay;
 
   static DateTime get _now => clock.now();
 
