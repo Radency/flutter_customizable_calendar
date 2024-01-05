@@ -71,6 +71,9 @@ class MonthViewController extends Cubit<MonthViewState>
     final now = clock.now();
     final focusedDate = DateUtils.addMonthsToMonthDate(initialDate, page);
     final isCurrentMonth = DateUtils.isSameMonth(focusedDate, now);
+    if (DateUtils.isSameMonth(focusedDate, state.focusedDate)) {
+      return;
+    }
     emit(
       MonthViewCurrentMonthIsSet(
         focusedDate: isCurrentMonth ? now : focusedDate,
