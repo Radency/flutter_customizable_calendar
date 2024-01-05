@@ -55,7 +55,7 @@ class App extends StatelessWidget {
       SimpleEvent(
         id: 'Event 1',
         start: today.add(const Duration(hours: 38)),
-        duration: const Duration(hours: 70),
+        duration: const Duration(hours: 4),
         title: 'Event 1',
       ),
     ];
@@ -265,6 +265,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     return WeekView<T>(
       saverConfig: _saverConfig(),
       controller: _weekViewController,
+      pageViewPhysics: const BouncingScrollPhysics(),
       weekPickerTheme: _periodPickerTheme,
       divider: Divider(
         height: 2,
@@ -312,6 +313,9 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       saverConfig: _saverConfig(),
       controller: _monthViewController,
       monthPickerTheme: _periodPickerTheme,
+      onShowMoreTap: (events) {
+        print(events);
+      },
       divider: Divider(
         height: 2,
         thickness: 2,
@@ -348,7 +352,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         // currentDayColor: Colors.grey,
         // dayColor: Colors.white,
         // spacingColor: Colors.orange,
-        dayNumberHeight: 23,
+        dayNumberHeight: 24,
         dayNumberMargin: EdgeInsets.all(3),
         dayNumberBackgroundColor: Colors.grey.withOpacity(0.3),
       ),

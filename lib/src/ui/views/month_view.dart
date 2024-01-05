@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/custom/custom_linked_scroll_controller.dart';
+import 'package:flutter_customizable_calendar/src/ui/themes/month_show_more_theme.dart';
 import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.dart';
 
 /// A key holder of all MonthView keys
@@ -33,6 +34,8 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.timelineTheme = const TimelineTheme(),
     this.floatingEventTheme = const FloatingEventsTheme(),
     this.monthDayTheme = const MonthDayTheme(),
+    this.showMoreTheme = const MonthShowMoreTheme(),
+    this.onShowMoreTap,
     this.breaks = const [],
     this.events = const [],
     this.onDateLongPress,
@@ -49,6 +52,12 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// The days list customization params
   final DaysRowTheme daysRowTheme;
+
+  /// The theme of show more button
+  final MonthShowMoreTheme? showMoreTheme;
+
+  /// The callback which is called when user taps on show more button
+  final void Function(List<T> events)? onShowMoreTap;
 
   /// A divider which separates the weekdays list and the month section.
   /// You can set it to null if you don't need it.
@@ -474,6 +483,8 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                           onEventTap: widget.onEventTap,
                           viewType: CalendarView.month,
                           dayWidth: maxWidth / 13,
+                          showMoreTheme: widget.showMoreTheme,
+                          onShowMoreTap: widget.onShowMoreTap,
                           controller: dayControllerMap[dayDate],
                         ),
                       ),
