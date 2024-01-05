@@ -21,6 +21,7 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
 
   @override
   final DateTime? endDate;
+  double? timelineOffset;
 
   @override
   void dispose() => close();
@@ -63,6 +64,35 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
       emit(
         WeekViewNextWeekSelected(
           focusedDate: isCurrentWeek ? now : nextWeek,
+        ),
+      );
+    }
+  }
+
+  @override
+  void setPage(int page) {
+    final now = clock.now();
+
+    final pageDate = DateUtils.addDaysToDate(
+      initialDate,
+      page * 7,
+    );
+    final focusedDate = DateTime(
+      pageDate.year,
+      pageDate.month,
+      pageDate.day,
+    );
+    final isCurrentWeek = focusedDate.isSameWeekAs(now);
+    if (focusedDate.isBefore(state.focusedDate)) {
+      emit(
+        WeekViewPrevWeekSelected(
+          focusedDate: isCurrentWeek ? now : focusedDate,
+        ),
+      );
+    } else {
+      emit(
+        WeekViewNextWeekSelected(
+          focusedDate: isCurrentWeek ? now : focusedDate,
         ),
       );
     }
