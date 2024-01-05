@@ -25,13 +25,17 @@ class _WidgetSizeState extends State<WidgetSize> {
   Size? _oldSize;
 
   void _postFrameCallback(_) {
-    final context = _widgetKey.currentContext;
-    if (context == null) return;
+    try {
+      final context = _widgetKey.currentContext;
+      if (context == null) return;
 
-    final newSize = context.size;
-    if (_oldSize == newSize) return;
+      final newSize = context.size;
+      if (_oldSize == newSize) return;
 
-    _oldSize = newSize;
-    widget.onChange(newSize);
+      _oldSize = newSize;
+      widget.onChange(newSize);
+    } on Exception {
+      // ignore
+    }
   }
 }

@@ -330,7 +330,10 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
       },
       physics: widget.pageViewPhysics ?? const NeverScrollableScrollPhysics(),
       itemBuilder: (context, pageIndex) {
-        final weekdays = widget.controller.state.displayedWeek.days;
+        final weekdays = DateUtils.addDaysToDate(
+          widget.controller.initialDate,
+          pageIndex * 7,
+        ).weekRange.days;
 
         return LayoutBuilder(
           builder: (context, constraints) {
