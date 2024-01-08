@@ -239,6 +239,10 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
             saverConfig: _saverConfig(),
             controller: _daysViewController,
             monthPickerTheme: _periodPickerTheme,
+            overrideOnEventLongPress: (details, event) {
+              // ignore
+              print(event);
+            },
             eventBuilders: _getEventBuilders(),
             daysListTheme: DaysListTheme(
               itemTheme: DaysListItemTheme(
@@ -317,6 +321,10 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       eventBuilders: _getEventBuilders(),
       pageViewPhysics: const BouncingScrollPhysics(),
       weekPickerTheme: _periodPickerTheme,
+      overrideOnEventLongPress: (details, event) {
+        // ignore
+        print(event);
+      },
       divider: Divider(
         height: 2,
         thickness: 2,
@@ -362,6 +370,10 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     return MonthView<T>(
       saverConfig: _saverConfig(),
       controller: _monthViewController,
+      overrideOnEventLongPress: (details, event) {
+        // ignore
+        print(event);
+      },
       pageViewPhysics: BouncingScrollPhysics(),
       monthPickerTheme: _periodPickerTheme,
       eventBuilders: _getEventBuilders(),

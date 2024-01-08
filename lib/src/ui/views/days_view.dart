@@ -31,6 +31,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
     required this.saverConfig,
     required this.controller,
     super.key,
+    this.overrideOnEventLongPress,
     this.monthPickerTheme = const DisplayedPeriodPickerTheme(),
     this.daysListTheme = const DaysListTheme(),
     this.timelineTheme = const TimelineTheme(),
@@ -70,6 +71,10 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Returns selected timestamp
   final Future<CalendarEvent?> Function(DateTime)? onDateLongPress;
+
+  /// Overrides the default behavior of the event view's long press
+  final void Function(LongPressStartDetails details, T event)?
+      overrideOnEventLongPress;
 
   /// Returns the tapped event
   final void Function(T)? onEventTap;
@@ -292,6 +297,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
               key: _overlayKey,
+              onEventLongPressStart: widget.overrideOnEventLongPress,
               viewType: CalendarView.days,
               eventBuilders: widget.eventBuilders,
               timelineTheme: widget.timelineTheme,
