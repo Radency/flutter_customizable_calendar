@@ -42,6 +42,7 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onDiscardChanges,
     this.pageViewPhysics,
     this.eventBuilders = const {},
+    this.overrideOnEventLongPress,
   });
 
   /// Enable page view physics
@@ -52,6 +53,10 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Event builders
   final Map<Type, EventBuilder> eventBuilders;
+
+  /// Overrides the default behavior of the event view's long press
+  final void Function(LongPressStartDetails details, T event)?
+      overrideOnEventLongPress;
 
   /// The month picker customization params
   final DisplayedPeriodPickerTheme weekPickerTheme;
@@ -263,6 +268,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
               key: _overlayKey,
+              onEventLongPressStart: widget.overrideOnEventLongPress,
               viewType: CalendarView.week,
               timelineTheme: widget.timelineTheme,
               padding: EdgeInsets.only(

@@ -34,6 +34,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     super.key,
     this.padding = EdgeInsets.zero,
     this.eventBuilders = const {},
+    this.onEventLongPressStart,
     this.onDragDown,
     this.onDragUpdate,
     this.onDragEnd,
@@ -65,6 +66,10 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
 
   /// Is called just after user start to interact with the event view
   final void Function()? onDragDown;
+
+  /// Overrides the default behavior of the event view's long press
+  final void Function(LongPressStartDetails details, T event)?
+      onEventLongPressStart;
 
   /// Is called when user tap outside events
   final void Function(DateTime)? onDateLongPress;
@@ -142,6 +147,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   bool _edited = false;
   List<Rect> _rects = [];
   bool _scrolling = false;
+
+  T? _getEventAt(Offset globalPosition) {
+    final renderIds = _timelineHitTest(globalPosition);
+    final targets = renderIds.whereType<RenderId<T>>();
+
+    return targets.isNotEmpty ? targets.first.id : null;
+  }
 
   /// Needs to make interaction between a timeline and the overlay
   bool onEventLongPressStart(LongPressStartDetails details) {
@@ -516,7 +528,15 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onLongPressStart: (details) {
+      onLongPressStart: (LongPressStartDetails details) {
+        if (widget.onEventLongPressStart != null) {
+          final event = _getEventAt(details.globalPosition);
+          if (event != null) {
+            widget.onEventLongPressStart!(details, event);
+            return;
+          }
+        }
+
         if (!_dragging && !onEventLongPressStart(details)) {
           final dayDate = _getTimePointAt(details.globalPosition);
           if (dayDate != null) {

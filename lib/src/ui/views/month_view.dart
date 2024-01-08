@@ -45,6 +45,7 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onDiscardChanges,
     this.eventBuilders = const {},
     this.pageViewPhysics,
+    this.overrideOnEventLongPress,
   });
 
   /// Enable page view physics
@@ -89,6 +90,10 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Returns selected timestamp
   final Future<CalendarEvent?> Function(DateTime)? onDateLongPress;
+
+  /// Overrides the default behavior of the event view's long press
+  final void Function(LongPressStartDetails details, T event)?
+      overrideOnEventLongPress;
 
   /// Returns the tapped event
   final void Function(T)? onEventTap;
@@ -269,6 +274,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
               key: _overlayKey,
+              onEventLongPressStart: widget.overrideOnEventLongPress,
               eventBuilders: widget.eventBuilders,
               viewType: CalendarView.month,
               timelineTheme: widget.timelineTheme,
