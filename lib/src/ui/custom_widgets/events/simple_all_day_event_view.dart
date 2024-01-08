@@ -19,16 +19,13 @@ class SimpleAllDayEventView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Container(
-        padding: theme.eventMargin,
-        child: Text(
-          event.title,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textStyle,
-          maxLines: _getTextMaxLines(),
-        ),
+    return Container(
+      padding: theme.eventMargin,
+      child: Text(
+        event.title,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textStyle,
+        maxLines: _getTextMaxLines(),
       ),
     );
   }

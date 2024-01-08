@@ -37,14 +37,63 @@ class App extends StatelessWidget {
         id: 'All-day 1',
         start: today,
         duration: const Duration(days: 2),
-        title: 'Event 5',
+        title: 'Event 1',
         color: Colors.redAccent.shade200,
       ),
+      // SimpleAllDayEvent(
+      //   id: 'All-day 2',
+      //   start: today.add(Duration(days: 2)),
+      //   duration: const Duration(days: 6),
+      //   title: 'Event 2',
+      //   color: Colors.greenAccent.shade200,
+      // ),
       SimpleAllDayEvent(
-        id: 'All-day 2',
+        id: 'All-day 3',
+        start: today.add(Duration(days: 2)),
+        duration: const Duration(days: 2),
+        title: 'Event 3',
+        color: Colors.greenAccent.shade200,
+      ),
+      SimpleAllDayEvent(
+        id: 'All-day 4',
+        start: today.add(Duration(days: 2)),
+        duration: const Duration(days: 2),
+        title: 'Event 4',
+        color: Colors.greenAccent.shade200,
+      ),
+      SimpleAllDayEvent(
+        id: 'All-day 5',
         start: today,
         duration: const Duration(days: 2),
+        title: 'Event 5',
+        color: Colors.greenAccent.shade200,
+      ),
+      SimpleAllDayEvent(
+        id: 'All-day 6',
+        start: today.add(Duration(days: 4)),
+        duration: const Duration(days: 4),
         title: 'Event 6',
+        color: Colors.greenAccent.shade200,
+      ),
+      SimpleAllDayEvent(
+        id: 'All-day 7',
+        start: today.add(Duration(days: 4)),
+        duration: const Duration(days: 1),
+        title: 'Event 7',
+        color: Colors.greenAccent.shade200,
+      ),
+      SimpleAllDayEvent(
+        id: 'All-day 8',
+        start: today.add(Duration(days: 5)),
+        duration: const Duration(days: 3),
+        title: 'Event 8',
+        color: Colors.greenAccent.shade200,
+      ),
+      SimpleAllDayEvent(
+        id: 'All-day 9',
+        start: today,
+        duration: const Duration(days: 7),
+        title: 'Event 9',
         color: Colors.greenAccent.shade200,
       ),
       ImageCalendarEvent(
@@ -369,11 +418,46 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       controller: _weekViewController,
       eventBuilders: _getEventBuilders(),
       pageViewPhysics: const BouncingScrollPhysics(),
+      allDayEventsTheme: AllDayEventsTheme(listMaxRowsVisible: 2),
       weekPickerTheme: _periodPickerTheme,
       overrideOnEventLongPress: (details, event) {
         // ignore
         print(event);
       },
+      onAllDayEventsShowMoreTap: (visibleEvents, events) {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => EventsListPage(
+                  events: events,
+                  day: events.first.start,
+                )));
+      },
+      onAllDayEventTap: print,
+      allDayEventsShowMoreBuilder: (visibleEvents, events) => GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => EventsListPage(
+                    events: events,
+                    day: events.first.start,
+                  )));
+        },
+        child: Container(
+          margin: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(4),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            'Show more (${events.length - visibleEvents.length})',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _theme.primaryColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
       divider: Divider(
         height: 2,
         thickness: 2,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/events/events.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/events/simple_all_day_event_view.dart';
-import 'package:flutter_customizable_calendar/src/ui/themes/all_day_events_theme.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/enums.dart';
 

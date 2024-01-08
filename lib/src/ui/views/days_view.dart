@@ -8,7 +8,6 @@ import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/controllers/controllers.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/all_days_events_list.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
-import 'package:flutter_customizable_calendar/src/ui/themes/all_day_events_theme.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
@@ -70,15 +69,19 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final AllDayEventsTheme allDayEventsTheme;
 
   /// On all day events show more tap callback
-  final void Function(List<AllDayCalendarEvent> visibleEvents,
-      List<AllDayCalendarEvent> events)? onAllDayEventsShowMoreTap;
+  final void Function(
+    List<AllDayCalendarEvent> visibleEvents,
+    List<AllDayCalendarEvent> events,
+  )? onAllDayEventsShowMoreTap;
 
   /// On all day event tap callback
   final void Function(AllDayCalendarEvent event)? onAllDayEventTap;
 
   /// Builder for all day events show more button
-  final Widget Function(List<AllDayCalendarEvent> visibleEvents,
-      List<AllDayCalendarEvent> events)? allDayEventsShowMoreBuilder;
+  final Widget Function(
+    List<AllDayCalendarEvent> visibleEvents,
+    List<AllDayCalendarEvent> events,
+  )? allDayEventsShowMoreBuilder;
 
   /// Breaks list to display
   final List<Break> breaks;
@@ -381,12 +384,17 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   Widget _allDayEvents() {
     final theme = widget.allDayEventsTheme;
 
-    return AllDaysEventsList(
-      theme: theme,
-      allDayEvents: allDayEvents,
-      onShowMoreTap: widget.onAllDayEventsShowMoreTap,
-      showMoreBuilder: widget.allDayEventsShowMoreBuilder,
-      onEventTap: widget.onAllDayEventTap,
+    return SizedBox(
+      width: double.maxFinite,
+      child: AllDaysEventsList(
+        theme: theme,
+        allDayEvents: allDayEvents,
+        onShowMoreTap: widget.onAllDayEventsShowMoreTap,
+        showMoreBuilder: widget.allDayEventsShowMoreBuilder,
+        onEventTap: widget.onAllDayEventTap,
+        width: MediaQuery.of(context).size.width,
+        view: CalendarView.days,
+      ),
     );
   }
 

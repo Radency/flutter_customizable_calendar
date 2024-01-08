@@ -18,7 +18,7 @@ class AllDayEventsTheme {
       horizontal: 8,
     ),
     this.borderRadius,
-    this.listMaxVisible = 1,
+    this.listMaxRowsVisible = 2,
     this.eventHeight = 28,
     this.showMoreButtonTheme = const AllDayEventsShowMoreButtonTheme(),
     this.elevation,
@@ -30,8 +30,8 @@ class AllDayEventsTheme {
 
   final AllDayEventsShowMoreButtonTheme showMoreButtonTheme;
 
-  /// Max number of events to show
-  final int listMaxVisible;
+  /// Max number of rows to show
+  final int listMaxRowsVisible;
 
   /// Event height
   final double eventHeight;
@@ -63,7 +63,7 @@ class AllDayEventsTheme {
   /// Creates a copy of this theme but with the given fields replaced with the
   AllDayEventsTheme copyWith({
     AllDayEventsShowMoreButtonTheme? showMoreButtonTheme,
-    int? listMaxVisible,
+    int? listMaxRowsVisible,
     double? eventHeight,
     TextStyle? textStyle,
     EdgeInsets? containerPadding,
@@ -76,7 +76,7 @@ class AllDayEventsTheme {
   }) {
     return AllDayEventsTheme(
       showMoreButtonTheme: showMoreButtonTheme ?? this.showMoreButtonTheme,
-      listMaxVisible: listMaxVisible ?? this.listMaxVisible,
+      listMaxRowsVisible: listMaxRowsVisible ?? this.listMaxRowsVisible,
       eventHeight: eventHeight ?? this.eventHeight,
       textStyle: textStyle ?? this.textStyle,
       containerPadding: containerPadding ?? this.containerPadding,

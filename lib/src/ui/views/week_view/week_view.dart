@@ -43,6 +43,10 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.pageViewPhysics,
     this.eventBuilders = const {},
     this.overrideOnEventLongPress,
+    this.allDayEventsTheme = const AllDayEventsTheme(),
+    this.onAllDayEventsShowMoreTap,
+    this.onAllDayEventTap,
+    this.allDayEventsShowMoreBuilder,
   });
 
   /// Enable page view physics
@@ -73,6 +77,24 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Floating events customization params
   final FloatingEventsTheme floatingEventTheme;
+
+  /// All day events theme
+  final AllDayEventsTheme allDayEventsTheme;
+
+  /// On all day events show more tap callback
+  final void Function(
+    List<AllDayCalendarEvent> visibleEvents,
+    List<AllDayCalendarEvent> events,
+  )? onAllDayEventsShowMoreTap;
+
+  /// On all day event tap callback
+  final void Function(AllDayCalendarEvent event)? onAllDayEventTap;
+
+  /// Builder for all day events show more button
+  final Widget Function(
+    List<AllDayCalendarEvent> visibleEvents,
+    List<AllDayCalendarEvent> events,
+  )? allDayEventsShowMoreBuilder;
 
   /// Breaks list to display
   final List<Break> breaks;
@@ -107,6 +129,9 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   var _pointerLocation = Offset.zero;
   var _scrolling = false;
   ScrollController? _timelineController;
+
+  List<T> events = [];
+  List<AllDayCalendarEvent> allDayEvents = [];
 
   DateTime get _initialDate => widget.controller.initialDate;
 
@@ -204,6 +229,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   @override
   void initState() {
     super.initState();
+    events = widget.events
+        .where((element) => element is! AllDayCalendarEvent)
+        .toList()
+        .cast<T>();
+    allDayEvents = widget.events.whereType<AllDayCalendarEvent>().toList();
     _weekPickerController = PageController(
       initialPage: _displayedWeek.start.difference(_initialWeek.start).inWeeks,
     );
@@ -364,7 +394,12 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               controller: widget.controller,
               overlayKey: _overlayKey,
               breaks: widget.breaks,
-              events: widget.events,
+              events: events,
+              allDayEvents: allDayEvents,
+              allDayEventsTheme: widget.allDayEventsTheme,
+              allDayEventsShowMoreBuilder: widget.allDayEventsShowMoreBuilder,
+              onAllDayEventsShowMoreTap: widget.onAllDayEventsShowMoreTap,
+              onAllDayEventTap: widget.onAllDayEventTap,
               elevatedEvent: _elevatedEvent,
               divider: widget.divider,
               onEventTap: widget.onEventTap,

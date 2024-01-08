@@ -4,15 +4,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/widget_size.dart';
 
+class AllDaysEventsListRow {
+  const AllDaysEventsListRow({required this.events});
+
+  final List<AllDaysEventListItemRow> events;
+}
+
+class AllDaysEventListItemRow {
+  const AllDaysEventListItemRow({
+    required this.event,
+    required this.paddingLeft,
+    required this.width,
+  });
+
+  final AllDayCalendarEvent event;
+  final double paddingLeft;
+  final double width;
+
+  AllDaysEventListItemRow copyWith({
+    AllDayCalendarEvent? event,
+    double? paddingLeft,
+    double? width,
+  }) {
+    return AllDaysEventListItemRow(
+      event: event ?? this.event,
+      paddingLeft: paddingLeft ?? this.paddingLeft,
+      width: width ?? this.width,
+    );
+  }
+}
+
 class AllDaysEventsList extends StatefulWidget {
   const AllDaysEventsList({
     required this.theme,
     required this.allDayEvents,
+    required this.width,
+    required this.view,
     this.onShowMoreTap,
     this.showMoreBuilder,
     this.onEventTap,
     super.key,
   });
+
+  final CalendarView view;
+
+  final double width;
 
   final AllDayEventsTheme theme;
 
@@ -20,11 +56,15 @@ class AllDaysEventsList extends StatefulWidget {
 
   final void Function(AllDayCalendarEvent event)? onEventTap;
 
-  final void Function(List<AllDayCalendarEvent> visibleEvents,
-      List<AllDayCalendarEvent> events)? onShowMoreTap;
+  final void Function(
+    List<AllDayCalendarEvent> visibleEvents,
+    List<AllDayCalendarEvent> events,
+  )? onShowMoreTap;
 
-  final Widget Function(List<AllDayCalendarEvent> visibleEvents,
-      List<AllDayCalendarEvent> events)? showMoreBuilder;
+  final Widget Function(
+    List<AllDayCalendarEvent> visibleEvents,
+    List<AllDayCalendarEvent> events,
+  )? showMoreBuilder;
 
   @override
   State<AllDaysEventsList> createState() => _AllDaysEventsListState();
@@ -36,14 +76,18 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
 
   AllDayEventsTheme get _theme => widget.theme;
 
-  int get _maxEvents => min(widget.allDayEvents.length, _theme.listMaxVisible);
+  int get _rowsNumber => widget.view == CalendarView.week
+      ? _allDaysEventsListItems.length
+      : widget.allDayEvents.length;
+
+  int get _maxRows => min(_rowsNumber, _theme.listMaxRowsVisible);
 
   double get _eventHeight =>
       _theme.eventHeight + (_theme.eventPadding.vertical);
 
   double get _getContainerHeight =>
-      _eventHeight * _maxEvents +
-      (_maxEvents < widget.allDayEvents.length
+      _eventHeight * _maxRows +
+      (_maxRows < _rowsNumber
           ? _showMoreButtonHeight + _theme.containerPadding.vertical
           : 0);
 
@@ -53,6 +97,102 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
       (_theme.containerPadding.vertical);
 
   double _showMoreButtonHeight = 0;
+
+  bool _eventsOverlap(AllDayCalendarEvent event1, AllDayCalendarEvent event2) {
+    return !(event1.end.isBefore(event2.start) ||
+        event1.end == event2.start ||
+        event1.start.isAfter(event2.end) ||
+        event1.start == event2.end);
+  }
+
+  bool _canPlaceEvent(
+    AllDaysEventsListRow row,
+    AllDayCalendarEvent event,
+    double eventWidth,
+    double oneDayWidth,
+  ) {
+    for (final existingEvent in row.events) {
+      if (_eventsOverlap(existingEvent.event, event)) {
+        return false;
+      }
+    }
+
+    var allPreviousEventsWidth = 0.0;
+
+    for (var i = 0; i < row.events.length; i++) {
+      final e = row.events[i];
+      allPreviousEventsWidth +=
+          e.width + (allPreviousEventsWidth - e.paddingLeft);
+    }
+
+    return (allPreviousEventsWidth + eventWidth) <= widget.width;
+  }
+
+  List<AllDaysEventsListRow> get _allDaysEventsListItems {
+    final weekRange = DateTime.now().weekRange;
+    final oneDayWidth = widget.width / 7;
+
+    final allDaysEventsListRows = <AllDaysEventsListRow>[];
+
+    for (var i = 0; i < widget.allDayEvents.length; i++) {
+      final event = widget.allDayEvents[i];
+
+      final paddingLeft =
+          (event.start.difference(weekRange.start).inDays * oneDayWidth).abs();
+      final width = min(
+        widget.width -
+            paddingLeft -
+            _theme.eventPadding.horizontal -
+            _theme.containerPadding.horizontal,
+        (event.end.difference(event.start).inDays * oneDayWidth).abs(),
+      );
+
+      if (allDaysEventsListRows.isEmpty) {
+        allDaysEventsListRows.add(
+          AllDaysEventsListRow(
+            events: [
+              AllDaysEventListItemRow(
+                event: event,
+                paddingLeft: paddingLeft,
+                width: width,
+              ),
+            ],
+          ),
+        );
+        continue;
+      }
+
+      for (var rowI = 0; rowI < allDaysEventsListRows.length; rowI++) {
+        final row = allDaysEventsListRows[rowI];
+        if (_canPlaceEvent(row, event, width, oneDayWidth)) {
+          row.events.add(
+            AllDaysEventListItemRow(
+              event: event,
+              paddingLeft: paddingLeft,
+              width: width,
+            ),
+          );
+          break;
+        }
+
+        if (rowI == allDaysEventsListRows.length - 1) {
+          allDaysEventsListRows.add(
+            AllDaysEventsListRow(
+              events: [
+                AllDaysEventListItemRow(
+                  event: event,
+                  paddingLeft: paddingLeft,
+                  width: width,
+                ),
+              ],
+            ),
+          );
+          break;
+        }
+      }
+    }
+    return allDaysEventsListRows;
+  }
 
   @override
   void initState() {
@@ -66,6 +206,7 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       height: _getContainerHeight,
+      width: widget.width,
       child: _buildList(),
     );
   }
@@ -74,34 +215,92 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
     return Padding(
       padding: _theme.containerPadding,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ...widget.allDayEvents.take(_maxEvents).map(
-                (e) => EventView(
-                  e,
-                  viewType: CalendarView.days,
-                  allDayEventsTheme: _theme,
-                  onTap: () {
-                    widget.onEventTap?.call(e);
-                  },
-                ),
-              ),
-          if (widget.allDayEvents.length > _maxEvents)
+          if (widget.view == CalendarView.week)
+            ..._buildWeekListVIew()
+          else
+            ..._buildDaysListView(),
+          if (_rowsNumber > _maxRows)
             WidgetSize(
-                onChange: (size) {
-                  if (size == null) return;
+              onChange: (size) {
+                if (size == null) return;
 
-                  if (_showMoreButtonHeight != size.height) {
-                    _showMoreButtonHeight = size.height;
-                    if (mounted) {
-                      setState(() {});
-                    }
+                if (_showMoreButtonHeight != size.height) {
+                  _showMoreButtonHeight = size.height;
+                  if (mounted) {
+                    setState(() {});
                   }
-                },
-                child: _buildShowMoreButton(widget.allDayEvents)),
+                }
+              },
+              child: _buildShowMoreButton(widget.allDayEvents),
+            ),
         ],
       ),
     );
+  }
+
+  Iterable<Widget> _buildDaysListView() {
+    return widget.allDayEvents.take(_maxRows).map(
+      (e) {
+        return SizedBox(
+          height: _theme.eventHeight,
+          width: widget.width,
+          child: EventView(
+            e,
+            viewType: widget.view,
+            allDayEventsTheme: _theme,
+            onTap: () {
+              widget.onEventTap?.call(e);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Iterable<Widget> _buildWeekListVIew() {
+    final rows = _allDaysEventsListItems;
+    return rows.take(_maxRows).map(
+      (e) {
+        return Flexible(
+          child: Stack(
+            alignment: Alignment.centerLeft,
+            children: e.events
+                .map(
+                  (e) => Positioned(
+                    left: e.paddingLeft,
+                    child: SizedBox(
+                      height: _theme.eventHeight,
+                      width: e.width,
+                      child: EventView(
+                        e.event,
+                        viewType: widget.view,
+                        allDayEventsTheme: _theme,
+                        onTap: () {
+                          widget.onEventTap?.call(e.event);
+                        },
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  List<AllDayCalendarEvent> get _visibleEvents {
+    if (widget.view == CalendarView.week) {
+      return _allDaysEventsListItems
+          .take(_maxRows)
+          .map((e) => e.events.map((e) => e.event).toList())
+          .toList()
+          .reduce((value, element) => [...value, ...element]);
+    } else {
+      return widget.allDayEvents.take(_maxRows).toList();
+    }
   }
 
   Widget _buildShowMoreButton(List<AllDayCalendarEvent> eventsToDisplay) {
@@ -110,14 +309,12 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
     }
 
     if (widget.showMoreBuilder != null) {
-      return widget.showMoreBuilder!
-          .call(eventsToDisplay.take(_maxEvents).toList(), eventsToDisplay);
+      return widget.showMoreBuilder!.call(_visibleEvents, eventsToDisplay);
     }
 
     return InkWell(
       onTap: () {
-        widget.onShowMoreTap
-            ?.call(eventsToDisplay.take(_maxEvents).toList(), eventsToDisplay);
+        widget.onShowMoreTap?.call(_visibleEvents, eventsToDisplay);
       },
       child: Align(
         alignment: Alignment.topLeft,
@@ -127,7 +324,7 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
           padding: _showMoreButtonTheme.padding,
           margin: _showMoreButtonTheme.margin,
           child: RenderIdProvider(
-            id: eventsToDisplay[_maxEvents],
+            id: eventsToDisplay[_maxRows],
             child: Container(
               decoration: BoxDecoration(
                 color: _showMoreButtonTheme.backgroundColor,
@@ -136,7 +333,7 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
               ),
               child: Center(
                 child: Text(
-                  '+${eventsToDisplay.length - _maxEvents}',
+                  '+${eventsToDisplay.length - _maxRows}',
                   style: _showMoreButtonTheme.textStyle,
                 ),
               ),
