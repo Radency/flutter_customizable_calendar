@@ -33,6 +33,20 @@ class App extends StatelessWidget {
     );
 
     final events = [
+      SimpleAllDayEvent(
+        id: 'All-day 1',
+        start: today,
+        duration: const Duration(days: 2),
+        title: 'Event 5',
+        color: Colors.redAccent.shade200,
+      ),
+      SimpleAllDayEvent(
+        id: 'All-day 2',
+        start: today,
+        duration: const Duration(days: 2),
+        title: 'Event 6',
+        color: Colors.greenAccent.shade200,
+      ),
       ImageCalendarEvent(
         id: "Task1",
         title: "Workout",
@@ -243,6 +257,41 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
               // ignore
               print(event);
             },
+            onAllDayEventsShowMoreTap: (visibleEvents, events) {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => EventsListPage(
+                        events: events,
+                        day: events.first.start,
+                      )));
+            },
+            onAllDayEventTap: print,
+            allDayEventsShowMoreBuilder: (visibleEvents, events) =>
+                GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => EventsListPage(
+                          events: events,
+                          day: events.first.start,
+                        )));
+              },
+              child: Container(
+                margin: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(4),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'Show more (${events.length - visibleEvents.length})',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: _theme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
             eventBuilders: _getEventBuilders(),
             daysListTheme: DaysListTheme(
               itemTheme: DaysListItemTheme(
@@ -374,6 +423,9 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         // ignore
         print(event);
       },
+      showMoreTheme: MonthShowMoreTheme(
+        borderRadius: 12,
+      ),
       pageViewPhysics: BouncingScrollPhysics(),
       monthPickerTheme: _periodPickerTheme,
       eventBuilders: _getEventBuilders(),

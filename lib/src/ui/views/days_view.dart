@@ -6,7 +6,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/controllers/controllers.dart';
+import 'package:flutter_customizable_calendar/src/ui/custom_widgets/all_days_events_list.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
+import 'package:flutter_customizable_calendar/src/ui/themes/all_day_events_theme.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
@@ -36,6 +38,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.daysListTheme = const DaysListTheme(),
     this.timelineTheme = const TimelineTheme(),
     this.floatingEventTheme = const FloatingEventsTheme(),
+    this.allDayEventsTheme = const AllDayEventsTheme(),
     this.breaks = const [],
     this.events = const [],
     this.eventBuilders = const {},
@@ -43,6 +46,9 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onEventTap,
     this.onEventUpdated,
     this.onDiscardChanges,
+    this.allDayEventsShowMoreBuilder,
+    this.onAllDayEventsShowMoreTap,
+    this.onAllDayEventTap,
   });
 
   /// Controller which allows to control the view
@@ -59,6 +65,20 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Floating events customization params
   final FloatingEventsTheme floatingEventTheme;
+
+  /// All day events theme
+  final AllDayEventsTheme allDayEventsTheme;
+
+  /// On all day events show more tap callback
+  final void Function(List<AllDayCalendarEvent> visibleEvents,
+      List<AllDayCalendarEvent> events)? onAllDayEventsShowMoreTap;
+
+  /// On all day event tap callback
+  final void Function(AllDayCalendarEvent event)? onAllDayEventTap;
+
+  /// Builder for all day events show more button
+  final Widget Function(List<AllDayCalendarEvent> visibleEvents,
+      List<AllDayCalendarEvent> events)? allDayEventsShowMoreBuilder;
 
   /// Breaks list to display
   final List<Break> breaks;
@@ -103,6 +123,9 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   ScrollController? _daysListController;
 
   static DateTime get _now => clock.now();
+
+  List<T> events = [];
+  List<AllDayCalendarEvent> allDayEvents = [];
 
   DateTime get _initialDate => widget.controller.initialDate;
 
@@ -207,6 +230,9 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   @override
   void initState() {
     super.initState();
+    events =
+        widget.events.where((event) => event is! AllDayCalendarEvent).toList();
+    allDayEvents = widget.events.whereType<AllDayCalendarEvent>().toList();
     _monthPickerController = PageController(
       initialPage: DateUtils.monthDelta(_initialDate, _displayedDate),
     );
@@ -293,6 +319,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         children: [
           _monthPicker(),
           _daysList(),
+          _allDayEvents(),
           Expanded(
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
@@ -350,6 +377,18 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
           current.displayedDate,
         ),
       );
+
+  Widget _allDayEvents() {
+    final theme = widget.allDayEventsTheme;
+
+    return AllDaysEventsList(
+      theme: theme,
+      allDayEvents: allDayEvents,
+      onShowMoreTap: widget.onAllDayEventsShowMoreTap,
+      showMoreBuilder: widget.allDayEventsShowMoreBuilder,
+      onEventTap: widget.onAllDayEventTap,
+    );
+  }
 
   Widget _daysList() {
     final theme = widget.daysListTheme;
@@ -467,7 +506,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                         eventsKeys: DaysViewKeys.events,
                         timelineTheme: widget.timelineTheme,
                         breaks: widget.breaks,
-                        events: widget.events,
+                        events: events,
                         elevatedEvent: _elevatedEvent,
                         onEventTap: widget.onEventTap,
                         eventBuilders: widget.eventBuilders,

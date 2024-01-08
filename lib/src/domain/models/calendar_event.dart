@@ -79,6 +79,15 @@ abstract class EditableCalendarEvent extends FloatingCalendarEvent {
   });
 }
 
+abstract class AllDayCalendarEvent extends EditableCalendarEvent {
+  const AllDayCalendarEvent({
+    required super.id,
+    required super.start,
+    required super.duration,
+    required super.color,
+  });
+}
+
 class Break extends CalendarEvent {
   const Break({
     required super.id,
@@ -132,6 +141,34 @@ class SimpleEvent extends EditableCalendarEvent {
     String? title,
   }) {
     return SimpleEvent(
+      id: id,
+      start: start ?? this.start,
+      duration: duration ?? this.duration,
+      color: color ?? this.color,
+      title: title ?? this.title,
+    );
+  }
+}
+
+class SimpleAllDayEvent extends AllDayCalendarEvent {
+  const SimpleAllDayEvent({
+    required super.id,
+    required super.start,
+    required super.duration,
+    required this.title,
+    super.color = Colors.white,
+  });
+
+  final String title;
+
+  @override
+  SimpleAllDayEvent copyWith({
+    DateTime? start,
+    Duration? duration,
+    Color? color,
+    String? title,
+  }) {
+    return SimpleAllDayEvent(
       id: id,
       start: start ?? this.start,
       duration: duration ?? this.duration,
