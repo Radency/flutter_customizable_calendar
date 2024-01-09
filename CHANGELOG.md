@@ -31,3 +31,7 @@
     * `MonthView` layout changes abruptly when switching months.
     * `WeekView` layout changes abruptly when switching weeks.
     * `PageView.builder` resets to initialPosition when interacting with `OverlayEntry`
+
+## 0.2.1
+
+* Fix linter warnings.

@@ -31,6 +31,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     required this.saverConfig,
     required this.getEventBox,
     required this.child,
+    required this.eventUpdatesStreamController,
     super.key,
     this.padding = EdgeInsets.zero,
     this.eventBuilders = const {},
@@ -49,8 +50,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
   final Map<Type, EventBuilder> eventBuilders;
 
   /// Stream which allows to request event view's data update
-  static final StreamController<int> eventUpdatesStreamController =
-      StreamController.broadcast();
+  final StreamController<int> eventUpdatesStreamController;
 
   /// A notifier which needs to control elevated event
   final FloatingEventNotifier<T> event;
@@ -471,9 +471,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   void _initEventStreamSubscription() {
-    _streamSubscription = DraggableEventOverlay
-        .eventUpdatesStreamController.stream
-        .listen((event) {
+    _streamSubscription =
+        widget.eventUpdatesStreamController.stream.listen((event) {
       try {
         widget.onDragEnd?.call();
         _pointerTimePoint =

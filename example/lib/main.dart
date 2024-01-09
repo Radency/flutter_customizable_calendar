@@ -297,10 +297,10 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
             controller: _daysViewController,
             monthPickerTheme: _periodPickerTheme,
             allDayEventsTheme: _getAllDayEventsTheme(),
-            overrideOnEventLongPress: (details, event) {
-              // ignore
-              print(event);
-            },
+            // overrideOnEventLongPress: (details, event) {
+            //   // ignore
+            //   print(event);
+            // },
             onAllDayEventsShowMoreTap: (visibleEvents, events) {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => EventsListPage(
@@ -433,10 +433,10 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       pageViewPhysics: const BouncingScrollPhysics(),
       allDayEventsTheme: _getAllDayEventsTheme(),
       weekPickerTheme: _periodPickerTheme,
-      overrideOnEventLongPress: (details, event) {
-        // ignore
-        print(event);
-      },
+      // overrideOnEventLongPress: (details, event) {
+      //   // ignore
+      //   print(event);
+      // },
       onAllDayEventsShowMoreTap: (visibleEvents, events) {
         Navigator.of(context).push(MaterialPageRoute(
             builder: (context) => EventsListPage(
@@ -491,10 +491,10 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     return MonthView<T>(
       saverConfig: _saverConfig(),
       controller: _monthViewController,
-      overrideOnEventLongPress: (details, event) {
-        // ignore
-        print(event);
-      },
+      // overrideOnEventLongPress: (details, event) {
+      //   // ignore
+      //   print(event);
+      // },
       showMoreTheme: MonthShowMoreTheme(
         borderRadius: 12,
       ),

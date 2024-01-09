@@ -146,6 +146,9 @@ class _MonthViewState<T extends FloatingCalendarEvent>
       MonthViewKeys.events[event]?.currentContext?.findRenderObject()
           as RenderBox?;
 
+  final StreamController<int> _eventUpdatesStreamController =
+      StreamController.broadcast();
+
   Future<void> _scrollIfNecessary() async {
     final timelineBox = _getTimelineBox();
 
@@ -295,6 +298,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
               saverConfig: widget.saverConfig,
+              eventUpdatesStreamController: _eventUpdatesStreamController,
               child: _monthSection(),
             ),
           ),
@@ -308,12 +312,13 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     _forward.dispose();
     _backward.dispose();
     _monthPickerController?.dispose();
+    _eventUpdatesStreamController.close();
     super.dispose();
   }
 
   void _requestDraggableEventOverlayUpdate() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      DraggableEventOverlay.eventUpdatesStreamController.add(0);
+      _eventUpdatesStreamController.add(0);
     });
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:clock/clock.dart';
@@ -155,6 +156,9 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
   List<T> get _events =>
       widget.events.where((event) => event is! AllDayCalendarEvent).toList();
+
+  final StreamController<int> _eventUpdatesStreamController =
+      StreamController.broadcast();
 
   void _stopTimelineScrolling() =>
       _timelineController.jumpTo(_timelineController.offset);
@@ -342,6 +346,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               getTimelineBox: _getTimelineBox,
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
+              eventUpdatesStreamController: _eventUpdatesStreamController,
               saverConfig: widget.saverConfig,
               child: _timeline(),
             ),
@@ -357,6 +362,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
     _monthPickerController.dispose();
     _daysListController?.dispose();
     _timelineController.dispose();
+    _eventUpdatesStreamController.close();
     super.dispose();
   }
 

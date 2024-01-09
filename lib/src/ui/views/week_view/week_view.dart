@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -129,6 +130,9 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   var _pointerLocation = Offset.zero;
   var _scrolling = false;
   ScrollController? _timelineController;
+
+  final StreamController<int> _eventUpdatesStreamController =
+      StreamController.broadcast();
 
   DateTime get _initialDate => widget.controller.initialDate;
 
@@ -319,6 +323,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
               saverConfig: widget.saverConfig,
+              eventUpdatesStreamController: _eventUpdatesStreamController,
               child: _weekTimeline(),
             ),
           ),
@@ -329,7 +334,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
   void _requestDraggableEventOverlayUpdate() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      DraggableEventOverlay.eventUpdatesStreamController.add(0);
+      _eventUpdatesStreamController.add(0);
     });
   }
 
@@ -338,6 +343,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     _elevatedEvent.dispose();
     _weekPickerController?.dispose();
     _timelineController?.dispose();
+    _eventUpdatesStreamController.close();
     super.dispose();
   }
 
