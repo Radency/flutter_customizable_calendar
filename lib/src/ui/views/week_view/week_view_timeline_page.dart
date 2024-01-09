@@ -120,9 +120,25 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
             padding: EdgeInsets.only(left: timeScaleWidth),
             child: SizedBox(
               child: AllDaysEventsList(
+                eventKeys: widget.eventKeys,
                 width: widget.constraints.maxWidth - timeScaleWidth,
                 theme: widget.allDayEventsTheme,
-                allDayEvents: widget.allDayEvents,
+                weekRange: DateTimeRange(
+                  start: widget.weekDays.first,
+                  end: widget.weekDays.last,
+                ),
+                allDayEvents: widget.allDayEvents
+                    .where(
+                      (element) =>
+                          DateTimeRange(start: element.start, end: element.end)
+                              .days
+                              .any(
+                                (d1) => widget.weekDays.any(
+                                  (d2) => DateUtils.isSameDay(d1, d2),
+                                ),
+                              ),
+                    )
+                    .toList(),
                 onEventTap: widget.onAllDayEventTap,
                 onShowMoreTap: widget.onAllDayEventsShowMoreTap,
                 showMoreBuilder: widget.allDayEventsShowMoreBuilder,

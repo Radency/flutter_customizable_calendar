@@ -40,11 +40,17 @@ class AllDaysEventsList extends StatefulWidget {
     required this.allDayEvents,
     required this.width,
     required this.view,
+    required this.eventKeys,
     this.onShowMoreTap,
     this.showMoreBuilder,
     this.onEventTap,
+    this.weekRange,
     super.key,
   });
+
+  final Map<CalendarEvent, GlobalKey> eventKeys;
+
+  final DateTimeRange? weekRange;
 
   final CalendarView view;
 
@@ -89,7 +95,7 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
       _eventHeight * _maxRows +
       (_maxRows < _rowsNumber
           ? _showMoreButtonHeight + _theme.containerPadding.vertical
-          : 0);
+          : _theme.containerPadding.vertical);
 
   double get _getShowMoreButtonThemeHeight =>
       _showMoreButtonTheme.height +
@@ -129,7 +135,13 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
   }
 
   List<AllDaysEventsListRow> get _allDaysEventsListItems {
-    final weekRange = DateTime.now().weekRange;
+    assert(
+      widget.view == CalendarView.week || widget.weekRange == null,
+      'weekRange can be used only with CalendarView.week',
+    );
+
+    final weekRange = widget.weekRange!;
+
     final oneDayWidth = widget.width / 7;
 
     final allDaysEventsListRows = <AllDaysEventsListRow>[];
@@ -137,14 +149,17 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
     for (var i = 0; i < widget.allDayEvents.length; i++) {
       final event = widget.allDayEvents[i];
 
+      final start =
+          weekRange.start.isAfter(event.start) ? weekRange.start : event.start;
+
       final paddingLeft =
-          (event.start.difference(weekRange.start).inDays * oneDayWidth).abs();
+          (start.difference(weekRange.start).inDays * oneDayWidth).abs();
       final width = min(
         widget.width -
             paddingLeft -
             _theme.eventPadding.horizontal -
             _theme.containerPadding.horizontal,
-        (event.end.difference(event.start).inDays * oneDayWidth).abs(),
+        (event.end.difference(start).inDays * oneDayWidth).abs(),
       );
 
       if (allDaysEventsListRows.isEmpty) {
@@ -202,9 +217,7 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+    return SizedBox(
       height: _getContainerHeight,
       width: widget.width,
       child: _buildList(),
@@ -249,6 +262,7 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
           child: EventView(
             e,
             viewType: widget.view,
+            key: _getEventKey(e),
             allDayEventsTheme: _theme,
             onTap: () {
               widget.onEventTap?.call(e);
@@ -257,6 +271,13 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
         );
       },
     );
+  }
+
+  GlobalKey<State<StatefulWidget>> _getEventKey(CalendarEvent event) {
+    if (widget.eventKeys.containsKey(event)) {
+      widget.eventKeys.remove(event);
+    }
+    return widget.eventKeys[event] ??= GlobalKey();
   }
 
   Iterable<Widget> _buildWeekListVIew() {
@@ -276,6 +297,7 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
                       child: EventView(
                         e.event,
                         viewType: widget.view,
+                        key: _getEventKey(e.event),
                         allDayEventsTheme: _theme,
                         onTap: () {
                           widget.onEventTap?.call(e.event);

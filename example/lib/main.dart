@@ -14,7 +14,8 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today =
+        DateUtils.dateOnly(DateTime.now().subtract(Duration(days: 1)));
     final breaks = List.generate(
       7,
       (index) {
@@ -93,6 +94,13 @@ class App extends StatelessWidget {
         id: 'All-day 9',
         start: today,
         duration: const Duration(days: 7),
+        title: 'Event 9',
+        color: Colors.greenAccent.shade200,
+      ),
+      SimpleAllDayEvent(
+        id: 'All-day 10',
+        start: today.add(Duration(days: 5)),
+        duration: const Duration(days: 14),
         title: 'Event 9',
         color: Colors.greenAccent.shade200,
       ),
@@ -418,7 +426,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       controller: _weekViewController,
       eventBuilders: _getEventBuilders(),
       pageViewPhysics: const BouncingScrollPhysics(),
-      allDayEventsTheme: AllDayEventsTheme(listMaxRowsVisible: 2),
+      allDayEventsTheme: AllDayEventsTheme(listMaxRowsVisible: 5),
       weekPickerTheme: _periodPickerTheme,
       overrideOnEventLongPress: (details, event) {
         // ignore

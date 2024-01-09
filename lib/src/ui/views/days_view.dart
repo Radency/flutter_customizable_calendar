@@ -384,17 +384,32 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   Widget _allDayEvents() {
     final theme = widget.allDayEventsTheme;
 
-    return SizedBox(
-      width: double.maxFinite,
-      child: AllDaysEventsList(
-        theme: theme,
-        allDayEvents: allDayEvents,
-        onShowMoreTap: widget.onAllDayEventsShowMoreTap,
-        showMoreBuilder: widget.allDayEventsShowMoreBuilder,
-        onEventTap: widget.onAllDayEventTap,
-        width: MediaQuery.of(context).size.width,
-        view: CalendarView.days,
-      ),
+    return BlocBuilder<DaysViewController, DaysViewState>(
+      bloc: widget.controller,
+      builder: (context, state) {
+        return SizedBox(
+          width: double.maxFinite,
+          child: AllDaysEventsList(
+            eventKeys: DaysViewKeys.events,
+            theme: theme,
+            allDayEvents: allDayEvents
+                .where(
+                  (element) =>
+                      DateTimeRange(start: element.start, end: element.end)
+                          .days
+                          .any(
+                            (d) => DateUtils.isSameDay(d, state.focusedDate),
+                          ),
+                )
+                .toList(),
+            onShowMoreTap: widget.onAllDayEventsShowMoreTap,
+            showMoreBuilder: widget.allDayEventsShowMoreBuilder,
+            onEventTap: widget.onAllDayEventTap,
+            width: MediaQuery.of(context).size.width,
+            view: CalendarView.days,
+          ),
+        );
+      },
     );
   }
 
