@@ -158,6 +158,226 @@ void main() {
       },
       skip: false,
     );
+
+    testWidgets(
+      'All-Day event is displayed',
+      (widgetTester) async {
+        final event = SimpleAllDayEvent(
+            id: 'All-Day Event 1',
+            start: now,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 1');
+
+        final view = WeekView(
+          controller: controller,
+          saverConfig: _saverConfig(),
+          events: [event],
+        );
+
+        when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.endDate).thenReturn(currentWeekEnd);
+        when(() => controller.state)
+            .thenReturn(initialStateWithDate(event.start));
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        await widgetTester.pumpAndSettle();
+
+        expect(find.text('All-Day Event 1'), findsOneWidget);
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'All-Day event onTap callback is called',
+      (widgetTester) async {
+        final event = SimpleAllDayEvent(
+            id: 'All-Day Event 1',
+            start: now,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 1');
+
+        AllDayCalendarEvent? tappedEvent;
+        final view = WeekView(
+          controller: controller,
+          events: [event],
+          saverConfig: _saverConfig(),
+          onAllDayEventTap: (event) {
+            tappedEvent = event;
+          },
+        );
+
+        when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.endDate).thenReturn(currentWeekEnd);
+        when(() => controller.state)
+            .thenReturn(initialStateWithDate(event.start));
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        await widgetTester.pumpAndSettle();
+
+        await widgetTester.tap(find.text(event.title));
+
+        expect(tappedEvent, event);
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'All-Day events show more button is displayed',
+      (widgetTester) async {
+        final event = SimpleAllDayEvent(
+            id: 'All-Day Event 1',
+            start: now,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 1');
+        final otherEvent = SimpleAllDayEvent(
+            id: 'All-Day Event 2',
+            start: now,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 2');
+
+        final view = Material(
+          child: WeekView(
+            controller: controller,
+            events: [event, otherEvent],
+            saverConfig: _saverConfig(),
+            allDayEventsTheme: const AllDayEventsTheme(
+              listMaxRowsVisible: 1,
+            ),
+            allDayEventsShowMoreBuilder: (visible, all) {
+              return Text('+${all.length - visible.length}');
+            },
+          ),
+        );
+
+        when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.endDate).thenReturn(currentWeekEnd);
+        when(() => controller.state)
+            .thenReturn(initialStateWithDate(event.start));
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        await widgetTester.pumpAndSettle();
+
+        expect(find.text('+1'), findsOneWidget);
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'All-Day events show more button callback is called when tapped',
+      (widgetTester) async {
+        final event = SimpleAllDayEvent(
+            id: 'All-Day Event 1',
+            start: now,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 1');
+        final otherEvent = SimpleAllDayEvent(
+            id: 'All-Day Event 2',
+            start: now,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 2');
+        final otherEvent2 = SimpleAllDayEvent(
+            id: 'All-Day Event 3',
+            start: now,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 3');
+
+        var visibleEvents = <AllDayCalendarEvent>[];
+        var allEvents = <AllDayCalendarEvent>[];
+        final view = Material(
+          child: WeekView(
+            controller: controller,
+            events: [event, otherEvent, otherEvent2],
+            saverConfig: _saverConfig(),
+            onAllDayEventsShowMoreTap: (visible, all) {
+              visibleEvents = visible;
+              allEvents = all;
+            },
+          ),
+        );
+
+        when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.endDate).thenReturn(currentWeekEnd);
+        when(() => controller.state)
+            .thenReturn(initialStateWithDate(event.start));
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        await widgetTester.pumpAndSettle();
+
+        expect(find.text(event.title), findsOneWidget);
+        expect(find.text(otherEvent.title), findsOneWidget);
+        expect(find.text(otherEvent2.title), findsNothing);
+
+        await widgetTester.tap(find.text('+1'));
+
+        expect(visibleEvents, [event, otherEvent]);
+        expect(allEvents, [event, otherEvent, otherEvent2]);
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'All-Day events changes when switching to another week',
+      (widgetTester) async {
+        final event = SimpleAllDayEvent(
+            id: 'All-Day Event 1',
+            start: now,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 1');
+        final otherEvent = SimpleAllDayEvent(
+            id: 'All-Day Event 2',
+            start: now.add(const Duration(days: 7)),
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 2');
+        final otherEvent2 = SimpleAllDayEvent(
+            id: 'All-Day Event 3',
+            start: now.add(const Duration(days: 7)),
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 3');
+
+        var visibleEvents = <AllDayCalendarEvent>[];
+        var allEvents = <AllDayCalendarEvent>[];
+        final view = Material(
+          child: WeekView(
+            controller: controller,
+            events: [event, otherEvent, otherEvent2],
+            allDayEventsTheme: const AllDayEventsTheme(
+              listMaxRowsVisible: 1,
+            ),
+            saverConfig: _saverConfig(),
+            onAllDayEventsShowMoreTap: (visible, all) {
+              visibleEvents = visible;
+              allEvents = all;
+            },
+          ),
+        );
+
+        when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.endDate).thenReturn(currentWeekEnd);
+        when(() => controller.state).thenReturn(
+          withClock(
+            clock,
+                () => WeekViewNextWeekSelected(focusedDate: nextWeek),
+          ),
+        );
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        await widgetTester.pumpAndSettle();
+
+        expect(find.text(event.title), findsNothing);
+        expect(find.text(otherEvent.title), findsOneWidget);
+        expect(find.text(otherEvent2.title), findsNothing);
+
+        await widgetTester.tap(find.text('+1'));
+
+        expect(visibleEvents, [otherEvent]);
+        expect(allEvents, [otherEvent, otherEvent2]);
+      },
+      skip: false,
+    );
   });
 }
 
