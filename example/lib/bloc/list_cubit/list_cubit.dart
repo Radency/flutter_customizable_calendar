@@ -9,8 +9,9 @@ class ListCubit extends Cubit<ListState> {
   void save(CalendarEvent event) {
     if (event is Break) {
       emit(state.copyWith(breaks: state.breaks..[event.id] = event));
-    }
-    if (event is FloatingCalendarEvent) {
+    } else if (event is FloatingCalendarEvent) {
+      emit(state.copyWith(events: state.events..[event.id] = event));
+    } else if (event is AllDayCalendarEvent) {
       emit(state.copyWith(events: state.events..[event.id] = event));
     }
   }

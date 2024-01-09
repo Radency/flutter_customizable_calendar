@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:clock/clock.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
@@ -33,13 +34,21 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.timelineTheme = const TimelineTheme(),
     this.floatingEventTheme = const FloatingEventsTheme(),
     this.monthDayTheme = const MonthDayTheme(),
+    this.showMoreTheme = const MonthShowMoreTheme(),
+    this.onShowMoreTap,
     this.breaks = const [],
     this.events = const [],
     this.onDateLongPress,
     this.onEventTap,
     this.onEventUpdated,
     this.onDiscardChanges,
+    this.eventBuilders = const {},
+    this.pageViewPhysics,
+    this.overrideOnEventLongPress,
   });
+
+  /// Enable page view physics
+  final ScrollPhysics? pageViewPhysics;
 
   /// Controller which allows to control the view
   final MonthViewController controller;
@@ -47,8 +56,17 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// The month picker customization params
   final DisplayedPeriodPickerTheme monthPickerTheme;
 
+  /// Event builders
+  final Map<Type, EventBuilder> eventBuilders;
+
   /// The days list customization params
   final DaysRowTheme daysRowTheme;
+
+  /// The theme of show more button
+  final MonthShowMoreTheme? showMoreTheme;
+
+  /// The callback which is called when user taps on show more button
+  final void Function(List<T> events, DateTime day)? onShowMoreTap;
 
   /// A divider which separates the weekdays list and the month section.
   /// You can set it to null if you don't need it.
@@ -72,6 +90,10 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Returns selected timestamp
   final Future<CalendarEvent?> Function(DateTime)? onDateLongPress;
 
+  /// Overrides the default behavior of the event view's long press
+  final void Function(LongPressStartDetails details, T event)?
+      overrideOnEventLongPress;
+
   /// Returns the tapped event
   final void Function(T)? onEventTap;
 
@@ -92,7 +114,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     extends State<MonthView<T>> {
   final _overlayKey = GlobalKey<DraggableEventOverlayState<T>>();
   final _elevatedEvent = FloatingEventNotifier<T>();
-  late final PageController _monthPickerController;
+  PageController? _monthPickerController;
   var _pointerLocation = Offset.zero;
   var _scrolling = false;
   Map<DateTime, List<T>> dayEventMap = {};
@@ -151,8 +173,12 @@ class _MonthViewState<T extends FloatingCalendarEvent>
         monthListScrollPosition.minScrollExtent,
       );
     } else {
-      final monthPickerPosition = _monthPickerController.position;
+      final monthPickerPosition = _monthPickerController?.position;
 
+      if (monthPickerPosition == null) {
+        _scrolling = false;
+        return;
+      }
       // Checking if scroll is finished
       if (!monthPickerPosition.isScrollingNotifier.value) {
         if (fingerPosition.dx > timelineBox.size.width - detectionArea &&
@@ -204,29 +230,39 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     return BlocListener<MonthViewController, MonthViewState>(
       bloc: widget.controller,
       listener: (context, state) {
-        final displayedMonth = DateUtils.monthDelta(_initialDate, _monthDate);
+        final displayedMonth = DateUtils.monthDelta(
+          widget.controller.initialDate,
+          state.focusedDate,
+        );
 
         if (state is MonthViewCurrentMonthIsSet) {
           Future.wait([
-            if (displayedMonth != _monthPickerController.page?.round())
-              _monthPickerController.animateToPage(
+            if (displayedMonth != _monthPickerController?.page?.round())
+              _monthPickerController!.animateToPage(
                 displayedMonth,
                 duration: const Duration(milliseconds: 400),
                 curve: Curves.linearToEaseOut,
               ),
           ]).whenComplete(() {
+            _requestDraggableEventOverlayUpdate();
             setState(() {});
           });
         } else if (state is MonthViewNextMonthSelected ||
             state is MonthViewPrevMonthSelected) {
-          _monthPickerController.animateToPage(
+          _monthPickerController
+              ?.animateToPage(
             displayedMonth,
             duration: const Duration(milliseconds: 300),
             curve: Curves.linearToEaseOut,
-          );
+          )
+              .then((value) {
+            _requestDraggableEventOverlayUpdate();
+          });
+        } else {
+          _requestDraggableEventOverlayUpdate();
         }
 
-        if (displayedMonth != _monthPickerController.page?.round()) {
+        if (displayedMonth != _monthPickerController?.page?.round()) {
           _initDailyEventsAndControllers();
         }
       },
@@ -237,6 +273,8 @@ class _MonthViewState<T extends FloatingCalendarEvent>
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
               key: _overlayKey,
+              onEventLongPressStart: widget.overrideOnEventLongPress,
+              eventBuilders: widget.eventBuilders,
               viewType: CalendarView.month,
               timelineTheme: widget.timelineTheme,
               padding: EdgeInsets.only(
@@ -269,7 +307,14 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   void dispose() {
     _forward.dispose();
     _backward.dispose();
+    _monthPickerController?.dispose();
     super.dispose();
+  }
+
+  void _requestDraggableEventOverlayUpdate() {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      DraggableEventOverlay.eventUpdatesStreamController.add(0);
+    });
   }
 
   Widget _monthPicker() => BlocBuilder<MonthViewController, MonthViewState>(
@@ -296,13 +341,26 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   Widget _monthSection() {
     final theme = widget.timelineTheme;
 
+    _monthPickerController?.dispose();
+    _monthPickerController = PageController(
+      initialPage: DateUtils.monthDelta(_initialDate, _monthDate),
+    );
+
     return PageView.builder(
       controller: _monthPickerController,
-      physics: const NeverScrollableScrollPhysics(),
+      physics: widget.pageViewPhysics ?? const NeverScrollableScrollPhysics(),
+      onPageChanged: (pageIndex) {
+        widget.controller.setPage(pageIndex);
+      },
+      dragStartBehavior: DragStartBehavior.down,
       itemBuilder: (context, pageIndex) {
-        final monthDays = _displayedMonth.days;
+        final monthDays = DateUtils.addMonthsToMonthDate(
+          widget.controller.initialDate,
+          pageIndex,
+        ).monthViewRange.days;
 
         return Padding(
+          key: ValueKey(widget.controller.state.focusedDate),
           padding: EdgeInsets.only(
             left: theme.padding.left,
             right: theme.padding.right,
@@ -470,10 +528,13 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                           timelineTheme: widget.timelineTheme,
                           breaks: widget.breaks,
                           events: dayEventMap[dayDate] ?? [],
+                          eventBuilders: widget.eventBuilders,
                           elevatedEvent: _elevatedEvent,
                           onEventTap: widget.onEventTap,
                           viewType: CalendarView.month,
                           dayWidth: maxWidth / 13,
+                          showMoreTheme: widget.showMoreTheme,
+                          onShowMoreTap: widget.onShowMoreTap,
                           controller: dayControllerMap[dayDate],
                         ),
                       ),

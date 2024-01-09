@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/events/events.dart';
+import 'package:flutter_customizable_calendar/src/ui/custom_widgets/events/simple_all_day_event_view.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/enums.dart';
 
@@ -10,17 +11,25 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
   /// Creates a view of given [event].
   const EventView(
     this.event, {
-    required this.theme,
     required this.viewType,
+    this.theme = const FloatingEventsTheme(),
+    this.allDayEventsTheme = const AllDayEventsTheme(),
     super.key,
     this.onTap,
+    this.eventBuilders = const {},
   });
+
+  /// Custom event builders
+  final Map<Type, EventBuilder> eventBuilders;
 
   /// Calendar event
   final T event;
 
   /// Customization parameters of the view
   final FloatingEventsTheme theme;
+
+  /// Theme which allows to customize all day events
+  final AllDayEventsTheme allDayEventsTheme;
 
   final CalendarView viewType;
 
@@ -29,6 +38,23 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (event is SimpleAllDayEvent) {
+      return Card(
+        color: event.color,
+        elevation: allDayEventsTheme.elevation,
+        shape: allDayEventsTheme.shape,
+        borderOnForeground: false,
+        margin: allDayEventsTheme.margin,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Builder(
+            builder: _getEventBuilder(event.runtimeType),
+          ),
+        ),
+      );
+    }
+
     return Card(
       color: event.color,
       elevation: theme.elevation,
@@ -39,11 +65,20 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Builder(
-          builder: _createBody[event.runtimeType] ??
-              (context) => const SizedBox.shrink(),
+          builder: _getEventBuilder(event.runtimeType),
         ),
       ),
     );
+  }
+
+  WidgetBuilder _getEventBuilder(Type type) {
+    if (eventBuilders[type] == null) {
+      return _createBody[type]!;
+    }
+
+    return (context) {
+      return eventBuilders[type]!.call(context, event);
+    };
   }
 
   Map<Type, WidgetBuilder> get _createBody => {
@@ -56,6 +91,11 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
               event as TaskDue,
               viewType: viewType,
               theme: _viewEventTheme,
+            ),
+        SimpleAllDayEvent: (context) => SimpleAllDayEventView(
+              event as SimpleAllDayEvent,
+              theme: allDayEventsTheme,
+              viewType: viewType,
             ),
       };
 

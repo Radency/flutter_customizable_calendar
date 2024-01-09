@@ -87,4 +87,18 @@ class DaysViewController extends Cubit<DaysViewState> with CalendarController {
           reverseAnimation: state.displayedDate.isAfter(date),
         ),
       );
+
+  /// Switches calendar to shows a specific day
+  @override
+  void setPage(int page) {
+    final now = clock.now();
+    final displayedDate = DateUtils.addMonthsToMonthDate(initialDate, page);
+    final isCurrentMonth = DateUtils.isSameMonth(displayedDate, now);
+    emit(
+      DaysViewCurrentDateIsSet(
+        displayedDate: isCurrentMonth ? now : displayedDate,
+        reverseAnimation: state.displayedDate.isAfter(displayedDate),
+      ),
+    );
+  }
 }

@@ -65,4 +65,20 @@ class MonthViewController extends Cubit<MonthViewState>
       );
     }
   }
+
+  @override
+  void setPage(int page) {
+    final now = clock.now();
+    final focusedDate = DateUtils.addMonthsToMonthDate(initialDate, page);
+    final isCurrentMonth = DateUtils.isSameMonth(focusedDate, now);
+    if (DateUtils.isSameMonth(focusedDate, state.focusedDate)) {
+      return;
+    }
+    emit(
+      MonthViewCurrentMonthIsSet(
+        focusedDate: isCurrentMonth ? now : focusedDate,
+        reverseAnimation: state.focusedDate.isAfter(now),
+      ),
+    );
+  }
 }

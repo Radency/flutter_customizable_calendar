@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
+import 'package:flutter_customizable_calendar/src/ui/custom_widgets/widget_size.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
@@ -21,10 +22,16 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatefulWidget {
     super.key,
     this.breaks = const [],
     this.events = const [],
+    this.eventBuilders = const {},
+    this.showMoreTheme,
+    this.onShowMoreTap,
     this.onEventTap,
     this.dayWidth,
     this.controller,
   });
+
+  /// Events builder
+  final Map<Type, EventBuilder> eventBuilders;
 
   /// A day which needs to be displayed
   final DateTime dayDate;
@@ -57,6 +64,12 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// [CalendarView.month].
   final CalendarView viewType;
 
+  /// The theme of show more button
+  final MonthShowMoreTheme? showMoreTheme;
+
+  /// The callback which is called when user taps on show more button
+  final void Function(List<T> events, DateTime day)? onShowMoreTap;
+
   final double? dayWidth;
 
   final ScrollController? controller;
@@ -69,6 +82,18 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
     extends State<EventsLayout<T>> {
   /// Defines if show events in simplified way
   bool get simpleView => widget.viewType == CalendarView.month;
+
+  double _eventsContainerHeight = 0;
+
+  MonthShowMoreTheme get _getShowMoreButtonTheme =>
+      widget.showMoreTheme ?? const MonthShowMoreTheme();
+
+  int get maxEvents => max(
+        0,
+        ((_eventsContainerHeight - _getShowMoreButtonTheme.height) /
+                _getShowMoreButtonTheme.height)
+            .floor(),
+      );
 
   bool _eventPresentAtDay<E extends CalendarEvent>(E event) =>
       DateUtils.isSameDay(event.start, widget.dayDate) ||
@@ -96,7 +121,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
 
     return RenderIdProvider(
       id: Constants.layoutId,
-      key: widget.layoutsKeys[widget.dayDate] ??= GlobalKey(),
+      key: _getLayoutKey(),
       child: !simpleView
           ? CustomMultiChildLayout(
               delegate: _EventsLayoutDelegate<T>(
@@ -125,6 +150,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
                           child: child,
                         ),
                         child: EventView(
+                          eventBuilders: widget.eventBuilders,
                           key: _getEventKey(event),
                           event,
                           theme: widget.timelineTheme.floatingEventsTheme,
@@ -147,73 +173,155 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
                 }
                 return child!;
               },
-              child: ListView(
-                key: ValueKey(widget.controller),
-                controller: widget.controller,
-                children: [
-                  ...eventsToDisplay.map((event) {
-                    final range = DateTimeRange(
-                      start: DateUtils.dateOnly(event.start),
-                      end: DateUtils.dateOnly(event.end),
-                    );
-                    var eventDays = range.days.length + 1;
-                    if (event.end
-                        .isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
-                      eventDays -= 1;
-                    }
-                    var eventWidth = widget.dayWidth! * eventDays;
-                    if (widget.dayDate.weekday == 1) {
-                      var diff = event.end.weekday;
-                      if (event.end
-                          .isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
-                        diff -= 1;
-                      }
-                      eventWidth = widget.dayWidth! * diff;
-                    }
+              child: _buildMonthViewEvents(eventsToDisplay),
+            ),
+    );
+  }
 
-                    return Visibility(
-                      visible: DateUtils.dateOnly(event.start) ==
-                              DateUtils.dateOnly(widget.dayDate) ||
-                          widget.dayDate.weekday == 1,
-                      maintainState: true,
-                      maintainAnimation: true,
-                      maintainSize: true,
-                      maintainInteractivity: _eventPresentAtDay(event),
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Container(
-                          width: eventWidth,
-                          margin: const EdgeInsets.only(
-                            bottom: 2,
-                          ),
-                          child: RenderIdProvider(
-                            id: event,
-                            child: ValueListenableBuilder(
-                              valueListenable: widget.elevatedEvent,
-                              builder: (context, elevatedEvent, child) =>
-                                  Opacity(
-                                opacity:
-                                    (elevatedEvent?.id == event.id) ? 0.5 : 1,
-                                child: child,
-                              ),
-                              child: EventView(
-                                key: _getEventKey(event),
-                                event,
-                                theme: widget.timelineTheme.floatingEventsTheme,
-                                viewType: widget.viewType,
-                                onTap: () {
-                                  widget.onEventTap?.call(event);
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ],
+  GlobalKey<State<StatefulWidget>> _getLayoutKey() {
+    if (widget.layoutsKeys.containsKey(widget.dayDate)) {
+      widget.layoutsKeys.remove(widget.dayDate);
+    }
+    return widget.layoutsKeys[widget.dayDate] ??= GlobalKey();
+  }
+
+  Widget _buildMonthViewEvents(List<T> eventsToDisplay) {
+    final filteredEventsToDisplay =
+        _getFilteredEventsToDisplay(eventsToDisplay);
+    if (widget.onShowMoreTap != null) {
+      return WidgetSize(
+        onChange: (size) {
+          if (size == null) return;
+
+          if (_eventsContainerHeight != size.height) {
+            _eventsContainerHeight = size.height;
+            if (mounted) {
+              setState(() {});
+            }
+          }
+        },
+        child: Column(
+          key: ValueKey(widget.controller),
+          children: [
+            ...eventsToDisplay.take(maxEvents).map(_buildMonthViewEventItem),
+            if (filteredEventsToDisplay.length > maxEvents)
+              _buildShowMoreButton(filteredEventsToDisplay),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      controller: widget.controller,
+      physics: const BouncingScrollPhysics(),
+      itemBuilder: (context, index) =>
+          _buildMonthViewEventItem(eventsToDisplay[index]),
+      itemCount: eventsToDisplay.length,
+    );
+  }
+
+  List<T> _getFilteredEventsToDisplay(List<T> eventsToDisplay) {
+    return eventsToDisplay.where((element) {
+      return DateUtils.dateOnly(element.start) ==
+              DateUtils.dateOnly(widget.dayDate) ||
+          widget.dayDate.weekday == 1;
+    }).toList();
+  }
+
+  Visibility _buildMonthViewEventItem(T event) {
+    final range = DateTimeRange(
+      start: DateUtils.dateOnly(event.start),
+      end: DateUtils.dateOnly(event.end),
+    );
+    var eventDays = range.days.length + 1;
+    if (event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
+      eventDays -= 1;
+    }
+    var eventWidth = widget.dayWidth! * eventDays;
+    if (widget.dayDate.weekday == 1) {
+      var diff = event.end.weekday;
+      if (event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
+        diff -= 1;
+      }
+      eventWidth = widget.dayWidth! * diff;
+    }
+    return Visibility(
+      visible: DateUtils.dateOnly(event.start) ==
+              DateUtils.dateOnly(widget.dayDate) ||
+          widget.dayDate.weekday == 1,
+      maintainState: true,
+      maintainAnimation: true,
+      maintainSize: true,
+      maintainInteractivity: _eventPresentAtDay(event),
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: Container(
+          width: eventWidth,
+          height: _getShowMoreButtonTheme.eventHeight,
+          margin: const EdgeInsets.only(
+            bottom: 2,
+          ),
+          child: RenderIdProvider(
+            id: event,
+            child: ValueListenableBuilder(
+              valueListenable: widget.elevatedEvent,
+              builder: (context, elevatedEvent, child) => Opacity(
+                opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
+                child: child,
+              ),
+              child: EventView(
+                key: _getEventKey(event),
+                eventBuilders: widget.eventBuilders,
+                event,
+                theme: widget.timelineTheme.floatingEventsTheme,
+                viewType: widget.viewType,
+                onTap: () {
+                  widget.onEventTap?.call(event);
+                },
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShowMoreButton(List<T> eventsToDisplay) {
+    if (eventsToDisplay.isEmpty) {
+      return Container();
+    }
+
+    final theme = _getShowMoreButtonTheme;
+    return InkWell(
+      onTap: () {
+        widget.onShowMoreTap?.call(eventsToDisplay, widget.dayDate);
+      },
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: Container(
+          width: widget.dayWidth,
+          height: 24,
+          padding: theme.padding,
+          margin: const EdgeInsets.only(
+            bottom: 2,
+          ),
+          child: RenderIdProvider(
+            id: eventsToDisplay[maxEvents],
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.backgroundColor,
+                borderRadius: BorderRadius.circular(theme.borderRadius),
+              ),
+              child: Center(
+                child: Text(
+                  '+${eventsToDisplay.length - maxEvents}',
+                  style: theme.textStyle,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
