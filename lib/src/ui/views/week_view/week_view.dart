@@ -151,7 +151,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
       WeekViewKeys.events[event]?.currentContext?.findRenderObject()
           as RenderBox?;
 
-  List<AllDayCalendarEvent> get _allDayEvents => widget.events.whereType<AllDayCalendarEvent>().toList();
+  List<AllDayCalendarEvent> get _allDayEvents =>
+      widget.events.whereType<AllDayCalendarEvent>().toList();
 
   List<T> get _events {
     return widget.events

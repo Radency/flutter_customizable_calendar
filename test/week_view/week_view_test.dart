@@ -163,10 +163,11 @@ void main() {
       'All-Day event is displayed',
       (widgetTester) async {
         final event = SimpleAllDayEvent(
-            id: 'All-Day Event 1',
-            start: now,
-            duration: const Duration(days: 1),
-            title: 'All-Day Event 1');
+          id: 'All-Day Event 1',
+          start: now,
+          duration: const Duration(days: 1),
+          title: 'All-Day Event 1',
+        );
 
         final view = WeekView(
           controller: controller,
@@ -192,10 +193,11 @@ void main() {
       'All-Day event onTap callback is called',
       (widgetTester) async {
         final event = SimpleAllDayEvent(
-            id: 'All-Day Event 1',
-            start: now,
-            duration: const Duration(days: 1),
-            title: 'All-Day Event 1');
+          id: 'All-Day Event 1',
+          start: now,
+          duration: const Duration(days: 1),
+          title: 'All-Day Event 1',
+        );
 
         AllDayCalendarEvent? tappedEvent;
         final view = WeekView(
@@ -227,15 +229,17 @@ void main() {
       'All-Day events show more button is displayed',
       (widgetTester) async {
         final event = SimpleAllDayEvent(
-            id: 'All-Day Event 1',
-            start: now,
-            duration: const Duration(days: 1),
-            title: 'All-Day Event 1');
+          id: 'All-Day Event 1',
+          start: now,
+          duration: const Duration(days: 1),
+          title: 'All-Day Event 1',
+        );
         final otherEvent = SimpleAllDayEvent(
-            id: 'All-Day Event 2',
-            start: now,
-            duration: const Duration(days: 1),
-            title: 'All-Day Event 2');
+          id: 'All-Day Event 2',
+          start: now,
+          duration: const Duration(days: 1),
+          title: 'All-Day Event 2',
+        );
 
         final view = Material(
           child: WeekView(
@@ -269,20 +273,23 @@ void main() {
       'All-Day events show more button callback is called when tapped',
       (widgetTester) async {
         final event = SimpleAllDayEvent(
-            id: 'All-Day Event 1',
-            start: now,
-            duration: const Duration(days: 1),
-            title: 'All-Day Event 1');
+          id: 'All-Day Event 1',
+          start: now,
+          duration: const Duration(days: 1),
+          title: 'All-Day Event 1',
+        );
         final otherEvent = SimpleAllDayEvent(
-            id: 'All-Day Event 2',
-            start: now,
-            duration: const Duration(days: 1),
-            title: 'All-Day Event 2');
+          id: 'All-Day Event 2',
+          start: now,
+          duration: const Duration(days: 1),
+          title: 'All-Day Event 2',
+        );
         final otherEvent2 = SimpleAllDayEvent(
-            id: 'All-Day Event 3',
-            start: now,
-            duration: const Duration(days: 1),
-            title: 'All-Day Event 3');
+          id: 'All-Day Event 3',
+          start: now,
+          duration: const Duration(days: 1),
+          title: 'All-Day Event 3',
+        );
 
         var visibleEvents = <AllDayCalendarEvent>[];
         var allEvents = <AllDayCalendarEvent>[];
@@ -323,20 +330,23 @@ void main() {
       'All-Day events changes when switching to another week',
       (widgetTester) async {
         final event = SimpleAllDayEvent(
-            id: 'All-Day Event 1',
-            start: now,
-            duration: const Duration(days: 1),
-            title: 'All-Day Event 1');
+          id: 'All-Day Event 1',
+          start: now,
+          duration: const Duration(days: 1),
+          title: 'All-Day Event 1',
+        );
         final otherEvent = SimpleAllDayEvent(
-            id: 'All-Day Event 2',
-            start: now.add(const Duration(days: 7)),
-            duration: const Duration(days: 1),
-            title: 'All-Day Event 2');
+          id: 'All-Day Event 2',
+          start: now.add(const Duration(days: 7)),
+          duration: const Duration(days: 1),
+          title: 'All-Day Event 2',
+        );
         final otherEvent2 = SimpleAllDayEvent(
-            id: 'All-Day Event 3',
-            start: now.add(const Duration(days: 7)),
-            duration: const Duration(days: 1),
-            title: 'All-Day Event 3');
+          id: 'All-Day Event 3',
+          start: now.add(const Duration(days: 7)),
+          duration: const Duration(days: 1),
+          title: 'All-Day Event 3',
+        );
 
         var visibleEvents = <AllDayCalendarEvent>[];
         var allEvents = <AllDayCalendarEvent>[];
@@ -360,7 +370,7 @@ void main() {
         when(() => controller.state).thenReturn(
           withClock(
             clock,
-                () => WeekViewNextWeekSelected(focusedDate: nextWeek),
+            () => WeekViewNextWeekSelected(focusedDate: nextWeek),
           ),
         );
         await widgetTester.pumpWidget(runTestApp(view));
