@@ -130,9 +130,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   var _scrolling = false;
   ScrollController? _timelineController;
 
-  List<T> events = [];
-  List<AllDayCalendarEvent> allDayEvents = [];
-
   DateTime get _initialDate => widget.controller.initialDate;
 
   DateTime? get _endDate => widget.controller.endDate;
@@ -153,6 +150,15 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   RenderBox? _getEventBox(T event) =>
       WeekViewKeys.events[event]?.currentContext?.findRenderObject()
           as RenderBox?;
+
+  List<AllDayCalendarEvent> get _allDayEvents => widget.events.whereType<AllDayCalendarEvent>().toList();
+
+  List<T> get _events {
+    return widget.events
+        .where((element) => element is! AllDayCalendarEvent)
+        .toList()
+        .cast<T>();
+  }
 
   void _stopTimelineScrolling() =>
       _timelineController?.jumpTo(_timelineController?.offset ?? 0);
@@ -229,11 +235,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   @override
   void initState() {
     super.initState();
-    events = widget.events
-        .where((element) => element is! AllDayCalendarEvent)
-        .toList()
-        .cast<T>();
-    allDayEvents = widget.events.whereType<AllDayCalendarEvent>().toList();
     _weekPickerController = PageController(
       initialPage: _displayedWeek.start.difference(_initialWeek.start).inWeeks,
     );
@@ -394,8 +395,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               controller: widget.controller,
               overlayKey: _overlayKey,
               breaks: widget.breaks,
-              events: events,
-              allDayEvents: allDayEvents,
+              events: _events,
+              allDayEvents: _allDayEvents,
               allDayEventsTheme: widget.allDayEventsTheme,
               allDayEventsShowMoreBuilder: widget.allDayEventsShowMoreBuilder,
               onAllDayEventsShowMoreTap: widget.onAllDayEventsShowMoreTap,

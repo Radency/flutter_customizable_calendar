@@ -644,6 +644,20 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
               Navigator.of(context).pop(newItem);
             },
           ),
+          ListTile(
+            title: Text("Simple All Day Event"),
+            onTap: () {
+              final T newItem = SimpleAllDayEvent(
+                id: const Uuid().v1(),
+                start: timestamp.subtract(Duration(minutes: _minute)),
+                duration: Duration(days: 2),
+                title: "Simple All Day Event",
+                color: Colors.black,
+              ) as T;
+              listCubit.save(newItem);
+              Navigator.of(context).pop(newItem);
+            },
+          ),
         ],
       ),
     );

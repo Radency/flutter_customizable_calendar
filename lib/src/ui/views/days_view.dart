@@ -127,9 +127,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
   static DateTime get _now => clock.now();
 
-  List<T> events = [];
-  List<AllDayCalendarEvent> allDayEvents = [];
-
   DateTime get _initialDate => widget.controller.initialDate;
 
   DateTime? get _endDate => widget.controller.endDate;
@@ -152,6 +149,12 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   RenderBox? _getEventBox(T event) =>
       DaysViewKeys.events[event]?.currentContext?.findRenderObject()
           as RenderBox?;
+
+  List<AllDayCalendarEvent> get _allDayEvents =>
+      widget.events.whereType<AllDayCalendarEvent>().toList();
+
+  List<T> get _events =>
+      widget.events.where((event) => event is! AllDayCalendarEvent).toList();
 
   void _stopTimelineScrolling() =>
       _timelineController.jumpTo(_timelineController.offset);
@@ -233,9 +236,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   @override
   void initState() {
     super.initState();
-    events =
-        widget.events.where((event) => event is! AllDayCalendarEvent).toList();
-    allDayEvents = widget.events.whereType<AllDayCalendarEvent>().toList();
     _monthPickerController = PageController(
       initialPage: DateUtils.monthDelta(_initialDate, _displayedDate),
     );
@@ -322,7 +322,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         children: [
           _monthPicker(),
           _daysList(),
-          _allDayEvents(),
+          _buildAllDayEvents(),
           Expanded(
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
@@ -381,7 +381,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         ),
       );
 
-  Widget _allDayEvents() {
+  Widget _buildAllDayEvents() {
     final theme = widget.allDayEventsTheme;
 
     return BlocBuilder<DaysViewController, DaysViewState>(
@@ -392,7 +392,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
           child: AllDaysEventsList(
             eventKeys: DaysViewKeys.events,
             theme: theme,
-            allDayEvents: allDayEvents
+            allDayEvents: _allDayEvents
                 .where(
                   (element) =>
                       DateTimeRange(start: element.start, end: element.end)
@@ -529,7 +529,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                         eventsKeys: DaysViewKeys.events,
                         timelineTheme: widget.timelineTheme,
                         breaks: widget.breaks,
-                        events: events,
+                        events: _events,
                         elevatedEvent: _elevatedEvent,
                         onEventTap: widget.onEventTap,
                         eventBuilders: widget.eventBuilders,
