@@ -19,7 +19,7 @@
 
 * Fix `README` images links.
 
-## 0.1.4
+## 0.2.0
 
 - Added 
     * An option to override the `onEventLongPress` handler.
