@@ -41,20 +41,6 @@ class App extends StatelessWidget {
         title: 'Event 1',
         color: Colors.redAccent.shade200,
       ),
-      // SimpleAllDayEvent(
-      //   id: 'All-day 2',
-      //   start: today.add(Duration(days: 2)),
-      //   duration: const Duration(days: 6),
-      //   title: 'Event 2',
-      //   color: Colors.greenAccent.shade200,
-      // ),
-      SimpleAllDayEvent(
-        id: 'All-day 3',
-        start: today.add(Duration(days: 2)),
-        duration: const Duration(days: 2),
-        title: 'Event 3',
-        color: Colors.greenAccent.shade200,
-      ),
       SimpleAllDayEvent(
         id: 'All-day 4',
         start: today.add(Duration(days: 2)),
@@ -310,6 +296,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
             saverConfig: _saverConfig(),
             controller: _daysViewController,
             monthPickerTheme: _periodPickerTheme,
+            allDayEventsTheme: _getAllDayEventsTheme(),
             overrideOnEventLongPress: (details, event) {
               // ignore
               print(event);
@@ -322,33 +309,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
                       )));
             },
             onAllDayEventTap: print,
-            allDayEventsShowMoreBuilder: (visibleEvents, events) =>
-                GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => EventsListPage(
-                          events: events,
-                          day: events.first.start,
-                        )));
-              },
-              child: Container(
-                margin: const EdgeInsets.all(4),
-                padding: const EdgeInsets.all(4),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  'Show more (${events.length - visibleEvents.length})',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _theme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+            allDayEventsShowMoreBuilder: _getCustomAllDayEventsShowMoreBuilder,
             eventBuilders: _getEventBuilders(),
             daysListTheme: DaysListTheme(
               itemTheme: DaysListItemTheme(
@@ -381,6 +342,50 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
             },
           ),
         ],
+      );
+
+  AllDayEventsTheme _getAllDayEventsTheme() {
+    return AllDayEventsTheme(
+      listMaxRowsVisible: 3,
+      eventMargin: const EdgeInsets.all(2),
+      eventPadding: const EdgeInsets.all(2),
+      borderRadius: 8,
+      containerPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 4),
+      eventHeight: 32,
+      textStyle: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: _theme.secondaryHeaderColor,
+      ),
+    );
+  }
+
+  Widget _getCustomAllDayEventsShowMoreBuilder(visibleEvents, events) =>
+      GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => EventsListPage(
+                    events: events,
+                    day: events.first.start,
+                  )));
+        },
+        child: Container(
+          margin: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(4),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            'Show more (${events.length - visibleEvents.length})',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _theme.primaryColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       );
 
   Map<Type, EventBuilder<CalendarEvent>> _getEventBuilders() {
@@ -426,7 +431,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       controller: _weekViewController,
       eventBuilders: _getEventBuilders(),
       pageViewPhysics: const BouncingScrollPhysics(),
-      allDayEventsTheme: AllDayEventsTheme(listMaxRowsVisible: 5),
+      allDayEventsTheme: _getAllDayEventsTheme(),
       weekPickerTheme: _periodPickerTheme,
       overrideOnEventLongPress: (details, event) {
         // ignore
@@ -440,32 +445,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
                 )));
       },
       onAllDayEventTap: print,
-      allDayEventsShowMoreBuilder: (visibleEvents, events) => GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => EventsListPage(
-                    events: events,
-                    day: events.first.start,
-                  )));
-        },
-        child: Container(
-          margin: const EdgeInsets.all(4),
-          padding: const EdgeInsets.all(4),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            'Show more (${events.length - visibleEvents.length})',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: _theme.primaryColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
+      // allDayEventsShowMoreBuilder: _getCustomAllDayEventsShowMoreBuilder,
       divider: Divider(
         height: 2,
         thickness: 2,
@@ -638,7 +618,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
                 duration: Duration(hours: 1),
                 title: "Image event",
                 imgAsset: 'assets/images/gym.jpg',
-                color: Colors.black,
+                color: Colors.blueAccent,
               ) as T;
               listCubit.save(newItem);
               Navigator.of(context).pop(newItem);
@@ -650,9 +630,9 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
               final T newItem = SimpleAllDayEvent(
                 id: const Uuid().v1(),
                 start: timestamp.subtract(Duration(minutes: _minute)),
-                duration: Duration(days: 2),
+                duration: Duration(days: 5),
                 title: "Simple All Day Event",
-                color: Colors.black,
+                color: Colors.blueAccent,
               ) as T;
               listCubit.save(newItem);
               Navigator.of(context).pop(newItem);
