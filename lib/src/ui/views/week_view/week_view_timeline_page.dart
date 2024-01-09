@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
+import 'package:flutter_customizable_calendar/src/ui/custom_widgets/all_days_events_list.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
 class WeekViewTimelinePage<T extends FloatingCalendarEvent>
@@ -13,17 +14,35 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
     required this.overlayKey,
     required this.breaks,
     required this.events,
+    required this.allDayEvents,
     required this.elevatedEvent,
     required this.constraints,
     required this.timelineKey,
     required this.layoutKeys,
     required this.eventKeys,
+    required this.allDayEventsTheme,
     this.eventBuilders = const {},
     this.onEventTap,
     this.divider,
+    this.allDayEventsShowMoreBuilder,
+    this.onAllDayEventTap,
+    this.onAllDayEventsShowMoreTap,
     super.key,
   });
 
+  final void Function(
+    List<AllDayCalendarEvent> visibleEvents,
+    List<AllDayCalendarEvent> events,
+  )? onAllDayEventsShowMoreTap;
+
+  final void Function(AllDayCalendarEvent event)? onAllDayEventTap;
+
+  final Widget Function(
+    List<AllDayCalendarEvent> visibleEvents,
+    List<AllDayCalendarEvent> events,
+  )? allDayEventsShowMoreBuilder;
+  final AllDayEventsTheme allDayEventsTheme;
+  final List<AllDayCalendarEvent> allDayEvents;
   final Map<DateTime, GlobalKey> layoutKeys;
   final Map<CalendarEvent, GlobalKey> eventKeys;
 
@@ -91,10 +110,41 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
         right: widget.theme.padding.right,
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: EdgeInsets.only(left: timeScaleWidth),
             child: _daysRow(widget.weekDays),
+          ),
+          Padding(
+            padding: EdgeInsets.only(left: timeScaleWidth),
+            child: SizedBox(
+              child: AllDaysEventsList(
+                eventKeys: widget.eventKeys,
+                width: widget.constraints.maxWidth - timeScaleWidth,
+                theme: widget.allDayEventsTheme,
+                weekRange: DateTimeRange(
+                  start: widget.weekDays.first,
+                  end: widget.weekDays.last,
+                ),
+                allDayEvents: widget.allDayEvents
+                    .where(
+                      (element) =>
+                          DateTimeRange(start: element.start, end: element.end)
+                              .days
+                              .any(
+                                (d1) => widget.weekDays.any(
+                                  (d2) => DateUtils.isSameDay(d1, d2),
+                                ),
+                              ),
+                    )
+                    .toList(),
+                onEventTap: widget.onAllDayEventTap,
+                onShowMoreTap: widget.onAllDayEventsShowMoreTap,
+                showMoreBuilder: widget.allDayEventsShowMoreBuilder,
+                view: CalendarView.week,
+              ),
+            ),
           ),
           widget.divider ?? const SizedBox.shrink(),
           Expanded(

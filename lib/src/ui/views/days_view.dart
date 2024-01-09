@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 import 'package:flutter_customizable_calendar/src/ui/controllers/controllers.dart';
+import 'package:flutter_customizable_calendar/src/ui/custom_widgets/all_days_events_list.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
@@ -36,6 +37,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.daysListTheme = const DaysListTheme(),
     this.timelineTheme = const TimelineTheme(),
     this.floatingEventTheme = const FloatingEventsTheme(),
+    this.allDayEventsTheme = const AllDayEventsTheme(),
     this.breaks = const [],
     this.events = const [],
     this.eventBuilders = const {},
@@ -43,6 +45,9 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onEventTap,
     this.onEventUpdated,
     this.onDiscardChanges,
+    this.allDayEventsShowMoreBuilder,
+    this.onAllDayEventsShowMoreTap,
+    this.onAllDayEventTap,
   });
 
   /// Controller which allows to control the view
@@ -59,6 +64,24 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Floating events customization params
   final FloatingEventsTheme floatingEventTheme;
+
+  /// All day events theme
+  final AllDayEventsTheme allDayEventsTheme;
+
+  /// On all day events show more tap callback
+  final void Function(
+    List<AllDayCalendarEvent> visibleEvents,
+    List<AllDayCalendarEvent> events,
+  )? onAllDayEventsShowMoreTap;
+
+  /// On all day event tap callback
+  final void Function(AllDayCalendarEvent event)? onAllDayEventTap;
+
+  /// Builder for all day events show more button
+  final Widget Function(
+    List<AllDayCalendarEvent> visibleEvents,
+    List<AllDayCalendarEvent> events,
+  )? allDayEventsShowMoreBuilder;
 
   /// Breaks list to display
   final List<Break> breaks;
@@ -126,6 +149,12 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
   RenderBox? _getEventBox(T event) =>
       DaysViewKeys.events[event]?.currentContext?.findRenderObject()
           as RenderBox?;
+
+  List<AllDayCalendarEvent> get _allDayEvents =>
+      widget.events.whereType<AllDayCalendarEvent>().toList();
+
+  List<T> get _events =>
+      widget.events.where((event) => event is! AllDayCalendarEvent).toList();
 
   void _stopTimelineScrolling() =>
       _timelineController.jumpTo(_timelineController.offset);
@@ -293,6 +322,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
         children: [
           _monthPicker(),
           _daysList(),
+          _buildAllDayEvents(),
           Expanded(
             child: DraggableEventOverlay<T>(
               _elevatedEvent,
@@ -350,6 +380,38 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
           current.displayedDate,
         ),
       );
+
+  Widget _buildAllDayEvents() {
+    final theme = widget.allDayEventsTheme;
+
+    return BlocBuilder<DaysViewController, DaysViewState>(
+      bloc: widget.controller,
+      builder: (context, state) {
+        return SizedBox(
+          width: double.maxFinite,
+          child: AllDaysEventsList(
+            eventKeys: DaysViewKeys.events,
+            theme: theme,
+            allDayEvents: _allDayEvents
+                .where(
+                  (element) =>
+                      DateTimeRange(start: element.start, end: element.end)
+                          .days
+                          .any(
+                            (d) => DateUtils.isSameDay(d, state.focusedDate),
+                          ),
+                )
+                .toList(),
+            onShowMoreTap: widget.onAllDayEventsShowMoreTap,
+            showMoreBuilder: widget.allDayEventsShowMoreBuilder,
+            onEventTap: widget.onAllDayEventTap,
+            width: MediaQuery.of(context).size.width,
+            view: CalendarView.days,
+          ),
+        );
+      },
+    );
+  }
 
   Widget _daysList() {
     final theme = widget.daysListTheme;
@@ -467,7 +529,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                         eventsKeys: DaysViewKeys.events,
                         timelineTheme: widget.timelineTheme,
                         breaks: widget.breaks,
-                        events: widget.events,
+                        events: _events,
                         elevatedEvent: _elevatedEvent,
                         onEventTap: widget.onEventTap,
                         eventBuilders: widget.eventBuilders,

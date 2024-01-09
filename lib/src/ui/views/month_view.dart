@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/custom/custom_linked_scroll_controller.dart';
-import 'package:flutter_customizable_calendar/src/ui/themes/month_show_more_theme.dart';
 import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.dart';
 
 /// A key holder of all MonthView keys

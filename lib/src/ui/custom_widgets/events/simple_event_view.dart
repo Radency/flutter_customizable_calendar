@@ -13,7 +13,6 @@ class SimpleEventView extends StatelessWidget {
 
   final CalendarView viewType;
   final SimpleEvent event;
-
   final ViewEventTheme theme;
 
   @override

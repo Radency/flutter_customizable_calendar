@@ -411,6 +411,218 @@ void main() {
         },
         skip: false,
       );
+
+      testWidgets(
+        'Clicking on all day events triggers the callback',
+        (widgetTester) async {
+          final oneEvent = SimpleAllDayEvent(
+            id: 'SimpleEvent1',
+            start: today,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 1',
+          );
+          AllDayCalendarEvent? allDayEvent;
+          final view = DaysView(
+            controller: controller,
+            saverConfig: _saverConfig(),
+            events: [oneEvent],
+            allDayEventsTheme: const AllDayEventsTheme(
+              elevation: 0,
+              margin: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(),
+            ),
+            onAllDayEventTap: (event) {
+              allDayEvent = event;
+            },
+          );
+
+          when(() => controller.initialDate).thenReturn(currentMonth);
+          when(() => controller.endDate).thenReturn(currentMonthEnd);
+          when(() => controller.state)
+              .thenReturn(initialStateWithDate(oneEvent.start));
+
+          await widgetTester.pumpWidget(runTestApp(view));
+
+          await widgetTester.tapAt(
+            widgetTester.getCenter(
+              find.text(
+                'All-Day Event 1',
+              ),
+            ),
+          );
+
+          expect(allDayEvent, oneEvent);
+        },
+        skip: false,
+      );
+
+      testWidgets(
+        'Clicking on all day events show more button triggers the callback',
+        (widgetTester) async {
+          final oneEvent = SimpleAllDayEvent(
+            id: 'SimpleEvent1',
+            start: today,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 1',
+          );
+          final otherEvent = SimpleAllDayEvent(
+            id: 'SimpleEvent2',
+            start: today,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 2',
+          );
+
+          var visible = <AllDayCalendarEvent>[];
+          var all = <AllDayCalendarEvent>[];
+          final view = Material(
+            child: DaysView(
+              controller: controller,
+              saverConfig: _saverConfig(),
+              events: [oneEvent, otherEvent],
+              allDayEventsTheme: const AllDayEventsTheme(
+                elevation: 0,
+                margin: EdgeInsets.zero,
+                listMaxRowsVisible: 1,
+              ),
+              onAllDayEventsShowMoreTap: (v, a) {
+                visible = v;
+                all = a;
+              },
+            ),
+          );
+
+          when(() => controller.initialDate).thenReturn(currentMonth);
+          when(() => controller.endDate).thenReturn(currentMonthEnd);
+          when(() => controller.state)
+              .thenReturn(initialStateWithDate(oneEvent.start));
+
+          await widgetTester.pumpWidget(runTestApp(view));
+
+          await widgetTester.tapAt(
+            widgetTester.getCenter(
+              find.text(
+                '+1',
+              ),
+            ),
+          );
+
+          expect(all, [oneEvent, otherEvent]);
+          expect(visible, [oneEvent]);
+        },
+        skip: false,
+      );
+
+      testWidgets(
+        'Switching to another day scrolls the '
+        'timeline and changes all day events',
+        (widgetTester) async {
+          final oneEvent = SimpleAllDayEvent(
+            id: 'SimpleEvent1',
+            start: today,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 1',
+          );
+          final otherEvent = SimpleAllDayEvent(
+            id: 'SimpleEvent2',
+            start: today.add(const Duration(days: 1)),
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 2',
+          );
+          final view = DaysView(
+            controller: controller,
+            saverConfig: _saverConfig(),
+            events: [oneEvent, otherEvent],
+          );
+
+          when(() => controller.initialDate).thenReturn(currentMonth);
+          when(() => controller.endDate).thenReturn(currentMonthEnd);
+          whenListen(
+            controller,
+            Stream<DaysViewState>.fromIterable([
+              initialStateWithDate(oneEvent.start),
+              DaysViewDaySelected(displayedDate: otherEvent.start),
+            ]),
+            initialState: initialStateWithDate(oneEvent.start),
+          );
+
+          await widgetTester.pumpWidget(runTestApp(view));
+
+          final oneEventKey = DaysViewKeys.events[oneEvent]!;
+          expect(find.byKey(oneEventKey), findsOneWidget);
+          expect(DaysViewKeys.events[otherEvent], isNull); // Doesn't exist
+
+          final otherDayItemFinder = find.widgetWithText(
+            DaysListItem,
+            otherEvent.start.day.toString(),
+          );
+
+          expect(otherDayItemFinder, findsOneWidget);
+
+          await widgetTester.tap(otherDayItemFinder);
+          await widgetTester.pumpAndSettle();
+
+          final otherEventKey = DaysViewKeys.events[otherEvent]!;
+
+          expect(find.byKey(oneEventKey), findsNothing);
+          expect(find.byKey(otherEventKey), findsOneWidget);
+          verify(() => controller.selectDay(any())).called(1);
+        },
+        skip: false,
+      );
+
+      testWidgets(
+        'shore more button does not show when there is no more events',
+        (widgetTester) async {
+          final oneEvent = SimpleAllDayEvent(
+            id: 'SimpleEvent1',
+            start: today,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 1',
+          );
+          final otherEvent = SimpleAllDayEvent(
+            id: 'SimpleEvent2',
+            start: today,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 2',
+          );
+          final otherEvent2 = SimpleAllDayEvent(
+            id: 'SimpleEvent3',
+            start: today,
+            duration: const Duration(days: 1),
+            title: 'All-Day Event 3',
+          );
+
+          const showMoreKey = Key('showMore');
+          final view = Material(
+            child: DaysView(
+              controller: controller,
+              saverConfig: _saverConfig(),
+              events: [oneEvent, otherEvent, otherEvent2],
+              allDayEventsTheme: const AllDayEventsTheme(
+                elevation: 0,
+                margin: EdgeInsets.zero,
+                listMaxRowsVisible: 3,
+              ),
+              allDayEventsShowMoreBuilder: (v, a) {
+                return Container(
+                  key: showMoreKey,
+                  child: const Text('+'),
+                );
+              },
+            ),
+          );
+
+          when(() => controller.initialDate).thenReturn(currentMonth);
+          when(() => controller.endDate).thenReturn(currentMonthEnd);
+          when(() => controller.state)
+              .thenReturn(initialStateWithDate(oneEvent.start));
+
+          await widgetTester.pumpWidget(runTestApp(view));
+
+          expect(find.byKey(showMoreKey), findsNothing);
+        },
+        skip: false,
+      );
     },
     skip: false,
   );

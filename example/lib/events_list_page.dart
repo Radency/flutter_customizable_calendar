@@ -61,6 +61,14 @@ class EventsListPage extends StatelessWidget {
                                         event is ImageCalendarEvent) ...[
                                       SizedBox(width: 8),
                                       Text(_formatEventDate(event))
+                                    ],
+                                    if (event is AllDayCalendarEvent) ...[
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'All Day',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      )
                                     ]
                                   ],
                                 )),
@@ -124,6 +132,8 @@ class EventsListPage extends StatelessWidget {
                 ? 'Break'
                 : event is ImageCalendarEvent
                     ? event.title
-                    : 'Unknown Event';
+                    : event is SimpleAllDayEvent
+                        ? event.title
+                        : 'Unknown Event';
   }
 }
