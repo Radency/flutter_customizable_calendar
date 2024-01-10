@@ -21,7 +21,7 @@ class EventsListPage extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Container(
                     padding: EdgeInsets.all(8),
-                    height: event is ImageCalendarEvent ? 200 : 50,
+                    height: event is ImageCalendarEvent ? 200 : null,
                     decoration: BoxDecoration(
                       image: event is ImageCalendarEvent
                           ? DecorationImage(
@@ -36,45 +36,45 @@ class EventsListPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                                padding: EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 4,
-                                      offset: Offset(0, 2),
-                                    )
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(_getEventText(event)),
-                                    if (event is SimpleEvent ||
-                                        event is ImageCalendarEvent) ...[
-                                      SizedBox(width: 8),
-                                      Text(_formatEventDate(event))
-                                    ],
-                                    if (event is AllDayCalendarEvent) ...[
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'All Day',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                  padding: EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
                                       )
-                                    ]
-                                  ],
-                                )),
-                          ],
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Flexible(
+                                          child: Text(_getEventText(event))),
+                                      if (event is SimpleEvent ||
+                                          event is ImageCalendarEvent) ...[
+                                        SizedBox(width: 8),
+                                        Text(_formatEventDate(event))
+                                      ],
+                                    ],
+                                  )),
+                            ],
+                          ),
                         ),
-                        if (event is SimpleEvent || event is ImageCalendarEvent)
+                        const SizedBox(
+                          width: 32,
+                        ),
+                        if (event is SimpleEvent ||
+                            event is ImageCalendarEvent ||
+                            event is AllDayCalendarEvent)
                           Container(
                             padding: EdgeInsets.all(4),
                             decoration: BoxDecoration(
@@ -97,6 +97,8 @@ class EventsListPage extends StatelessWidget {
   }
 
   String _formatEventDuration(CalendarEvent event) {
+    if (event is AllDayCalendarEvent) return 'All Day';
+
     final duration = event.duration;
     final hours = duration.inHours;
     final minutes = duration.inMinutes - hours * 60;
