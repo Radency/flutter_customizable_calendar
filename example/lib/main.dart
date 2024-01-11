@@ -298,13 +298,64 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       );
 
   final dayDateTimeFormatter = DateFormat('hh:mm a');
+  final monthDateTimeFormatter = DateFormat('MMM dd');
 
   Widget _scheduleListView() => ScheduleListView(
         breaks: listCubit.state.breaks.values.toList(),
         events: listCubit.state.events.values.cast<T>().toList(),
         controller: _scheduleListViewController,
+        floatingEventsTheme: _floatingEventsTheme,
         eventBuilders: {
           ..._getEventBuilders(),
+          SimpleAllDayEvent: (context, event) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(
+                    4,
+                  ),
+                  color: Colors.black12,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text(
+                          'All-day',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        (event as SimpleAllDayEvent).title,
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Divider(color: Colors.black),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                              '${monthDateTimeFormatter.format(event.start)} - '
+                              '${monthDateTimeFormatter.format(event.end)}'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
           Break: (context, brk) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),

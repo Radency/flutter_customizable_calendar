@@ -96,7 +96,6 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
           2,
         ),
         reverseAnimation: true,
-        animePicker: false,
       ),
     );
   }
@@ -105,11 +104,16 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
   @override
   void reset() {
     final now = clock.now();
-    final reversed = state.displayedDate.isBefore(now);
+    final day = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    );
+    final reversed = state.displayedDate.isBefore(day);
     emit(
       ScheduleListViewControllerCurrentDateIsSet(
-        animateTo: now,
-        displayedDate: now,
+        animateTo: day,
+        displayedDate: state.displayedDate,
         reverseAnimation: reversed,
       ),
     );
@@ -150,7 +154,13 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
         animateTo: displayedDate,
         displayedDate: state.displayedDate,
         animePicker: displayedDate.month != state.displayedDate.month,
-        reverseAnimation: displayedDate.isBefore(state.displayedDate),
+        reverseAnimation: displayedDate.isBefore(
+          DateTime(
+            state.displayedDate.year,
+            state.displayedDate.month,
+            state.displayedDate.day,
+          ),
+        ),
       ),
     );
   }

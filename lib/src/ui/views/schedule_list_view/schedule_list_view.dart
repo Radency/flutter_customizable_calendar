@@ -16,6 +16,7 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
     this.eventBuilders = const {},
     this.theme = const ScheduleListViewTheme(),
     this.monthPickerTheme = const DisplayedPeriodPickerTheme(),
+    this.floatingEventsTheme = const FloatingEventsTheme(),
     this.onEventTap,
     this.monthPickerBuilder,
     super.key,
@@ -25,6 +26,11 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
   /// If you want to customize the default schedule list view, you need to
   /// specify this theme.
   final ScheduleListViewTheme theme;
+
+  /// The theme for the floating events.
+  /// If you want to customize the default floating events, you need to
+  /// specify this theme.
+  final FloatingEventsTheme floatingEventsTheme;
 
   /// The theme for the month picker.
   /// If you want to customize the default month picker, you need to
@@ -235,6 +241,7 @@ class _ScheduleListViewState<T extends CalendarEvent>
         padding: theme.eventPadding,
         child: EventView(
           eventBuilders: widget.eventBuilders,
+          theme: widget.floatingEventsTheme,
           event,
           viewType: CalendarView.scheduleList,
           onTap: () {
