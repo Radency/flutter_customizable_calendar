@@ -10,9 +10,9 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
   /// Creates ScheduleListView controller instance.
   const ScheduleListView({
-    required this.breaks,
-    required this.events,
     required this.controller,
+    this.events = const [],
+    this.breaks = const [],
     this.eventBuilders = const {},
     this.theme = const ScheduleListViewTheme(),
     this.monthPickerTheme = const DisplayedPeriodPickerTheme(),
