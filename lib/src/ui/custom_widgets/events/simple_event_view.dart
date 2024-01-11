@@ -44,6 +44,11 @@ class SimpleEventView extends StatelessWidget {
           vertical: 4,
           horizontal: 4,
         );
+      case CalendarView.scheduleList:
+        return const EdgeInsets.symmetric(
+          vertical: 4,
+          horizontal: 4,
+        );
     }
   }
 
@@ -56,6 +61,8 @@ class SimpleEventView extends StatelessWidget {
         return max(1, difference.inHours * 4);
       case CalendarView.month:
         return 1;
+      case CalendarView.scheduleList:
+        return null;
     }
   }
 }

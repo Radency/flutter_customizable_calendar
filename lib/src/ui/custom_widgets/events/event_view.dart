@@ -5,9 +5,9 @@ import 'package:flutter_customizable_calendar/src/ui/custom_widgets/events/simpl
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
 import 'package:flutter_customizable_calendar/src/utils/enums.dart';
 
-/// Wrapper for all [FloatingCalendarEvent] views. It needs to unify
+/// Wrapper for all [CalendarEvent] views. It needs to unify
 /// their main views parameters (like elevation, shape, margin).
-class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
+class EventView<T extends CalendarEvent> extends StatelessWidget {
   /// Creates a view of given [event].
   const EventView(
     this.event, {
@@ -107,6 +107,8 @@ class EventView<T extends FloatingCalendarEvent> extends StatelessWidget {
         return theme.weekTheme;
       case CalendarView.month:
         return theme.monthTheme;
+      case CalendarView.scheduleList:
+        return theme.dayTheme;
     }
   }
 }

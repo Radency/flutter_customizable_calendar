@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 void main() => runApp(const App());
@@ -38,7 +39,7 @@ class App extends StatelessWidget {
         id: 'All-day 1',
         start: today,
         duration: const Duration(days: 2),
-        title: 'Event 1',
+        title: 'Event 1 (all-day) 1 - long title to test the text overflow',
         color: Colors.redAccent.shade200,
       ),
       SimpleAllDayEvent(
@@ -170,6 +171,12 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     initialDate: _initialDate,
     endDate: _endDate,
   );
+
+  final _scheduleListViewController = ScheduleListViewController(
+    initialDate: _initialDate,
+    endDate: _endDate,
+  );
+
   late final TabController _tabController;
   late ThemeData _theme;
 
@@ -182,12 +189,14 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         0: _daysViewController,
         1: _weekViewController,
         2: _monthViewController,
+        3: _scheduleListViewController,
       };
 
   Map<int, String> get _segmentLabels => {
         0: CalendarView.days.name,
         1: CalendarView.week.name,
         2: CalendarView.month.name,
+        3: "List",
       };
 
   late final ListCubit listCubit;
@@ -195,10 +204,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-      length: 3,
-      vsync: this,
-    );
+    _tabController = TabController(length: 4, vsync: this, initialIndex: 3);
     listCubit = context.read<ListCubit>();
   }
 
@@ -287,7 +293,128 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
           _daysView(),
           _weekView(),
           _monthView(),
+          _scheduleListView(),
         ],
+      );
+
+  final dayDateTimeFormatter = DateFormat('hh:mm a');
+  final monthDateTimeFormatter = DateFormat('MMM dd');
+
+  Widget _scheduleListView() => ScheduleListView(
+        breaks: listCubit.state.breaks.values.toList(),
+        events: listCubit.state.events.values.cast<T>().toList(),
+        controller: _scheduleListViewController,
+        floatingEventsTheme: _floatingEventsTheme,
+        eventBuilders: {
+          ..._getEventBuilders(),
+          SimpleAllDayEvent: (context, event) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(
+                    4,
+                  ),
+                  color: Colors.black12,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text(
+                          'All-day',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        (event as SimpleAllDayEvent).title,
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Divider(color: Colors.black),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                              '${monthDateTimeFormatter.format(event.start)} - '
+                              '${monthDateTimeFormatter.format(event.end)}'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+          Break: (context, brk) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(
+                    4,
+                  ),
+                  color: Colors.black12,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Text('Break'),
+                      Row(
+                        children: [
+                          Text('${dayDateTimeFormatter.format(brk.start)} - '
+                              '${dayDateTimeFormatter.format(brk.end)}'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+        },
+        monthPickerTheme: _periodPickerTheme,
+        monthPickerBuilder: (nextMonth, prevMonth, toTime, currentTime) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  onPressed: prevMonth,
+                  icon: const Icon(Icons.arrow_back_ios),
+                ),
+                Text(
+                  currentTime.year != DateTime.now().year
+                      ? DateFormat('MMMM yyyy').format(currentTime)
+                      : DateFormat('MMMM').format(currentTime),
+                  style: _textStyle.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                IconButton(
+                  onPressed: nextMonth,
+                  icon: const Icon(Icons.arrow_forward_ios),
+                ),
+              ],
+            ),
+          );
+        },
       );
 
   Widget _daysView() => Stack(
@@ -347,15 +474,15 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
   AllDayEventsTheme _getAllDayEventsTheme() {
     return AllDayEventsTheme(
       listMaxRowsVisible: 3,
-      eventMargin: const EdgeInsets.all(2),
-      eventPadding: const EdgeInsets.all(2),
+      eventMargin: const EdgeInsets.all(4),
+      eventPadding: const EdgeInsets.symmetric(horizontal: 4),
       borderRadius: 8,
-      containerPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 4),
+      containerPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       eventHeight: 32,
+      elevation: 2,
       textStyle: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: _theme.secondaryHeaderColor,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
@@ -431,7 +558,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       controller: _weekViewController,
       eventBuilders: _getEventBuilders(),
       pageViewPhysics: const BouncingScrollPhysics(),
-      allDayEventsTheme: _getAllDayEventsTheme(),
+      // allDayEventsTheme: _getAllDayEventsTheme(),
       weekPickerTheme: _periodPickerTheme,
       // overrideOnEventLongPress: (details, event) {
       //   // ignore

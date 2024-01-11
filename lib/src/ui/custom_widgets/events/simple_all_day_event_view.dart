@@ -39,6 +39,8 @@ class SimpleAllDayEventView extends StatelessWidget {
         return max(1, difference.inHours * 4);
       case CalendarView.month:
         return 1;
+      case CalendarView.scheduleList:
+        return null;
     }
   }
 }

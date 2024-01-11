@@ -8,4 +8,7 @@ enum CalendarView {
 
   /// Is MonthView
   month,
+
+  /// Is ScheduleListView
+  scheduleList
 }
