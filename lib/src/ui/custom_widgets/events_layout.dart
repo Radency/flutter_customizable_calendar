@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
+import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_month_view_events_list_builder.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_widgets.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/widget_size.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/themes.dart';
@@ -25,6 +26,7 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.eventBuilders = const {},
     this.showMoreTheme,
     this.onShowMoreTap,
+    this.eventsListBuilder,
     this.onEventTap,
     this.dayWidth,
     this.controller,
@@ -65,9 +67,18 @@ class EventsLayout<T extends FloatingCalendarEvent> extends StatefulWidget {
   final CalendarView viewType;
 
   /// The theme of show more button
+  /// Works only if [eventsListBuilder] is not provided
   final MonthShowMoreTheme? showMoreTheme;
 
+  /// Custom builder for show more button
+  final List<CustomMonthViewEventsListBuilder<T>> Function(
+    BuildContext,
+    List<T> events,
+    DateTime day,
+  )? eventsListBuilder;
+
   /// The callback which is called when user taps on show more button
+  /// Works only if [eventsListBuilder] is not provided
   final void Function(List<T> events, DateTime day)? onShowMoreTap;
 
   final double? dayWidth;
@@ -188,6 +199,26 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
   Widget _buildMonthViewEvents(List<T> eventsToDisplay) {
     final filteredEventsToDisplay =
         _getFilteredEventsToDisplay(eventsToDisplay);
+
+    if (widget.eventsListBuilder != null) {
+      return Column(
+        key: ValueKey(widget.controller),
+        children: [
+          ...widget.eventsListBuilder!(
+            context,
+            filteredEventsToDisplay,
+            widget.dayDate,
+          )
+              .map((e) {
+            return _buildMonthViewEventItem(
+              e.event ,
+              e.builder(context),
+            );
+          }),
+        ],
+      );
+    }
+
     if (widget.onShowMoreTap != null) {
       return WidgetSize(
         onChange: (size) {
@@ -203,7 +234,12 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
         child: Column(
           key: ValueKey(widget.controller),
           children: [
-            ...eventsToDisplay.take(maxEvents).map(_buildMonthViewEventItem),
+            ...eventsToDisplay.take(maxEvents).map(
+                  (e) => _buildMonthViewEventItem(
+                    e,
+                    _buildEventView(e),
+                  ),
+                ),
             if (filteredEventsToDisplay.length > maxEvents)
               _buildShowMoreButton(filteredEventsToDisplay),
           ],
@@ -214,8 +250,12 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
     return ListView.builder(
       controller: widget.controller,
       physics: const BouncingScrollPhysics(),
-      itemBuilder: (context, index) =>
-          _buildMonthViewEventItem(eventsToDisplay[index]),
+      itemBuilder: (context, index) => _buildMonthViewEventItem(
+        eventsToDisplay[index],
+        _buildEventView(
+          eventsToDisplay[index],
+        ),
+      ),
       itemCount: eventsToDisplay.length,
     );
   }
@@ -228,23 +268,8 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
     }).toList();
   }
 
-  Visibility _buildMonthViewEventItem(T event) {
-    final range = DateTimeRange(
-      start: DateUtils.dateOnly(event.start),
-      end: DateUtils.dateOnly(event.end),
-    );
-    var eventDays = range.days.length + 1;
-    if (event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
-      eventDays -= 1;
-    }
-    var eventWidth = widget.dayWidth! * eventDays;
-    if (widget.dayDate.weekday == 1) {
-      var diff = event.end.weekday;
-      if (event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
-        diff -= 1;
-      }
-      eventWidth = widget.dayWidth! * diff;
-    }
+  Visibility _buildMonthViewEventItem(T event, Widget child) {
+    final eventWidth = _getEventWidth(event);
     return Visibility(
       visible: DateUtils.dateOnly(event.start) ==
               DateUtils.dateOnly(widget.dayDate) ||
@@ -269,21 +294,45 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
                 opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
                 child: child,
               ),
-              child: EventView(
-                key: _getEventKey(event),
-                eventBuilders: widget.eventBuilders,
-                event,
-                theme: widget.timelineTheme.floatingEventsTheme,
-                viewType: widget.viewType,
-                onTap: () {
-                  widget.onEventTap?.call(event);
-                },
-              ),
+              child: child,
             ),
           ),
         ),
       ),
     );
+  }
+
+  EventView<dynamic> _buildEventView(T event) {
+    return EventView(
+      key: _getEventKey(event),
+      eventBuilders: widget.eventBuilders,
+      event,
+      theme: widget.timelineTheme.floatingEventsTheme,
+      viewType: widget.viewType,
+      onTap: () {
+        widget.onEventTap?.call(event);
+      },
+    );
+  }
+
+  double _getEventWidth(FloatingCalendarEvent event) {
+    final range = DateTimeRange(
+      start: DateUtils.dateOnly(event.start),
+      end: DateUtils.dateOnly(event.end),
+    );
+    var eventDays = range.days.length + 1;
+    if (event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
+      eventDays -= 1;
+    }
+    var eventWidth = widget.dayWidth! * eventDays;
+    if (widget.dayDate.weekday == 1) {
+      var diff = event.end.weekday;
+      if (event.end.isAtSameMomentAs(DateUtils.dateOnly(event.end))) {
+        diff -= 1;
+      }
+      eventWidth = widget.dayWidth! * diff;
+    }
+    return eventWidth;
   }
 
   Widget _buildShowMoreButton(List<T> eventsToDisplay) {

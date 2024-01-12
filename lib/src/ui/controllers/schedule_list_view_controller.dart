@@ -1,4 +1,5 @@
 import 'package:clock/clock.dart';
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,26 +38,44 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
   late final Map<DateTime, List<CalendarEvent>> grouped;
 
   /// Returns the index of the group to which the current date belongs
-  int get animateToGroupIndex {
+  int animateToGroupIndex({
+    required Map<DateTime, List<CalendarEvent>> events,
+    bool ignoreEmpty = false,
+  }) {
+    final keys = events.keys.toList();
+
+    late final DateTime targetDate;
+
     if (state is ScheduleListViewControllerCurrentDateIsSet) {
       final animateTo =
           (state as ScheduleListViewControllerCurrentDateIsSet).animateTo;
-      return grouped.keys.toList().indexOf(
-            DateTime(
-              animateTo.year,
-              animateTo.month,
-              animateTo.day,
-            ),
-          );
+      targetDate = DateTime(
+        animateTo.year,
+        animateTo.month,
+        animateTo.day,
+      );
+    } else {
+      targetDate = DateTime(
+        state.displayedDate.year,
+        state.displayedDate.month,
+        state.displayedDate.day,
+      );
     }
 
-    return grouped.keys.toList().indexOf(
-          DateTime(
-            state.displayedDate.year,
-            state.displayedDate.month,
-            state.displayedDate.day,
-          ),
-        );
+    final index = keys.indexOf(targetDate);
+    print('target index $index');
+    if (index != -1) {
+      return index;
+    }
+
+    // return closest target date or closes
+    final closest = keys.reduce((a, b) {
+      final aDiff = a.difference(targetDate).abs();
+      final bDiff = b.difference(targetDate).abs();
+      return aDiff < bDiff ? a : b;
+    });
+    print('closest index ${keys.indexOf(closest)}');
+    return keys.indexOf(closest);
   }
 
   @override

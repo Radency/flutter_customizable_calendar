@@ -19,6 +19,8 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
     this.floatingEventsTheme = const FloatingEventsTheme(),
     this.onEventTap,
     this.monthPickerBuilder,
+    this.dayBuilder,
+    this.ignoreDaysWithoutEvents = false,
     super.key,
   });
 
@@ -58,7 +60,21 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
 
   /// Event builders
   /// Allows to specify custom builders for events
+  /// Works only if you don't specify [dayBuilder] builder.
   final Map<Type, EventBuilder> eventBuilders;
+
+  /// Custom day builder
+  /// Allows to specify custom builder for day
+  /// Make sure you don't have many widgets with 0 height in your builder
+  /// If you don't need empty days, you can set
+  /// [ignoreDaysWithoutEvents] to true
+  final Widget Function(
+    List<CalendarEvent> events,
+    DateTime date,
+  )? dayBuilder;
+
+  /// If true, days without events will be ignored.
+  final bool ignoreDaysWithoutEvents;
 
   /// The builder for the month picker.
   /// If you want to use your own month picker, you need
@@ -102,27 +118,22 @@ class _ScheduleListViewState<T extends CalendarEvent>
     });
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      _scrollToCurrentPosition(animate: false);
+      _scrollToCurrentPosition(animate: false, events: _getGrouped());
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final grouped = {
-      ...widget.controller.grouped,
-      ...groupBy(
-        [...widget.breaks, ...widget.events].sortedBy((e) => e.start),
-        (e) => DateTime(e.start.year, e.start.month, e.start.day),
-      ),
-    };
+    final grouped = _getGrouped();
 
     return BlocListener<ScheduleListViewController,
         ScheduleListViewControllerState>(
       bloc: widget.controller,
+      listenWhen: (previous, current) => true,
       listener: (context, state) {
         if (state is ScheduleListViewControllerCurrentDateIsSet &&
             state.animeList) {
-          _scrollToCurrentPosition();
+          _scrollToCurrentPosition(events: grouped);
         }
       },
       child: Column(
@@ -187,6 +198,20 @@ class _ScheduleListViewState<T extends CalendarEvent>
     );
   }
 
+  Map<DateTime, List<CalendarEvent>> _getGrouped() {
+    final grouped = {
+      ...widget.controller.grouped,
+      ...groupBy(
+        [...widget.breaks, ...widget.events].sortedBy((e) => e.start),
+        (e) => DateTime(e.start.year, e.start.month, e.start.day),
+      ),
+    };
+    if (widget.ignoreDaysWithoutEvents) {
+      grouped.removeWhere((key, value) => value.isEmpty);
+    }
+    return grouped;
+  }
+
   Widget _itemBuilder(int i, Map<DateTime, List<CalendarEvent>> grouped) {
     if (i < 0) {
       return const SizedBox();
@@ -202,6 +227,10 @@ class _ScheduleListViewState<T extends CalendarEvent>
 
     final date = group.key;
     final events = group.value;
+
+    if (widget.dayBuilder != null) {
+      return widget.dayBuilder!(events, date);
+    }
 
     return Container(
       width: double.infinity,
@@ -252,16 +281,26 @@ class _ScheduleListViewState<T extends CalendarEvent>
     );
   }
 
-  void _scrollToCurrentPosition({bool animate = true}) {
+  void _scrollToCurrentPosition({
+    required Map<DateTime, List<CalendarEvent>> events,
+    bool animate = true,
+  }) {
     if (animate) {
       _scrollController.scrollTo(
-        index: widget.controller.animateToGroupIndex,
+        index: widget.controller.animateToGroupIndex(
+          ignoreEmpty: widget.ignoreDaysWithoutEvents,
+          events: events,
+        ),
         duration: const Duration(milliseconds: 300),
         curve: Curves.ease,
       );
     } else {
       _scrollController.jumpTo(
-        index: widget.controller.animateToGroupIndex,
+        index: widget.controller.animateToGroupIndex(
+          ignoreEmpty: widget.ignoreDaysWithoutEvents,
+          events: events,
+        ),
+        alignment: 0,
       );
     }
   }

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/custom/custom_linked_scroll_controller.dart';
+import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_month_view_events_list_builder.dart';
 import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.dart';
 
 /// A key holder of all MonthView keys
@@ -25,16 +26,19 @@ abstract class MonthViewKeys {
 class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Creates a Month view. Parameters [saverConfig] [controller] are required.
   const MonthView({
-    required this.saverConfig,
     required this.controller,
+    this.saverConfig,
     super.key,
     this.monthPickerTheme = const DisplayedPeriodPickerTheme(),
+    this.monthPickerBuilder,
     this.daysRowTheme = const DaysRowTheme(),
     this.divider,
     this.timelineTheme = const TimelineTheme(),
     this.floatingEventTheme = const FloatingEventsTheme(),
     this.monthDayTheme = const MonthDayTheme(),
+    this.monthDayBuilder,
     this.showMoreTheme = const MonthShowMoreTheme(),
+    this.eventsListBuilder,
     this.onShowMoreTap,
     this.breaks = const [],
     this.events = const [],
@@ -53,8 +57,17 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Controller which allows to control the view
   final MonthViewController controller;
 
-  /// The month picker customization params
+  /// The month picker customization params.
+  /// It works only if [monthPickerBuilder] is not provided.
   final DisplayedPeriodPickerTheme monthPickerTheme;
+
+  /// The month picker builder
+  final Widget Function(
+    BuildContext,
+    void Function() prevMonth,
+    void Function() nextMonth,
+    DateTime focusedDate,
+  )? monthPickerBuilder;
 
   /// Event builders
   final Map<Type, EventBuilder> eventBuilders;
@@ -64,6 +77,14 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// The theme of show more button
   final MonthShowMoreTheme? showMoreTheme;
+
+  /// Custom builder for show more button
+  /// Works only if [monthDayBuilder] is not provided
+  final List<CustomMonthViewEventsListBuilder<T>> Function(
+    BuildContext,
+    List<T> events,
+    DateTime day,
+  )? eventsListBuilder;
 
   /// The callback which is called when user taps on show more button
   final void Function(List<T> events, DateTime day)? onShowMoreTap;
@@ -79,7 +100,15 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final FloatingEventsTheme floatingEventTheme;
 
   /// Single day customization params
+  /// Works only if [monthDayBuilder] is not provided
   final MonthDayTheme monthDayTheme;
+
+  /// Custom day cell builder
+  final Widget Function(
+    BuildContext context,
+    List<T> events,
+    DateTime day,
+  )? monthDayBuilder;
 
   /// Breaks list to display
   final List<Break> breaks;
@@ -104,7 +133,7 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final void Function(T)? onDiscardChanges;
 
   /// Properties for widget which is used to save edited event
-  final SaverConfig saverConfig;
+  final SaverConfig? saverConfig;
 
   @override
   State<MonthView<T>> createState() => _MonthViewState<T>();
@@ -297,7 +326,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
               getTimelineBox: _getTimelineBox,
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
-              saverConfig: widget.saverConfig,
+              saverConfig: widget.saverConfig ?? SaverConfig.def(),
               eventUpdatesStreamController: _eventUpdatesStreamController,
               child: _monthSection(),
             ),
@@ -324,19 +353,30 @@ class _MonthViewState<T extends FloatingCalendarEvent>
 
   Widget _monthPicker() => BlocBuilder<MonthViewController, MonthViewState>(
         bloc: widget.controller,
-        builder: (context, state) => DisplayedPeriodPicker(
-          period: DisplayedPeriod(state.focusedDate),
-          theme: widget.monthPickerTheme,
-          reverseAnimation: state.reverseAnimation,
-          onLeftButtonPressed:
-              DateUtils.isSameMonth(state.focusedDate, _initialDate)
-                  ? null
-                  : widget.controller.prev,
-          onRightButtonPressed:
-              DateUtils.isSameMonth(state.focusedDate, _endDate)
-                  ? null
-                  : widget.controller.next,
-        ),
+        builder: (context, state) {
+          if (widget.monthPickerBuilder != null) {
+            return widget.monthPickerBuilder!.call(
+              context,
+              widget.controller.prev,
+              widget.controller.next,
+              state.focusedDate,
+            );
+          }
+
+          return DisplayedPeriodPicker(
+            period: DisplayedPeriod(state.focusedDate),
+            theme: widget.monthPickerTheme,
+            reverseAnimation: state.reverseAnimation,
+            onLeftButtonPressed:
+                DateUtils.isSameMonth(state.focusedDate, _initialDate)
+                    ? null
+                    : widget.controller.prev,
+            onRightButtonPressed:
+                DateUtils.isSameMonth(state.focusedDate, _endDate)
+                    ? null
+                    : widget.controller.next,
+          );
+        },
         buildWhen: (previous, current) => !DateUtils.isSameMonth(
           previous.focusedDate,
           current.focusedDate,
@@ -387,8 +427,11 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   Widget _daysRow(List<DateTime> days) {
     final theme = widget.daysRowTheme;
 
-    return SizedBox(
+    return Container(
       height: theme.height,
+      decoration: BoxDecoration(
+        color: theme.backgroundColor,
+      ),
       child: Row(
         children: days
             .map(
@@ -433,50 +476,48 @@ class _MonthViewState<T extends FloatingCalendarEvent>
             bottom: 1,
           ),
           color: theme.spacingColor ?? widget.divider?.color ?? Colors.grey,
-          child: IntrinsicHeight(
-            child: Stack(
-              children: [
-                GridView.count(
-                  controller: _backward,
-                  crossAxisCount: 7,
-                  shrinkWrap: true,
-                  mainAxisSpacing: mainAxisSpacing,
-                  crossAxisSpacing: crossAxisSpacing,
-                  childAspectRatio: aspectRatio,
-                  physics: shouldScroll
-                      ? null
-                      : const NeverScrollableScrollPhysics(),
-                  children: [
-                    ...days.map((day) {
-                      final isToday = DateUtils.isSameDay(day, _now);
-                      return ColoredBox(
-                        color: (isToday
-                                ? theme.currentDayColor
-                                : theme.dayColor) ??
-                            Theme.of(context).scaffoldBackgroundColor,
-                      );
-                    }),
-                  ],
-                ),
-                GridView.count(
-                  controller: _forward,
-                  crossAxisCount: 7,
-                  shrinkWrap: true,
-                  mainAxisSpacing: mainAxisSpacing,
-                  crossAxisSpacing: crossAxisSpacing,
-                  childAspectRatio: aspectRatio,
-                  physics: shouldScroll
-                      ? null
-                      : const NeverScrollableScrollPhysics(),
-                  children: [
-                    ...days.map(
-                      (day) =>
-                          _singleDayView(day, constraints.maxWidth * 13 / 7),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          child: Stack(
+            children: [
+              GridView.count(
+                controller: _backward,
+                crossAxisCount: 7,
+                shrinkWrap: true,
+                mainAxisSpacing: mainAxisSpacing,
+                crossAxisSpacing: crossAxisSpacing,
+                childAspectRatio: aspectRatio,
+                physics: shouldScroll
+                    ? null
+                    : const NeverScrollableScrollPhysics(),
+                children: [
+                  ...days.map((day) {
+                    final isToday = DateUtils.isSameDay(day, _now);
+                    return ColoredBox(
+                      color: (isToday
+                              ? theme.currentDayColor
+                              : theme.dayColor) ??
+                          Theme.of(context).scaffoldBackgroundColor,
+                    );
+                  }),
+                ],
+              ),
+              GridView.count(
+                controller: _forward,
+                crossAxisCount: 7,
+                shrinkWrap: true,
+                mainAxisSpacing: mainAxisSpacing,
+                crossAxisSpacing: crossAxisSpacing,
+                childAspectRatio: aspectRatio,
+                physics: shouldScroll
+                    ? null
+                    : const NeverScrollableScrollPhysics(),
+                children: [
+                  ...days.map(
+                    (day) =>
+                        _singleDayView(day, constraints.maxWidth * 13 / 7),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },
@@ -486,6 +527,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   Widget _singleDayView(DateTime dayDate, double maxWidth) {
     final theme = widget.monthDayTheme;
     final isToday = DateUtils.isSameDay(dayDate, _now);
+    final eventsToShow = dayEventMap[dayDate] ?? [];
 
     return RenderIdProvider(
       id: dayDate,
@@ -493,61 +535,77 @@ class _MonthViewState<T extends FloatingCalendarEvent>
         color: Colors.transparent, // Needs for hitTesting
         child: Column(
           children: [
-            Container(
-              padding: theme.dayNumberPadding,
-              margin: theme.dayNumberMargin,
-              height: theme.dayNumberHeight,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isToday
-                    ? theme.currentDayNumberBackgroundColor
-                    : theme.dayNumberBackgroundColor,
-              ),
-              child: Text(
-                dayDate.day.toString(),
-                style: isToday
-                    ? theme.currentDayNumberTextStyle
-                    : theme.dayNumberTextStyle,
-              ),
-            ),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) => Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      width: maxWidth,
-                      height: constraints.maxHeight,
-                      child: Container(
-                        constraints: BoxConstraints(
-                          maxHeight: constraints.maxHeight,
-                        ),
-                        child: EventsLayout<T>(
-                          dayDate: dayDate,
-                          overlayKey: _overlayKey,
-                          layoutsKeys: MonthViewKeys.layouts,
-                          eventsKeys: MonthViewKeys.events,
-                          timelineTheme: widget.timelineTheme,
-                          breaks: widget.breaks,
-                          events: dayEventMap[dayDate] ?? [],
-                          eventBuilders: widget.eventBuilders,
-                          elevatedEvent: _elevatedEvent,
-                          onEventTap: widget.onEventTap,
-                          viewType: CalendarView.month,
-                          dayWidth: maxWidth / 13,
-                          showMoreTheme: widget.showMoreTheme,
-                          onShowMoreTap: widget.onShowMoreTap,
-                          controller: dayControllerMap[dayDate],
-                        ),
-                      ),
-                    ),
-                  ],
+            if (widget.monthDayBuilder != null)
+              Container(
+                height: theme.dayNumberHeight,
+                margin: theme.dayNumberMargin,
+                padding: theme.dayNumberPadding,
+                child: widget.monthDayBuilder!.call(
+                  context,
+                  eventsToShow,
+                  dayDate,
+                ),
+              )
+            else ...[
+              Container(
+                padding: theme.dayNumberPadding,
+                margin: theme.dayNumberMargin,
+                height: theme.dayNumberHeight,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isToday
+                      ? theme.currentDayNumberBackgroundColor
+                      : theme.dayNumberBackgroundColor,
+                ),
+                child: Text(
+                  dayDate.day.toString(),
+                  style: isToday
+                      ? theme.currentDayNumberTextStyle
+                      : theme.dayNumberTextStyle,
                 ),
               ),
-            ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          width: maxWidth,
+                          height: constraints.maxHeight,
+                          child: Container(
+                            constraints: BoxConstraints(
+                              maxHeight: constraints.maxHeight,
+                            ),
+                            child: EventsLayout<T>(
+                              dayDate: dayDate,
+                              overlayKey: _overlayKey,
+                              layoutsKeys: MonthViewKeys.layouts,
+                              eventsKeys: MonthViewKeys.events,
+                              timelineTheme: widget.timelineTheme,
+                              breaks: widget.breaks,
+                              events: eventsToShow,
+                              eventBuilders: widget.eventBuilders,
+                              elevatedEvent: _elevatedEvent,
+                              onEventTap: widget.onEventTap,
+                              viewType: CalendarView.month,
+                              dayWidth: maxWidth / 13,
+                              showMoreTheme: widget.showMoreTheme,
+                              onShowMoreTap: widget.onShowMoreTap,
+                              eventsListBuilder: widget.eventsListBuilder,
+                              controller: dayControllerMap[dayDate],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              )
+            ],
           ],
         ),
       ),
@@ -562,7 +620,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   void _initDailyEvents() {
     final monthDays = _displayedMonth.days;
 
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 5; i++) {
       final monday = DateUtils.dateOnly(monthDays[7 * i]);
       dayEventMap[monday] = _getEventsOnDay(events, monday, true);
       for (var j = 1; j < 7; j++) {
@@ -594,7 +652,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
 
     LinkedScrollControllerGroup group;
 
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 5; i++) {
       final monday = DateUtils.dateOnly(monthDays[7 * i]);
       group = LinkedScrollControllerGroup();
       final controller = group.addAndGet();

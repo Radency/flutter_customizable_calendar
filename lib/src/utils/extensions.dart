@@ -39,7 +39,7 @@ extension MonthUtils on DateTime {
     return DateTimeRange(
       start: startDate,
       end:
-          DateUtils.addDaysToDate(startDate, 42).add(const Duration(hours: 12)),
+          DateUtils.addDaysToDate(startDate, 35).add(const Duration(hours: 12)),
     );
   }
 }

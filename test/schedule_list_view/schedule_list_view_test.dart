@@ -64,8 +64,11 @@ void main() {
 
         when(
           () => controller.animateToGroupIndex,
-        ).thenAnswer(
-          (a) {
+        ).thenAnswer((a) {
+          return ({
+            required Map<DateTime, List<CalendarEvent>> events,
+            bool ignoreEmpty = false,
+          }) {
             final state = controller.state;
             if (state is ScheduleListViewControllerCurrentDateIsSet) {
               final animateTo = state.animateTo;
@@ -85,8 +88,8 @@ void main() {
                     state.displayedDate.day,
                   ),
                 );
-          },
-        );
+          };
+        });
       });
 
       tearDown(() async {
