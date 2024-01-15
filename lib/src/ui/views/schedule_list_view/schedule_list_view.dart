@@ -105,21 +105,25 @@ class _ScheduleListViewState<T extends CalendarEvent>
     super.initState();
     _scrollController = ItemScrollController();
     _itemPositionsListener = ItemPositionsListener.create();
-    _itemPositionsListener.itemPositions.addListener(() {
-      widget.controller.setDisplayedDateByGroupIndex(
-        _itemPositionsListener.itemPositions.value
-                .sorted(
-                  (a, b) => a.itemLeadingEdge.compareTo(b.itemLeadingEdge),
-                )
-                .firstOrNull
-                ?.index ??
-            0,
-        _getGrouped(),
-      );
-    });
-
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      _scrollToCurrentPosition(animate: false, events: _getGrouped());
+      _scrollToCurrentPosition(animate: false, events: _getGrouped())
+          .then((value) {
+        _itemPositionsListener.itemPositions.addListener(() {
+          final index = _itemPositionsListener.itemPositions.value
+              .sorted(
+                (a, b) => a.itemLeadingEdge.compareTo(b.itemLeadingEdge),
+              )
+              .firstOrNull
+              ?.index;
+
+          if (index != null) {
+            widget.controller.setDisplayedDateByGroupIndex(
+              index,
+              _getGrouped(),
+            );
+          }
+        });
+      });
     });
   }
 
@@ -200,17 +204,17 @@ class _ScheduleListViewState<T extends CalendarEvent>
   }
 
   Map<DateTime, List<CalendarEvent>> _getGrouped() {
-    final grouped = {
+    final result = {
       ...widget.controller.grouped,
       ...groupBy(
         [...widget.breaks, ...widget.events].sortedBy((e) => e.start),
-        (e) => DateTime(e.start.year, e.start.month, e.start.day),
+            (e) => DateTime(e.start.year, e.start.month, e.start.day),
       ),
     };
     if (widget.ignoreDaysWithoutEvents) {
-      grouped.removeWhere((key, value) => value.isEmpty);
+      result.removeWhere((key, value) => value.isEmpty);
     }
-    return grouped;
+    return result;
   }
 
   Widget _itemBuilder(int i, Map<DateTime, List<CalendarEvent>> grouped) {
@@ -282,29 +286,32 @@ class _ScheduleListViewState<T extends CalendarEvent>
     );
   }
 
-  void _scrollToCurrentPosition({
+  Future<void> _scrollToCurrentPosition({
     required Map<DateTime, List<CalendarEvent>> events,
     bool animate = true,
-  }) {
-    if (animate) {
-      _scrollController.scrollTo(
-        index: widget.controller.animateToGroupIndex(
-              ignoreEmpty: widget.ignoreDaysWithoutEvents,
-              events: events,
-            ) +
-            1,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.ease,
-        alignment: .01,
-      );
-    } else {
-      _scrollController.jumpTo(
-        index: widget.controller.animateToGroupIndex(
-          ignoreEmpty: widget.ignoreDaysWithoutEvents,
-          events: events,
-        ),
-        alignment: 0,
-      );
+  }) async {
+    try {
+      if (animate) {
+        await _scrollController.scrollTo(
+          index: widget.controller.animateToGroupIndex(
+                ignoreEmpty: widget.ignoreDaysWithoutEvents,
+                events: events,
+              ) +
+              1,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.ease,
+          alignment: .01,
+        );
+      } else {
+        _scrollController.jumpTo(
+          index: widget.controller.animateToGroupIndex(
+            ignoreEmpty: widget.ignoreDaysWithoutEvents,
+            events: events,
+          ),
+        );
+      }
+    } catch (_) {
+      // ignore
     }
   }
 

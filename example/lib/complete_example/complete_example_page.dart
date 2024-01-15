@@ -33,7 +33,7 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
   late final Animation<double> _monthPickerSizeYAnimation;
   late final Animation<double> _arrowRotationAnimation;
 
-  final double maxCalendarHeight = 420;
+  final double maxCalendarHeight = 425;
   final double minCalendarHeight = 140;
 
   DateTime _selectedDate = DateTime.now();
@@ -88,17 +88,22 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
                 ),
               );
             }
-            return BlocListener<ScheduleListViewController,
-                ScheduleListViewControllerState>(
-              bloc: scheduleListController,
-              listener: (context, state) {
-                if (state is ScheduleListViewControllerCurrentDateIsSet) {
-                  _setSelectedDate(
-                    state.displayedDate,
-                    updateScheduleList: false,
-                  );
-                }
-              },
+            return MultiBlocListener(
+              listeners: [
+                BlocListener<ScheduleListViewController,
+                    ScheduleListViewControllerState>(
+                  bloc: scheduleListController,
+                  listener: (context, state) {
+                    if (state is ScheduleListViewControllerCurrentDateIsSet) {
+                      _setSelectedDate(
+                        state.displayedDate,
+                        updateScheduleList: false,
+                        updateMonthView: true,
+                      );
+                    }
+                  },
+                ),
+              ],
               child: _buildBody(context, state),
             );
           },
@@ -111,6 +116,7 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
     return Column(
       children: [
         SafeArea(
+          top: true,
           bottom: false,
           child: AnimatedBuilder(
             animation: _calendarHeightAnimation,
@@ -221,7 +227,6 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
           color: ExampleColors.white,
         ),
       ),
-      selectedDay: _selectedDate,
       pageViewPhysics: const BouncingScrollPhysics(),
       showMoreTheme: MonthShowMoreTheme(eventHeight: 0),
       monthDayTheme: MonthDayTheme(
@@ -249,31 +254,37 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
         final highlight = eventsStartedToday.isNotEmpty || selected;
         return GestureDetector(
           onTap: () {
-            _setSelectedDate(day);
+            _setSelectedDate(
+              day,
+              updateMonthView: false,
+            );
           },
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: ExampleColors.swatch24(),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color:
-                        selected ? ExampleColors.swatch1 : Colors.transparent,
-                    width: 2,
+              Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: ExampleColors.swatch24(),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color:
+                          selected ? ExampleColors.swatch1 : Colors.transparent,
+                      width: 2,
+                    ),
                   ),
-                ),
-                child: Center(
-                  child: Text(
-                    day.day.toString(),
-                    style: TextStyle(
-                      fontWeight: highlight ? FontWeight.bold : null,
-                      color: ExampleColors.white.withOpacity(
-                        highlight ? 1 : .5,
+                  child: Center(
+                    child: Text(
+                      day.day.toString(),
+                      style: TextStyle(
+                        fontWeight: highlight ? FontWeight.bold : null,
+                        color: ExampleColors.white.withOpacity(
+                          highlight ? 1 : .5,
+                        ),
                       ),
                     ),
                   ),
@@ -327,7 +338,7 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
                     width: 32,
                   ),
                   Text(
-                    DateFormat.MMM().format(focus),
+                    DateFormat.yMMMd().format(focus),
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w400,
@@ -368,10 +379,17 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
     );
   }
 
-  void _setSelectedDate(DateTime day, {bool updateScheduleList = true}) {
+  void _setSelectedDate(
+    DateTime day, {
+    bool updateScheduleList = true,
+    bool updateMonthView = true,
+  }) {
     _selectedDate = day;
     if (updateScheduleList) {
       scheduleListController.setDisplayedDate(day);
+    }
+    if (updateMonthView) {
+      monthViewController.setFocusedDate(day);
     }
     if (mounted) {
       setState(() {});
@@ -677,7 +695,6 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
   InkWell _buildNavButton(void Function() onTap, Widget child) {
     return InkWell(
       onTap: () {
-        print("object");
         onTap();
       },
       child: Container(

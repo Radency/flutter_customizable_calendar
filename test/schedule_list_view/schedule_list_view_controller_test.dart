@@ -158,7 +158,10 @@ void main() {
       blocTest<ScheduleListViewController, ScheduleListViewControllerState>(
         'Controller sets a displayed date correctly',
         build: () => controller,
-        act: (bloc) => bloc.setDisplayedDateByGroupIndex(0),
+        act: (bloc) => bloc.setDisplayedDateByGroupIndex(
+          0,
+          {},
+        ),
         expect: () => <ScheduleListViewControllerState>[
           ScheduleListViewControllerCurrentDateIsSet(
             displayedDate: controller.state.displayedDate,
