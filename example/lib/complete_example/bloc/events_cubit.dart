@@ -30,14 +30,14 @@ class EventsCubit extends Cubit<EventsState> {
         title: 'Sneakers', iconAsset: 'assets/images/sneakers.webp'),
   ];
 
-  static List<Shop> shops = [
+  static List<Shop> stores = [
     Shop(name: "Amazon", assetIcon: "assets/images/amazon.png"),
     Shop(name: "ASOS", assetIcon: "assets/images/asos.png"),
     Shop(name: "eBay", assetIcon: "assets/images/ebay.png"),
     Shop(name: "Adidas", assetIcon: "assets/images/adidas.webp"),
   ];
 
-  static List<String> locations = ["🏠 Home", "💼 Work"];
+  static const List<String> locations = ["🏠 Home", "💼 Work"];
 
   void init() {
     final List<DeliveryEvent<EventAttachment>> events = [];
@@ -60,7 +60,7 @@ class EventsCubit extends Cubit<EventsState> {
         List.generate(
           number,
           (index) {
-            final shop = shops[random.nextInt(shops.length)];
+            final shop = stores[random.nextInt(stores.length)];
             final List<EventAttachment> attachments = [];
             final attachmentNumber = max(1, random.nextInt(5));
 
@@ -88,5 +88,14 @@ class EventsCubit extends Cubit<EventsState> {
     }
 
     emit(EventsInitialized(events: events));
+  }
+
+  void addEvent(DeliveryEvent<EventAttachment> value) {
+    final state = this.state;
+    if (state is EventsInitialized) {
+      final events = state.events;
+      events.add(value);
+      emit(EventsInitialized(events: events));
+    }
   }
 }

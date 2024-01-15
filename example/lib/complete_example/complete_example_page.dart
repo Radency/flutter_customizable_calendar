@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:example/complete_example/add_event_dialog.dart';
 import 'package:example/complete_example/bloc/events_cubit.dart';
 import 'package:example/complete_example/colors.dart';
 import 'package:example/complete_example/custom_events/delivery_event.dart';
@@ -113,102 +114,161 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
   }
 
   Widget _buildBody(BuildContext context, EventsInitialized state) {
-    return Column(
+    return Stack(
+      fit: StackFit.expand,
       children: [
-        SafeArea(
-          top: true,
-          bottom: false,
-          child: AnimatedBuilder(
-            animation: _calendarHeightAnimation,
-            builder: (context, child) {
-              return SizedBox(
-                height: _calendarHeightAnimation.value,
-                child: child!,
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(24.0),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: ExampleColors.swatch24(),
-                  ),
-                  child: Column(
-                    children: [
-                      Expanded(child: _buildMonthView(state)),
-                      const SizedBox(
-                        height: 12,
+        Column(
+          children: [
+            SafeArea(
+              top: true,
+              bottom: false,
+              child: AnimatedBuilder(
+                animation: _calendarHeightAnimation,
+                builder: (context, child) {
+                  return SizedBox(
+                    height: _calendarHeightAnimation.value,
+                    child: child!,
+                  );
+                },
+                child: Padding(
+                  padding:
+                      const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(24.0),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: ExampleColors.swatch24(),
                       ),
-                      GestureDetector(
-                          onVerticalDragUpdate: (details) {
-                            double positionY = details.globalPosition.dy -
-                                MediaQuery.of(context).padding.top -
-                                MediaQuery.of(context).padding.bottom -
-                                24;
-                            double maxHeight =
-                                MediaQuery.of(context).size.height -
+                      child: Column(
+                        children: [
+                          Expanded(child: _buildMonthView(state)),
+                          const SizedBox(
+                            height: 12,
+                          ),
+                          GestureDetector(
+                              onVerticalDragUpdate: (details) {
+                                double positionY = details.globalPosition.dy -
                                     MediaQuery.of(context).padding.top -
-                                    MediaQuery.of(context).padding.bottom;
+                                    MediaQuery.of(context).padding.bottom -
+                                    24;
+                                double maxHeight =
+                                    MediaQuery.of(context).size.height -
+                                        MediaQuery.of(context).padding.top -
+                                        MediaQuery.of(context).padding.bottom;
 
-                            if (positionY >= maxCalendarHeight) {
-                              _animationController.value = 0;
-                            } else if (positionY <= maxHeight) {
-                              _animationController.value = 1 -
-                                  (positionY /
-                                      (maxCalendarHeight +
-                                          MediaQuery.of(context).padding.top +
-                                          MediaQuery.of(context)
-                                              .padding
-                                              .bottom));
-                            }
-                          },
-                          onVerticalDragCancel: () {
-                            if (_animationController.value > 0.5) {
-                              _animationController.animateTo(1,
-                                  duration: Duration(milliseconds: 100));
-                            } else {
-                              _animationController.animateBack(0,
-                                  duration: Duration(milliseconds: 100));
-                            }
-                          },
-                          onVerticalDragEnd: (details) {
-                            if (details.velocity.pixelsPerSecond.dy > 1500) {
-                              _animationController.animateTo(0,
-                                  duration: Duration(milliseconds: 100));
-                            } else if (_animationController.value > 0.5 ||
-                                (details.velocity.pixelsPerSecond.dy < -1500)) {
-                              _animationController.animateTo(1,
-                                  duration: Duration(milliseconds: 100));
-                            } else {
-                              _animationController.animateBack(0,
-                                  duration: Duration(milliseconds: 100));
-                            }
-                          },
-                          child: Container(
-                            width: double.maxFinite,
-                            color: ExampleColors.swatch24(),
-                            height: 32,
-                            child: AnimatedBuilder(
-                                animation: _arrowRotationAnimation,
-                                builder: (context, child) => Transform.rotate(
-                                    angle: _arrowRotationAnimation.value,
-                                    child: child!),
-                                child: Icon(
-                                  Icons.arrow_upward,
-                                  color: ExampleColors.white.withOpacity(0.6),
-                                )),
-                          )),
-                    ],
+                                if (positionY >= maxCalendarHeight) {
+                                  _animationController.value = 0;
+                                } else if (positionY <= maxHeight) {
+                                  _animationController.value = 1 -
+                                      (positionY /
+                                          (maxCalendarHeight +
+                                              MediaQuery.of(context)
+                                                  .padding
+                                                  .top +
+                                              MediaQuery.of(context)
+                                                  .padding
+                                                  .bottom));
+                                }
+                              },
+                              onVerticalDragCancel: () {
+                                if (_animationController.value > 0.5) {
+                                  _animationController.animateTo(1,
+                                      duration: Duration(milliseconds: 100));
+                                } else {
+                                  _animationController.animateBack(0,
+                                      duration: Duration(milliseconds: 100));
+                                }
+                              },
+                              onVerticalDragEnd: (details) {
+                                if (details.velocity.pixelsPerSecond.dy >
+                                    1500) {
+                                  _animationController.animateTo(0,
+                                      duration: Duration(milliseconds: 100));
+                                } else if (_animationController.value > 0.5 ||
+                                    (details.velocity.pixelsPerSecond.dy <
+                                        -1500)) {
+                                  _animationController.animateTo(1,
+                                      duration: Duration(milliseconds: 100));
+                                } else {
+                                  _animationController.animateBack(0,
+                                      duration: Duration(milliseconds: 100));
+                                }
+                              },
+                              child: Container(
+                                width: double.maxFinite,
+                                color: ExampleColors.swatch24(),
+                                height: 32,
+                                child: AnimatedBuilder(
+                                    animation: _arrowRotationAnimation,
+                                    builder: (context, child) =>
+                                        Transform.rotate(
+                                            angle:
+                                                _arrowRotationAnimation.value,
+                                            child: child!),
+                                    child: Icon(
+                                      Icons.arrow_upward,
+                                      color:
+                                          ExampleColors.white.withOpacity(0.6),
+                                    )),
+                              )),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(child: _buildListView(state)),
+          ],
+        ),
+        Align(
+          alignment: Alignment.bottomRight,
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(32),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => AddEventPage(),
+                  ),
+                ).then((value) {
+                  if(value is DeliveryEvent) {
+                    BlocProvider.of<EventsCubit>(context).addEvent(value);
+                  }
+                });
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: ExampleColors.black.withOpacity(0.25),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: ExampleColors.white.withOpacity(0.5),
+                      blurRadius: 16,
+                      spreadRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                  color: ExampleColors.swatch24(),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: Icon(
+                    Icons.add_rounded,
+                    color: ExampleColors.white,
+                    size: 40,
                   ),
                 ),
               ),
             ),
           ),
         ),
-        Expanded(child: _buildListView(state)),
       ],
     );
   }

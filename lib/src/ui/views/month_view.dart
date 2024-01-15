@@ -260,6 +260,12 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   }
 
   @override
+  void didUpdateWidget(covariant MonthView<T> oldWidget) {
+    _initDailyEvents();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<MonthViewController, MonthViewState>(
       bloc: widget.controller,
