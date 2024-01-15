@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/gestures.dart';
@@ -463,64 +464,103 @@ class _MonthViewState<T extends FloatingCalendarEvent>
         final crossAxisSpacing = theme.crossAxisSpacing;
         var aspectRatio = (constraints.maxWidth - crossAxisSpacing * 6) /
             7 /
-            (constraints.maxHeight - mainAxisSpacing * 5) *
-            6;
+            (constraints.maxHeight - mainAxisSpacing * 4) *
+            5;
         final shouldScroll = aspectRatio > 1;
         if (shouldScroll) {
           aspectRatio = 1.0; // / aspectRatio;
         }
 
-        return Container(
-          key: MonthViewKeys.timeline = GlobalKey(),
-          padding: const EdgeInsets.only(
-            bottom: 1,
-          ),
-          color: theme.spacingColor ?? widget.divider?.color ?? Colors.grey,
-          child: Stack(
-            children: [
-              GridView.count(
-                controller: _backward,
-                crossAxisCount: 7,
-                shrinkWrap: true,
-                mainAxisSpacing: mainAxisSpacing,
-                crossAxisSpacing: crossAxisSpacing,
-                childAspectRatio: aspectRatio,
-                physics: shouldScroll
-                    ? null
-                    : const NeverScrollableScrollPhysics(),
-                children: [
-                  ...days.map((day) {
-                    final isToday = DateUtils.isSameDay(day, _now);
-                    return ColoredBox(
-                      color: (isToday
-                              ? theme.currentDayColor
-                              : theme.dayColor) ??
-                          Theme.of(context).scaffoldBackgroundColor,
-                    );
-                  }),
-                ],
-              ),
-              GridView.count(
-                controller: _forward,
-                crossAxisCount: 7,
-                shrinkWrap: true,
-                mainAxisSpacing: mainAxisSpacing,
-                crossAxisSpacing: crossAxisSpacing,
-                childAspectRatio: aspectRatio,
-                physics: shouldScroll
-                    ? null
-                    : const NeverScrollableScrollPhysics(),
-                children: [
-                  ...days.map(
-                    (day) =>
-                        _singleDayView(day, constraints.maxWidth * 13 / 7),
-                  ),
-                ],
-              ),
-            ],
+        final rowHeight = constraints.maxHeight - mainAxisSpacing * 4;
+        final rowsHeight = rowHeight * 5;
+
+        return GestureDetector(
+          onVerticalDragUpdate: (details) {
+            if (shouldScroll) {
+              _onGridViewDragUpdate(details);
+            }
+          },
+          onVerticalDragEnd: (details) {
+            if (shouldScroll) {
+              // animate to to the nearest row
+              _onGridViewDragEnd(rowHeight, rowsHeight);
+            }
+          },
+          onVerticalDragCancel: () {
+            if (shouldScroll) {
+              // animate to to the nearest row
+              _onGridViewDragEnd(rowHeight, rowsHeight);
+            }
+          },
+          child: Container(
+            key: MonthViewKeys.timeline = GlobalKey(),
+            padding: const EdgeInsets.only(
+              bottom: 1,
+            ),
+            color: theme.spacingColor ?? widget.divider?.color ?? Colors.grey,
+            child: Stack(
+              children: [
+                GridView.count(
+                  controller: _backward,
+                  crossAxisCount: 7,
+                  shrinkWrap: true,
+                  mainAxisSpacing: mainAxisSpacing,
+                  crossAxisSpacing: crossAxisSpacing,
+                  childAspectRatio: aspectRatio,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    ...days.map((day) {
+                      final isToday = DateUtils.isSameDay(day, _now);
+                      return ColoredBox(
+                        color: (isToday
+                                ? theme.currentDayColor
+                                : theme.dayColor) ??
+                            Theme.of(context).scaffoldBackgroundColor,
+                      );
+                    }),
+                  ],
+                ),
+                GridView.count(
+                  controller: _forward,
+                  crossAxisCount: 7,
+                  shrinkWrap: true,
+                  mainAxisSpacing: mainAxisSpacing,
+                  crossAxisSpacing: crossAxisSpacing,
+                  childAspectRatio: aspectRatio,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    ...days.map(
+                      (day) =>
+                          _singleDayView(day, constraints.maxWidth * 13 / 7),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  void _onGridViewDragEnd(double rowHeight, double rowsHeight) {
+    final position = _forward.offset;
+    final row = (position / rowHeight).round();
+    final offset = min(rowsHeight - rowHeight, row * rowHeight - 8);
+    _forward.animateTo(
+      offset,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeIn,
+    );
+  }
+
+  void _onGridViewDragUpdate(DragUpdateDetails details) {
+    _forward.jumpTo(
+      clampDouble(
+        _forward.offset - details.delta.dy,
+        _forward.position.minScrollExtent - 32,
+        _forward.position.maxScrollExtent + 32,
+      ),
     );
   }
 

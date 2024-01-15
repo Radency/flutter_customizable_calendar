@@ -34,7 +34,7 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
   late final Animation<double> _arrowRotationAnimation;
 
   final double maxCalendarHeight = 420;
-  final double minCalendarHeight = 122;
+  final double minCalendarHeight = 140;
 
   @override
   void initState() {
