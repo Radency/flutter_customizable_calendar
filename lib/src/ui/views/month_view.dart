@@ -50,6 +50,7 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.eventBuilders = const {},
     this.pageViewPhysics,
     this.overrideOnEventLongPress,
+    this.selectedDay,
   });
 
   /// Enable page view physics
@@ -103,6 +104,9 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Single day customization params
   /// Works only if [monthDayBuilder] is not provided
   final MonthDayTheme monthDayTheme;
+
+  /// Selects the event to be displayed in the event view
+  final DateTime? selectedDay;
 
   /// Custom day cell builder
   final Widget Function(
@@ -486,18 +490,14 @@ class _MonthViewState<T extends FloatingCalendarEvent>
               _onGridViewDragEnd(rowHeight, rowsHeight);
             }
           },
-          onVerticalDragCancel: () {
-            if (shouldScroll) {
-              // animate to to the nearest row
-              _onGridViewDragEnd(rowHeight, rowsHeight);
-            }
-          },
           child: Container(
             key: MonthViewKeys.timeline = GlobalKey(),
             padding: const EdgeInsets.only(
               bottom: 1,
             ),
-            color: theme.spacingColor ?? widget.divider?.color ?? Colors.grey,
+            color: theme.spacingColor ??
+                widget.divider?.color ??
+                Colors.transparent,
             child: Stack(
               children: [
                 GridView.count(
@@ -546,7 +546,11 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   void _onGridViewDragEnd(double rowHeight, double rowsHeight) {
     final position = _forward.offset;
     final row = (position / rowHeight).round();
-    final offset = min(rowsHeight - rowHeight, row * rowHeight - 8);
+    final offset = clampDouble(
+      row * rowHeight - 4,
+      0,
+      rowsHeight - rowHeight,
+    );
     _forward.animateTo(
       offset,
       duration: const Duration(milliseconds: 200),
@@ -566,7 +570,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
 
   Widget _singleDayView(DateTime dayDate, double maxWidth) {
     final theme = widget.monthDayTheme;
-    final isToday = DateUtils.isSameDay(dayDate, _now);
+    final isSelected = DateUtils.isSameDay(dayDate, widget.selectedDay ?? _now);
     final eventsToShow = dayEventMap[dayDate] ?? [];
 
     return RenderIdProvider(
@@ -594,14 +598,14 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isToday
-                      ? theme.currentDayNumberBackgroundColor
+                  color: isSelected
+                      ? theme.selectedDayNumberBackgroundColor
                       : theme.dayNumberBackgroundColor,
                 ),
                 child: Text(
                   dayDate.day.toString(),
-                  style: isToday
-                      ? theme.currentDayNumberTextStyle
+                  style: isSelected
+                      ? theme.selectedDayNumberTextStyle
                       : theme.dayNumberTextStyle,
                 ),
               ),

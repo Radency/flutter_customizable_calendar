@@ -114,6 +114,7 @@ class _ScheduleListViewState<T extends CalendarEvent>
                 .firstOrNull
                 ?.index ??
             0,
+        _getGrouped(),
       );
     });
 
@@ -288,11 +289,13 @@ class _ScheduleListViewState<T extends CalendarEvent>
     if (animate) {
       _scrollController.scrollTo(
         index: widget.controller.animateToGroupIndex(
-          ignoreEmpty: widget.ignoreDaysWithoutEvents,
-          events: events,
-        ),
+              ignoreEmpty: widget.ignoreDaysWithoutEvents,
+              events: events,
+            ) +
+            1,
         duration: const Duration(milliseconds: 300),
         curve: Curves.ease,
+        alignment: .01,
       );
     } else {
       _scrollController.jumpTo(

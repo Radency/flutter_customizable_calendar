@@ -659,7 +659,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         draggableEventTheme: _draggableEventTheme,
       ),
       monthDayTheme: MonthDayTheme(
-        currentDayNumberTextStyle: TextStyle(
+        selectedDayNumberTextStyle: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
         ),

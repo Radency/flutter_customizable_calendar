@@ -36,6 +36,8 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
   final double maxCalendarHeight = 420;
   final double minCalendarHeight = 140;
 
+  DateTime _selectedDate = DateTime.now();
+
   @override
   void initState() {
     _animationController = AnimationController(
@@ -86,7 +88,19 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
                 ),
               );
             }
-            return _buildBody(context, state);
+            return BlocListener<ScheduleListViewController,
+                ScheduleListViewControllerState>(
+              bloc: scheduleListController,
+              listener: (context, state) {
+                if (state is ScheduleListViewControllerCurrentDateIsSet) {
+                  _setSelectedDate(
+                    state.displayedDate,
+                    updateScheduleList: false,
+                  );
+                }
+              },
+              child: _buildBody(context, state),
+            );
           },
         ),
       ),
@@ -207,6 +221,7 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
           color: ExampleColors.white,
         ),
       ),
+      selectedDay: _selectedDate,
       pageViewPhysics: const BouncingScrollPhysics(),
       showMoreTheme: MonthShowMoreTheme(eventHeight: 0),
       monthDayTheme: MonthDayTheme(
@@ -220,10 +235,7 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
         mainAxisSpacing: 0,
       ),
       monthDayBuilder: (context, events, day) {
-        final today = DateTime.now();
-        final isToday = day.isAtSameMomentAs(
-          DateTime(today.year, today.month, today.day),
-        );
+        final bool selected = DateUtils.isSameDay(_selectedDate, day);
 
         final eventsStartedToday = events.where((event) {
           final eventStart = DateTime(
@@ -234,50 +246,57 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
           return eventStart.isAtSameMomentAs(day);
         });
 
-        final highlight = eventsStartedToday.isNotEmpty || isToday;
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: ExampleColors.swatch24(),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isToday ? ExampleColors.swatch1 : Colors.transparent,
-                  width: 2,
+        final highlight = eventsStartedToday.isNotEmpty || selected;
+        return GestureDetector(
+          onTap: () {
+            _setSelectedDate(day);
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: ExampleColors.swatch24(),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        selected ? ExampleColors.swatch1 : Colors.transparent,
+                    width: 2,
+                  ),
                 ),
-              ),
-              child: Center(
-                child: Text(
-                  day.day.toString(),
-                  style: TextStyle(
-                    fontWeight: highlight ? FontWeight.bold : null,
-                    color: ExampleColors.white.withOpacity(
-                      highlight ? 1 : .5,
+                child: Center(
+                  child: Text(
+                    day.day.toString(),
+                    style: TextStyle(
+                      fontWeight: highlight ? FontWeight.bold : null,
+                      color: ExampleColors.white.withOpacity(
+                        highlight ? 1 : .5,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            Spacer(),
-            if (eventsStartedToday.isNotEmpty)
-              Center(
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: ExampleColors.white,
+              Spacer(),
+              if (eventsStartedToday.isNotEmpty)
+                Center(
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: ExampleColors.white,
+                      ),
+                      color: Colors.transparent,
                     ),
-                    color: Colors.transparent,
                   ),
                 ),
-              ),
-            Spacer(),
-          ],
+              Spacer(),
+            ],
+          ),
         );
       },
       monthPickerBuilder: (context, prev, next, focus) {
@@ -349,13 +368,23 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
     );
   }
 
+  void _setSelectedDate(DateTime day, {bool updateScheduleList = true}) {
+    _selectedDate = day;
+    if (updateScheduleList) {
+      scheduleListController.setDisplayedDate(day);
+    }
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   ScheduleListView<DeliveryEvent<EventAttachment>> _buildListView(
       EventsInitialized state) {
     return ScheduleListView(
       controller: scheduleListController,
       monthPickerBuilder: (next, prev, toTime, currentTime) => const SizedBox(),
       events: state.events,
-      ignoreDaysWithoutEvents: true,
+      ignoreDaysWithoutEvents: false,
       dayBuilder: (events, day) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -373,18 +402,40 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
               const SizedBox(
                 height: 16,
               ),
-              ...events.whereType<DeliveryEvent>().map(
-                (event) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: _buildListItemEvent(event),
-                  );
-                },
-              ),
+              if (events.isEmpty)
+                _buildEmptyListViewState()
+              else
+                ...events.whereType<DeliveryEvent>().map(
+                  (event) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: _buildListItemEvent(event),
+                    );
+                  },
+                ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Padding _buildEmptyListViewState() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0, bottom: 48.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "No events",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: ExampleColors.black,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

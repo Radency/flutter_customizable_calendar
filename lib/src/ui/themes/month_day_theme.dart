@@ -8,10 +8,10 @@ class MonthDayTheme extends Equatable {
     this.dayColor,
     this.currentDayColor,
     this.dayNumberBackgroundColor = Colors.transparent,
-    this.currentDayNumberBackgroundColor = Colors.blue,
+    this.selectedDayNumberBackgroundColor = Colors.blue,
     this.spacingColor,
     this.dayNumberTextStyle = const TextStyle(),
-    this.currentDayNumberTextStyle = const TextStyle(),
+    this.selectedDayNumberTextStyle = const TextStyle(),
     this.crossAxisSpacing = 1.0,
     this.mainAxisSpacing = 1.0,
     this.dayNumberPadding,
@@ -28,8 +28,8 @@ class MonthDayTheme extends Equatable {
   /// The background color of day number
   final Color dayNumberBackgroundColor;
 
-  /// The background color of current day number
-  final Color currentDayNumberBackgroundColor;
+  /// The background color of selected day number
+  final Color selectedDayNumberBackgroundColor;
 
   /// The color of spacing between day views
   final Color? spacingColor;
@@ -37,8 +37,8 @@ class MonthDayTheme extends Equatable {
   /// The TextStyle of day number
   final TextStyle dayNumberTextStyle;
 
-  /// The TextStyle of current day number
-  final TextStyle currentDayNumberTextStyle;
+  /// The TextStyle of selected day number
+  final TextStyle selectedDayNumberTextStyle;
 
   /// The cross axis spacing of spacing between day views
   final double crossAxisSpacing;
@@ -60,9 +60,9 @@ class MonthDayTheme extends Equatable {
         dayColor,
         currentDayColor,
         dayNumberBackgroundColor,
-        currentDayNumberBackgroundColor,
+        selectedDayNumberBackgroundColor,
         dayNumberTextStyle,
-        currentDayNumberTextStyle,
+        selectedDayNumberTextStyle,
         spacingColor,
         crossAxisSpacing,
         mainAxisSpacing,
@@ -71,16 +71,17 @@ class MonthDayTheme extends Equatable {
         dayNumberPadding,
       ];
 
+
   /// Creates a copy of this theme but with the given fields replaced with
   /// the new values
   MonthDayTheme copyWith({
     Color? dayColor,
     Color? currentDayColor,
     Color? dayNumberBackgroundColor,
-    Color? currentDayNumberBackgroundColor,
-    TextStyle? dayNumberTextStyle,
-    TextStyle? currentDayNumberTextStyle,
+    Color? selectedDayNumberBackgroundColor,
     Color? spacingColor,
+    TextStyle? dayNumberTextStyle,
+    TextStyle? selectedDayNumberTextStyle,
     double? crossAxisSpacing,
     double? mainAxisSpacing,
     double? dayNumberHeight,
@@ -92,12 +93,12 @@ class MonthDayTheme extends Equatable {
       currentDayColor: currentDayColor ?? this.currentDayColor,
       dayNumberBackgroundColor:
           dayNumberBackgroundColor ?? this.dayNumberBackgroundColor,
-      currentDayNumberBackgroundColor: currentDayNumberBackgroundColor ??
-          this.currentDayNumberBackgroundColor,
-      dayNumberTextStyle: dayNumberTextStyle ?? this.dayNumberTextStyle,
-      currentDayNumberTextStyle:
-          currentDayNumberTextStyle ?? this.currentDayNumberTextStyle,
+      selectedDayNumberBackgroundColor: selectedDayNumberBackgroundColor ??
+          this.selectedDayNumberBackgroundColor,
       spacingColor: spacingColor ?? this.spacingColor,
+      dayNumberTextStyle: dayNumberTextStyle ?? this.dayNumberTextStyle,
+      selectedDayNumberTextStyle:
+          selectedDayNumberTextStyle ?? this.selectedDayNumberTextStyle,
       crossAxisSpacing: crossAxisSpacing ?? this.crossAxisSpacing,
       mainAxisSpacing: mainAxisSpacing ?? this.mainAxisSpacing,
       dayNumberHeight: dayNumberHeight ?? this.dayNumberHeight,
@@ -105,4 +106,5 @@ class MonthDayTheme extends Equatable {
       dayNumberPadding: dayNumberPadding ?? this.dayNumberPadding,
     );
   }
+
 }
