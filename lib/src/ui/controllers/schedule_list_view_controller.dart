@@ -44,7 +44,14 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
     required Map<DateTime, List<CalendarEvent>> events,
     bool ignoreEmpty = false,
   }) {
-    final keys = events.keys.toList();
+    final entries = events.entries;
+    late final List<DateTime> keys;
+    if (ignoreEmpty) {
+      keys =
+          entries.where((e) => e.value.isNotEmpty).map((e) => e.key).toList();
+    } else {
+      keys = entries.map((e) => e.key).toList();
+    }
 
     late final DateTime targetDate;
 

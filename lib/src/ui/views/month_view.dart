@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/custom/custom_linked_scroll_controller.dart';
-import 'package:flutter_customizable_calendar/src/ui/custom_widgets/custom_month_view_events_list_builder.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/widget_size.dart';
 import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.dart';
 
@@ -721,7 +720,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                         );
                       },
                     ),
-                  )
+                  ),
                 ],
               ],
             ),

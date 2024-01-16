@@ -619,7 +619,6 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       // },
       showMoreTheme: MonthShowMoreTheme(
         borderRadius: 12,
-
       ),
       pageViewPhysics: BouncingScrollPhysics(),
       monthPickerTheme: _periodPickerTheme,

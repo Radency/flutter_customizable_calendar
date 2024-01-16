@@ -160,7 +160,7 @@ void main() {
         build: () => controller,
         act: (bloc) => bloc.setDisplayedDateByGroupIndex(
           0,
-          {},
+          controller.grouped,
         ),
         expect: () => <ScheduleListViewControllerState>[
           ScheduleListViewControllerCurrentDateIsSet(

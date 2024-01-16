@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:clock/clock.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
@@ -17,8 +18,6 @@ void main() {
     () {
       final now = DateTime(2024, DateTime.january, 11, 9, 30);
       final mockClock = Clock.fixed(now);
-      final today = DateUtils.dateOnly(now);
-      final tomorrow = DateUtils.addDaysToDate(today, 1);
       final currentMonth = DateTime(now.year, now.month);
       final prevMonth = DateUtils.addMonthsToMonthDate(currentMonth, -1);
       final nextMonth = DateUtils.addMonthsToMonthDate(currentMonth, 1);
@@ -63,32 +62,58 @@ void main() {
         );
 
         when(
-          () => controller.animateToGroupIndex,
+          () => controller.animateToGroupIndex(
+            events: any(named: 'events'),
+            ignoreEmpty: any(named: 'ignoreEmpty'),
+          ),
         ).thenAnswer((a) {
-          return ({
-            required Map<DateTime, List<CalendarEvent>> events,
-            bool ignoreEmpty = false,
-          }) {
-            final state = controller.state;
-            if (state is ScheduleListViewControllerCurrentDateIsSet) {
-              final animateTo = state.animateTo;
-              return controller.grouped.keys.toList().indexOf(
-                    DateTime(
-                      animateTo.year,
-                      animateTo.month,
-                      animateTo.day,
-                    ),
-                  );
-            }
+          final events = a.namedArguments[const Symbol('events')]
+              as Map<DateTime, List<CalendarEvent>>;
+          final ignoreEmpty =
+              a.namedArguments[const Symbol('ignoreEmpty')] as bool;
 
-            return controller.grouped.keys.toList().indexOf(
-                  DateTime(
-                    state.displayedDate.year,
-                    state.displayedDate.month,
-                    state.displayedDate.day,
-                  ),
-                );
-          };
+          final entries = events.entries;
+          late final List<DateTime> keys;
+
+          if (ignoreEmpty) {
+            keys = entries
+                .where((e) => e.value.isNotEmpty)
+                .map((e) => e.key)
+                .toList();
+          } else {
+            keys = entries.map((e) => e.key).toList();
+          }
+
+          late final DateTime targetDate;
+          final state = controller.state;
+
+          if (state is ScheduleListViewControllerCurrentDateIsSet) {
+            final animateTo = state.animateTo;
+            targetDate = DateTime(
+              animateTo.year,
+              animateTo.month,
+              animateTo.day,
+            );
+          } else {
+            targetDate = DateTime(
+              state.displayedDate.year,
+              state.displayedDate.month,
+              state.displayedDate.day,
+            );
+          }
+
+          final index = keys.indexOf(targetDate);
+          if (index != -1) {
+            return index;
+          }
+
+          // return closest target date or closes
+          final closest = keys.sorted((a, b) {
+            final aDiff = a.difference(targetDate).abs();
+            final bDiff = b.difference(targetDate).abs();
+            return aDiff.compareTo(bDiff);
+          });
+          return keys.indexOf(closest.first);
         });
       });
 
@@ -168,28 +193,21 @@ void main() {
           duration: const Duration(hours: 1),
         );
 
+        final events = [todayEvent, nextMonthEvent];
+
         final view = ScheduleListView(
           controller: controller,
-          events: [todayEvent, nextMonthEvent],
+          events: events,
         );
 
         whenListen(
           controller,
           Stream<ScheduleListViewControllerState>.fromIterable(
             [
-              initial(),
               ScheduleListViewControllerCurrentDateIsSet(
-                displayedDate: DateTime(
-                  nextMonth.year,
-                  nextMonth.month,
-                  2,
-                ),
+                displayedDate: nextMonth,
                 reverseAnimation: false,
-                animateTo: DateTime(
-                  nextMonth.year,
-                  nextMonth.month,
-                  2,
-                ),
+                animateTo: nextMonth,
               ),
             ],
           ),

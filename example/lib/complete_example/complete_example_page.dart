@@ -1,12 +1,10 @@
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:example/complete_example/add_event_dialog.dart';
 import 'package:example/complete_example/bloc/events_cubit.dart';
 import 'package:example/complete_example/colors.dart';
 import 'package:example/complete_example/custom_events/delivery_event.dart';
 import 'package:example/complete_example/custom_events/event_attachment.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';

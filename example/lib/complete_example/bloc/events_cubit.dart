@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:bloc/bloc.dart';
 import 'package:example/complete_example/custom_events/delivery_event.dart';
 import 'package:example/complete_example/custom_events/event_attachment.dart';
-import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:meta/meta.dart';
 
 part 'events_state.dart';
