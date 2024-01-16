@@ -26,6 +26,7 @@ class DaysRowTheme extends Equatable {
       fontSize: 16,
       fontWeight: FontWeight.w700,
     ),
+    this.backgroundColor = Colors.transparent,
   });
 
   /// The row height
@@ -49,6 +50,9 @@ class DaysRowTheme extends Equatable {
   /// Number text style
   final TextStyle numberStyle;
 
+  /// Background color
+  final Color backgroundColor;
+
   @override
   List<Object?> get props => [
         height,
@@ -58,6 +62,7 @@ class DaysRowTheme extends Equatable {
         hideNumber,
         numberFormatter,
         numberStyle,
+        backgroundColor,
       ];
 
   /// Creates a copy of this theme but with the given fields replaced with

@@ -30,6 +30,16 @@ class SaverConfig {
     this.alignment = Alignment.bottomRight,
   });
 
+  factory SaverConfig.def() {
+    return SaverConfig(
+      child: Container(
+        color: Colors.transparent,
+        padding: const EdgeInsets.all(15),
+        child: const Icon(Icons.done),
+      ),
+    );
+  }
+
   final Widget child;
   final Alignment alignment;
 }

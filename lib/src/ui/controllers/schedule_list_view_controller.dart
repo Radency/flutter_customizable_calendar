@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:clock/clock.dart';
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,30 +36,53 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
   @override
   final DateTime? endDate;
 
-  /// The list of events which will be rendered in the schedule list view.
+  /// The list of dates which will be rendered in the schedule list view.
   late final Map<DateTime, List<CalendarEvent>> grouped;
 
   /// Returns the index of the group to which the current date belongs
-  int get animateToGroupIndex {
+  int animateToGroupIndex({
+    required Map<DateTime, List<CalendarEvent>> events,
+    bool ignoreEmpty = false,
+  }) {
+    final entries = events.entries;
+    late final List<DateTime> keys;
+    if (ignoreEmpty) {
+      keys =
+          entries.where((e) => e.value.isNotEmpty).map((e) => e.key).toList();
+    } else {
+      keys = entries.map((e) => e.key).toList();
+    }
+
+    late final DateTime targetDate;
+
     if (state is ScheduleListViewControllerCurrentDateIsSet) {
       final animateTo =
           (state as ScheduleListViewControllerCurrentDateIsSet).animateTo;
-      return grouped.keys.toList().indexOf(
-            DateTime(
-              animateTo.year,
-              animateTo.month,
-              animateTo.day,
-            ),
-          );
+      targetDate = DateTime(
+        animateTo.year,
+        animateTo.month,
+        animateTo.day,
+      );
+    } else {
+      targetDate = DateTime(
+        state.displayedDate.year,
+        state.displayedDate.month,
+        state.displayedDate.day,
+      );
     }
 
-    return grouped.keys.toList().indexOf(
-          DateTime(
-            state.displayedDate.year,
-            state.displayedDate.month,
-            state.displayedDate.day,
-          ),
-        );
+    final index = keys.indexOf(targetDate);
+    if (index != -1) {
+      return index;
+    }
+
+    // return closest target date or closes
+    final closest = keys.sorted((a, b) {
+      final aDiff = a.difference(targetDate).abs();
+      final bDiff = b.difference(targetDate).abs();
+      return aDiff.compareTo(bDiff);
+    });
+    return keys.indexOf(closest.first);
   }
 
   @override
@@ -133,8 +159,12 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
   }
 
   /// Sets the current date of the calendar.
-  void setDisplayedDateByGroupIndex(int index) {
-    final date = grouped.keys.toList()[index];
+  void setDisplayedDateByGroupIndex(
+    int index,
+    Map<DateTime, List<CalendarEvent>> events,
+  ) {
+    final keys = events.keys.toList();
+    final date = keys[min(keys.length - 1, index)];
     emit(
       ScheduleListViewControllerCurrentDateIsSet(
         displayedDate: date,

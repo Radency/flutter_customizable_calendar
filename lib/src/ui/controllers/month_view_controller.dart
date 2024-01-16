@@ -81,4 +81,14 @@ class MonthViewController extends Cubit<MonthViewState>
       ),
     );
   }
+
+  /// Sets the focused date to the given [date].
+  void setFocusedDate(DateTime date) {
+    emit(
+      MonthViewCurrentMonthIsSet(
+        focusedDate: date,
+        reverseAnimation: state.focusedDate.isAfter(date),
+      ),
+    );
+  }
 }

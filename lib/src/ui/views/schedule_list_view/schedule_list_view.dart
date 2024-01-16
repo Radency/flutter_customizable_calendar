@@ -19,6 +19,8 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
     this.floatingEventsTheme = const FloatingEventsTheme(),
     this.onEventTap,
     this.monthPickerBuilder,
+    this.dayBuilder,
+    this.ignoreDaysWithoutEvents = false,
     super.key,
   });
 
@@ -58,7 +60,21 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
 
   /// Event builders
   /// Allows to specify custom builders for events
+  /// Works only if you don't specify [dayBuilder] builder.
   final Map<Type, EventBuilder> eventBuilders;
+
+  /// Custom day builder
+  /// Allows to specify custom builder for day
+  /// Make sure you don't have many widgets with 0 height in your builder
+  /// If you don't need empty days, you can set
+  /// [ignoreDaysWithoutEvents] to true
+  final Widget Function(
+    List<CalendarEvent> events,
+    DateTime date,
+  )? dayBuilder;
+
+  /// If true, days without events will be ignored.
+  final bool ignoreDaysWithoutEvents;
 
   /// The builder for the month picker.
   /// If you want to use your own month picker, you need
@@ -89,40 +105,40 @@ class _ScheduleListViewState<T extends CalendarEvent>
     super.initState();
     _scrollController = ItemScrollController();
     _itemPositionsListener = ItemPositionsListener.create();
-    _itemPositionsListener.itemPositions.addListener(() {
-      widget.controller.setDisplayedDateByGroupIndex(
-        _itemPositionsListener.itemPositions.value
-                .sorted(
-                  (a, b) => a.itemLeadingEdge.compareTo(b.itemLeadingEdge),
-                )
-                .firstOrNull
-                ?.index ??
-            0,
-      );
-    });
-
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      _scrollToCurrentPosition(animate: false);
+      _scrollToCurrentPosition(animate: false, events: _getGrouped())
+          .then((value) {
+        _itemPositionsListener.itemPositions.addListener(() {
+          final index = _itemPositionsListener.itemPositions.value
+              .sorted(
+                (a, b) => a.itemLeadingEdge.compareTo(b.itemLeadingEdge),
+              )
+              .firstOrNull
+              ?.index;
+
+          if (index != null) {
+            widget.controller.setDisplayedDateByGroupIndex(
+              index,
+              _getGrouped(),
+            );
+          }
+        });
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final grouped = {
-      ...widget.controller.grouped,
-      ...groupBy(
-        [...widget.breaks, ...widget.events].sortedBy((e) => e.start),
-        (e) => DateTime(e.start.year, e.start.month, e.start.day),
-      ),
-    };
+    final grouped = _getGrouped();
 
     return BlocListener<ScheduleListViewController,
         ScheduleListViewControllerState>(
       bloc: widget.controller,
+      listenWhen: (previous, current) => true,
       listener: (context, state) {
         if (state is ScheduleListViewControllerCurrentDateIsSet &&
             state.animeList) {
-          _scrollToCurrentPosition();
+          _scrollToCurrentPosition(events: grouped);
         }
       },
       child: Column(
@@ -187,6 +203,20 @@ class _ScheduleListViewState<T extends CalendarEvent>
     );
   }
 
+  Map<DateTime, List<CalendarEvent>> _getGrouped() {
+    final result = {
+      ...widget.controller.grouped,
+      ...groupBy(
+        [...widget.breaks, ...widget.events].sortedBy((e) => e.start),
+        (e) => DateTime(e.start.year, e.start.month, e.start.day),
+      ),
+    };
+    if (widget.ignoreDaysWithoutEvents) {
+      result.removeWhere((key, value) => value.isEmpty);
+    }
+    return result;
+  }
+
   Widget _itemBuilder(int i, Map<DateTime, List<CalendarEvent>> grouped) {
     if (i < 0) {
       return const SizedBox();
@@ -202,6 +232,10 @@ class _ScheduleListViewState<T extends CalendarEvent>
 
     final date = group.key;
     final events = group.value;
+
+    if (widget.dayBuilder != null) {
+      return widget.dayBuilder!(events, date);
+    }
 
     return Container(
       width: double.infinity,
@@ -252,17 +286,32 @@ class _ScheduleListViewState<T extends CalendarEvent>
     );
   }
 
-  void _scrollToCurrentPosition({bool animate = true}) {
-    if (animate) {
-      _scrollController.scrollTo(
-        index: widget.controller.animateToGroupIndex,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.ease,
-      );
-    } else {
-      _scrollController.jumpTo(
-        index: widget.controller.animateToGroupIndex,
-      );
+  Future<void> _scrollToCurrentPosition({
+    required Map<DateTime, List<CalendarEvent>> events,
+    bool animate = true,
+  }) async {
+    try {
+      if (animate) {
+        await _scrollController.scrollTo(
+          index: widget.controller.animateToGroupIndex(
+                ignoreEmpty: widget.ignoreDaysWithoutEvents,
+                events: events,
+              ) +
+              1,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.ease,
+          alignment: .01,
+        );
+      } else {
+        _scrollController.jumpTo(
+          index: widget.controller.animateToGroupIndex(
+            ignoreEmpty: widget.ignoreDaysWithoutEvents,
+            events: events,
+          ),
+        );
+      }
+    } catch (_) {
+      // ignore
     }
   }
 

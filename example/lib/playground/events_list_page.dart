@@ -1,4 +1,4 @@
-import 'package:example/image_calendar_event.dart';
+import 'package:example/playground/image_calendar_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 
