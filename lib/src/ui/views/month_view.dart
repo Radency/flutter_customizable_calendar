@@ -51,7 +51,11 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.eventBuilders = const {},
     this.pageViewPhysics,
     this.overrideOnEventLongPress,
+    this.weekStartsOnSunday = false,
   });
+
+  /// If true, the week starts on Sunday. Otherwise, the week starts on Monday.
+  final bool weekStartsOnSunday;
 
   /// Enable page view physics
   final ScrollPhysics? pageViewPhysics;
@@ -161,7 +165,9 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   DateTime get _monthDate =>
       _displayedMonth.start.add(const Duration(days: 14));
 
-  DateTimeRange get _displayedMonth => widget.controller.state.displayedMonth;
+  DateTimeRange get _displayedMonth => widget.controller.state.displayedMonth(
+        weekStartsOnSunday: widget.weekStartsOnSunday,
+      );
 
   late final ScrollController _forward;
   late final ScrollController _backward;
@@ -368,7 +374,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
               context,
               widget.controller.prev,
               widget.controller.next,
-              state.focusedDate,
+              widget.controller.state.focusedDate,
             );
           }
 
@@ -412,7 +418,11 @@ class _MonthViewState<T extends FloatingCalendarEvent>
         final monthDays = DateUtils.addMonthsToMonthDate(
           widget.controller.initialDate,
           pageIndex,
-        ).monthViewRange.days;
+        )
+            .monthViewRange(
+              weekStartsOnSunday: widget.weekStartsOnSunday,
+            )
+            .days;
 
         return Padding(
           key: ValueKey(widget.controller.state.focusedDate),
@@ -569,7 +579,11 @@ class _MonthViewState<T extends FloatingCalendarEvent>
       return;
     }
 
-    final monthDays = widget.controller.state.displayedMonth.days;
+    final monthDays = widget.controller.state
+        .displayedMonth(
+          weekStartsOnSunday: widget.weekStartsOnSunday,
+        )
+        .days;
 
     final index = monthDays.indexOf(widget.controller.state.focusedDate);
     if (index == -1) return;

@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:example/complete_example/add_event_dialog.dart';
 import 'package:example/complete_example/bloc/events_cubit.dart';
@@ -161,7 +162,7 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
                                 if (positionY >= maxCalendarHeight) {
                                   _animationController.value = 0;
                                 } else if (positionY <= maxHeight) {
-                                  _animationController.value = 1 -
+                                  final newPos = 1 -
                                       (positionY /
                                           (maxCalendarHeight +
                                               MediaQuery.of(context)
@@ -170,6 +171,8 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
                                               MediaQuery.of(context)
                                                   .padding
                                                   .bottom));
+                                  if (newPos != _animationController.value)
+                                    _animationController.value = newPos;
                                 }
                               },
                               onVerticalDragCancel: () {
@@ -230,12 +233,14 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
             child: InkWell(
               borderRadius: BorderRadius.circular(32),
               onTap: () {
-                Navigator.of(context).push(
+                Navigator.of(context)
+                    .push(
                   MaterialPageRoute(
                     builder: (context) => AddEventPage(),
                   ),
-                ).then((value) {
-                  if(value is DeliveryEvent) {
+                )
+                    .then((value) {
+                  if (value is DeliveryEvent) {
                     BlocProvider.of<EventsCubit>(context).addEvent(value);
                   }
                 });
@@ -277,6 +282,7 @@ class _CompleteExamplePageState extends State<CompleteExamplePage>
     return MonthView<DeliveryEvent<EventAttachment>>(
       controller: monthViewController,
       events: state.events,
+      weekStartsOnSunday: true,
       daysRowTheme: DaysRowTheme(
         height: 32,
         backgroundColor: ExampleColors.swatch24(),

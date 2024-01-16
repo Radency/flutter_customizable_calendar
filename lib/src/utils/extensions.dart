@@ -31,9 +31,15 @@ extension WeekUtils on DateTime {
 ///
 extension MonthUtils on DateTime {
   /// Returns day dates of 6 weeks which include current month.
-  DateTimeRange get monthViewRange {
-    final first = DateUtils.addDaysToDate(this, 1 - day);
-    final startDate = DateUtils.addDaysToDate(first, 1 - first.weekday);
+  DateTimeRange monthViewRange({bool weekStartsOnSunday = false}) {
+    final first = DateUtils.addDaysToDate(
+      this,
+      1 - day,
+    );
+    final startDate = DateUtils.addDaysToDate(
+      first,
+      1 - first.weekday - (weekStartsOnSunday ? 1 : 0),
+    );
 
     /// In case of clock change, set end day to 12:00
     return DateTimeRange(
