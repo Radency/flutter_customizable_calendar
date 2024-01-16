@@ -71,7 +71,6 @@ class MonthDayTheme extends Equatable {
         dayNumberPadding,
       ];
 
-
   /// Creates a copy of this theme but with the given fields replaced with
   /// the new values
   MonthDayTheme copyWith({
@@ -106,5 +105,4 @@ class MonthDayTheme extends Equatable {
       dayNumberPadding: dayNumberPadding ?? this.dayNumberPadding,
     );
   }
-
 }

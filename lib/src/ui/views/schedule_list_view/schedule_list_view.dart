@@ -208,7 +208,7 @@ class _ScheduleListViewState<T extends CalendarEvent>
       ...widget.controller.grouped,
       ...groupBy(
         [...widget.breaks, ...widget.events].sortedBy((e) => e.start),
-            (e) => DateTime(e.start.year, e.start.month, e.start.day),
+        (e) => DateTime(e.start.year, e.start.month, e.start.day),
       ),
     };
     if (widget.ignoreDaysWithoutEvents) {

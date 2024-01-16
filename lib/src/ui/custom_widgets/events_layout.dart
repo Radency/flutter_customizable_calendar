@@ -102,7 +102,8 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
   int get maxEvents => max(
         0,
         ((_eventsContainerHeight - _getShowMoreButtonTheme.height) /
-                _getShowMoreButtonTheme.height)
+                (_getShowMoreButtonTheme.height +
+                    _getShowMoreButtonTheme.padding.vertical))
             .floor(),
       );
 
@@ -211,7 +212,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
           )
               .map((e) {
             return _buildMonthViewEventItem(
-              e.event ,
+              e.event,
               e.builder(context),
             );
           }),
@@ -351,9 +352,6 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
           width: widget.dayWidth,
           height: 24,
           padding: theme.padding,
-          margin: const EdgeInsets.only(
-            bottom: 2,
-          ),
           child: RenderIdProvider(
             id: eventsToDisplay[maxEvents],
             child: Container(

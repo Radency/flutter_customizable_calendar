@@ -488,7 +488,14 @@ class _MonthViewState<T extends FloatingCalendarEvent>
         final mainAxisSpacing = theme.mainAxisSpacing;
         final crossAxisSpacing = theme.crossAxisSpacing;
 
+        var aspectRatio = (constraints.maxWidth - crossAxisSpacing * 6) /
+            7 /
+            (constraints.maxHeight - mainAxisSpacing * 4) *
+            5;
         _shouldScroll = _rowsHeight.round() > constraints.maxHeight.round();
+        if (_shouldScroll) {
+          aspectRatio = 1.0;
+        }
 
         WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
           if (!_shouldScroll) {
@@ -525,6 +532,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                   mainAxisSpacing: mainAxisSpacing,
                   crossAxisSpacing: crossAxisSpacing,
                   physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: aspectRatio,
                   children: [
                     ...days.map((day) {
                       final isToday = DateUtils.isSameDay(day, _now);
@@ -544,6 +552,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                   mainAxisSpacing: mainAxisSpacing,
                   crossAxisSpacing: crossAxisSpacing,
                   physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: aspectRatio,
                   children: [
                     ...days.map(
                       (day) => WidgetSize(

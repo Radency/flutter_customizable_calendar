@@ -474,8 +474,7 @@ class _AddEventPageState extends State<AddEventPage> {
                                                   .difference(_startDate),
                                               location: _location,
                                               title: _titleController.text,
-                                              iconAsset:
-                                                  _store.assetIcon,
+                                              iconAsset: _store.assetIcon,
                                               completed: false,
                                             ),
                                           );

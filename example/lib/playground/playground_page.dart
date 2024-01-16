@@ -619,6 +619,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       // },
       showMoreTheme: MonthShowMoreTheme(
         borderRadius: 12,
+
       ),
       pageViewPhysics: BouncingScrollPhysics(),
       monthPickerTheme: _periodPickerTheme,
@@ -633,8 +634,6 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       divider: Divider(
         height: 2,
         thickness: 2,
-        color: Colors.grey.withOpacity(0.33),
-        // color: Colors.green,
       ),
       daysRowTheme: DaysRowTheme(
         weekdayStyle: _textStyle,
