@@ -30,12 +30,14 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Creates a Days view, Parameters [controller]
   /// and [saverConfig] are required.
   const DaysView({
-    required this.saverConfig,
     required this.controller,
     super.key,
+    this.saverConfig,
     this.overrideOnEventLongPress,
     this.monthPickerTheme = const DisplayedPeriodPickerTheme(),
+    this.monthPickerBuilder,
     this.daysListTheme = const DaysListTheme(),
+    this.daysListBuilder,
     this.timelineTheme = const TimelineTheme(),
     this.floatingEventTheme = const FloatingEventsTheme(),
     this.allDayEventsTheme = const AllDayEventsTheme(),
@@ -55,10 +57,26 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final DaysViewController controller;
 
   /// The month picker customization params
+  /// Works only if [monthPickerBuilder] not specified
   final DisplayedPeriodPickerTheme monthPickerTheme;
 
+  final Widget Function(
+    BuildContext,
+    DateTime focusedDate,
+    List<T> events,
+  )? monthPickerBuilder;
+
   /// The days list customization params
+  /// Works only if [daysListBuilder] not specified
   final DaysListTheme daysListTheme;
+
+  /// The builder for the days list
+  final Widget Function(
+    BuildContext context,
+    List<DateTime> days,
+    DateTime focusedDate,
+    List<T> events,
+  )? daysListBuilder;
 
   /// The timeline customization params
   final TimelineTheme timelineTheme;
@@ -110,7 +128,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final void Function(T)? onDiscardChanges;
 
   /// Properties for widget which is used to save edited event
-  final SaverConfig saverConfig;
+  final SaverConfig? saverConfig;
 
   @override
   State<DaysView<T>> createState() => _DaysViewState<T>();
@@ -273,8 +291,38 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
           if (state is DaysViewCurrentDateIsSet) {
             // Reset displayed month
-            final displayedMonth = _getMonthsDeltaForDate(_displayedDate);
-            final daysListOffset = _getDaysListOffsetForDate(_displayedDate);
+
+            if (widget.monthPickerBuilder == null) {
+              final displayedMonth = _getMonthsDeltaForDate(_displayedDate);
+
+              if (displayedMonth != _monthPickerController.page?.round()) {
+                // Switch displayed month
+                _monthPickerController.animateToPage(
+                  displayedMonth,
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.linear,
+                );
+              }
+            }
+
+            if (widget.daysListBuilder != null) {
+              final daysListOffset = _getDaysListOffsetForDate(_displayedDate);
+
+              if (daysListOffset != _daysListController!.offset) {
+                _daysListController!.animateTo(
+                  daysListOffset,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.fastLinearToSlowEaseIn,
+                );
+              }
+            }
+          }
+        } else if (state is DaysViewFocusedDateIsSet) {
+          // User scrolls a timeline
+          final focusedDate = state.focusedDate;
+
+          if (widget.monthPickerBuilder == null) {
+            final displayedMonth = _getMonthsDeltaForDate(focusedDate);
 
             if (displayedMonth != _monthPickerController.page?.round()) {
               // Switch displayed month
@@ -283,33 +331,19 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
                 duration: const Duration(milliseconds: 150),
                 curve: Curves.linear,
               );
-            } else if (daysListOffset != _daysListController!.offset) {
-              _daysListController!.animateTo(
-                daysListOffset,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.fastLinearToSlowEaseIn,
-              );
             }
           }
-        } else if (state is DaysViewFocusedDateIsSet) {
-          // User scrolls a timeline
-          final focusedDate = state.focusedDate;
-          final displayedMonth = _getMonthsDeltaForDate(focusedDate);
-          final daysListOffset = _getDaysListOffsetForDate(focusedDate);
 
-          if (displayedMonth != _monthPickerController.page?.round()) {
-            // Switch displayed month
-            _monthPickerController.animateToPage(
-              displayedMonth,
-              duration: const Duration(milliseconds: 150),
-              curve: Curves.linear,
-            );
-          } else if (daysListOffset != _daysListController!.offset) {
-            _daysListController!.animateTo(
-              daysListOffset,
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.linear,
-            );
+          if (widget.daysListBuilder == null) {
+            final daysListOffset = _getDaysListOffsetForDate(focusedDate);
+
+            if (daysListOffset != _daysListController!.offset) {
+              _daysListController!.animateTo(
+                daysListOffset,
+                duration: const Duration(milliseconds: 100),
+                curve: Curves.linear,
+              );
+            }
           }
         } else if (state is DaysViewNextMonthSelected ||
             state is DaysViewPrevMonthSelected) {
@@ -347,7 +381,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
               eventUpdatesStreamController: _eventUpdatesStreamController,
-              saverConfig: widget.saverConfig,
+              saverConfig: widget.saverConfig ?? SaverConfig.def(),
               child: _timeline(),
             ),
           ),
@@ -368,19 +402,35 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
   Widget _monthPicker() => BlocBuilder<DaysViewController, DaysViewState>(
         bloc: widget.controller,
-        builder: (context, state) => DisplayedPeriodPicker(
-          period: DisplayedPeriod(state.displayedDate),
-          theme: widget.monthPickerTheme,
-          reverseAnimation: state.reverseAnimation,
-          onLeftButtonPressed:
-              DateUtils.isSameMonth(state.displayedDate, _initialDate)
-                  ? null
-                  : widget.controller.prev,
-          onRightButtonPressed:
-              DateUtils.isSameMonth(state.displayedDate, _endDate)
-                  ? null
-                  : widget.controller.next,
-        ),
+        builder: (context, state) {
+          if (widget.monthPickerBuilder != null) {
+            return widget.monthPickerBuilder!(
+              context,
+              state.focusedDate,
+              widget.events.where((element) {
+                return DateUtils.isSameMonth(
+                      element.start,
+                      state.focusedDate,
+                    ) ||
+                    DateUtils.isSameMonth(element.end, state.focusedDate);
+              }).toList(),
+            );
+          }
+
+          return DisplayedPeriodPicker(
+            period: DisplayedPeriod(state.displayedDate),
+            theme: widget.monthPickerTheme,
+            reverseAnimation: state.reverseAnimation,
+            onLeftButtonPressed:
+                DateUtils.isSameMonth(state.displayedDate, _initialDate)
+                    ? null
+                    : widget.controller.prev,
+            onRightButtonPressed:
+                DateUtils.isSameMonth(state.displayedDate, _endDate)
+                    ? null
+                    : widget.controller.next,
+          );
+        },
         buildWhen: (previous, current) => !DateUtils.isSameMonth(
           previous.displayedDate,
           current.displayedDate,
@@ -421,6 +471,37 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
   Widget _daysList() {
     final theme = widget.daysListTheme;
+
+    if (widget.daysListBuilder != null) {
+      return BlocBuilder<DaysViewController, DaysViewState>(
+        bloc: widget.controller,
+        builder: (context, state) {
+          final monthDate = DateUtils.addMonthsToMonthDate(
+            _initialDate,
+            DateUtils.monthDelta(_initialDate, state.focusedDate),
+          );
+          final daysInMonth =
+              DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
+
+          final days = List.generate(
+            daysInMonth,
+            (index) => DateUtils.addDaysToDate(monthDate, index + 1),
+          );
+
+          final dayEvents = widget.events.where((event) {
+            return DateUtils.isSameDay(event.start, state.focusedDate) ||
+                DateUtils.isSameDay(event.end, state.focusedDate);
+          }).toList();
+
+          return widget.daysListBuilder!(
+            context,
+            days,
+            state.focusedDate,
+            dayEvents.cast<T>(),
+          );
+        },
+      );
+    }
 
     return SizedBox(
       height: theme.height,

@@ -46,7 +46,7 @@ class HomePage extends StatelessWidget {
                     const MonthViewWithScheduleListViewPage())),
           ),
           ListTile(
-            title: const Text("ScheduleListView + DayView"),
+            title: const Text("ScheduleListView + DaysView"),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => const ScheduleListViewWithDaysView())),
           )

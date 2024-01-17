@@ -73,7 +73,12 @@ class EventsCubit extends Cubit<EventsState> {
 
     final start = DateTime.now().subtract(const Duration(days: 90));
     final end = DateTime.now().add(const Duration(days: 365));
-    var current = start;
+    var current = DateTime(
+      start.year,
+      start.month,
+      start.day,
+      7,
+    );
     while (current.isBefore(end)) {
       final addEvents = random.nextBool() || current.day == DateTime.now().day;
       if (!addEvents) {
@@ -89,20 +94,50 @@ class EventsCubit extends Cubit<EventsState> {
       randomLabels.forEach((element) {
         final shuffled = titles.entries.toList()..shuffle();
         final title = shuffled.firstWhere((e) => e.value == element).key;
+
+        final duration = Duration(
+          hours: max(
+            1,
+            random.nextInt(6),
+          ),
+        );
+
         events.add(
           EventWithLabel(
             id: "${current.millisecondsSinceEpoch}_${element.index}",
             start: current,
-            duration: const Duration(hours: 4),
+            duration: duration,
             title: title,
             label: element,
           ),
         );
+        current = current.add(duration).subtract(
+              Duration(
+                hours: min(
+                  duration.inHours - 1,
+                  random.nextInt(3),
+                ),
+              ),
+            );
       });
-      current = current.add(const Duration(days: 1));
+      current = current.add(
+        Duration(hours: (24 - current.hour) + 7),
+      );
     }
 
     emit(EventsInitialized(events: events));
+  }
+
+  void updateEvent(EventWithLabel value) {
+    final state = this.state;
+    if (state is EventsInitialized) {
+      final events = state.events;
+      final index = events.indexWhere((element) => element.id == value.id);
+      if (index != -1) {
+        events[index] = value;
+        emit(EventsInitialized(events: events));
+      }
+    }
   }
 
   void addEvent(EventWithLabel value) {

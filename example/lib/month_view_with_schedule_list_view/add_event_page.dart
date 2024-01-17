@@ -70,12 +70,23 @@ class _AddEventPageState extends State<AddEventPage> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: ExampleColors.swatch24().withOpacity(0.25),
+                        color: ExampleColors.swatch24().withAlpha(110),
                         borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: ExampleColors.black.withOpacity(0.25),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 0),
+                          ),
+                        ],
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
-                        child: Icon(Icons.close),
+                        child: Icon(
+                          Icons.close,
+                          color: ExampleColors.white,
+                        ),
                       ),
                     ),
                   )

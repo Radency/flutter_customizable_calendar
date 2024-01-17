@@ -20,7 +20,11 @@ abstract class DaysViewState extends Equatable {
 }
 
 class DaysViewInitial extends DaysViewState {
-  DaysViewInitial() : super(displayedDate: clock.now());
+  DaysViewInitial({
+    DateTime? focusDate,
+  }) : super(
+          displayedDate: focusDate ?? clock.now(),
+        );
 }
 
 class DaysViewCurrentDateIsSet extends DaysViewState {

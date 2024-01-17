@@ -1,6 +1,7 @@
 import 'package:example/month_view_with_schedule_list_view/colors.dart';
 import 'package:example/schedule_list_view_with_days_view/add_event_page.dart';
 import 'package:example/schedule_list_view_with_days_view/cubit/events_cubit.dart';
+import 'package:example/schedule_list_view_with_days_view/days_view_page.dart';
 import 'package:example/schedule_list_view_with_days_view/event_with_label/event_label.dart';
 import 'package:example/schedule_list_view_with_days_view/event_with_label/event_with_label.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ class _ScheduleListViewWithDaysViewState
       child: Scaffold(
         backgroundColor: ExampleColors.white,
         body: SafeArea(
+          bottom: false,
           child: BlocBuilder<EventsCubit, EventsState>(
             builder: (context, state) {
               if (state is EventsInitial) {
@@ -91,25 +93,26 @@ class _ScheduleListViewWithDaysViewState
                               ),
                               InkWell(
                                 onTap: () {
-                                  Navigator.of(context)
-                                      .push(
-                                    MaterialPageRoute(
-                                      builder: (context) => AddEventPage(),
-                                    ),
-                                  )
-                                      .then((value) {
-                                    if (value is EventWithLabel) {
-                                      context
-                                          .read<EventsCubit>()
-                                          .addEvent(value);
-                                    }
-                                  });
+                                  _onAddClicked(
+                                    context,
+                                    currentTime,
+                                    context.read<EventsCubit>(),
+                                  );
                                 },
                                 borderRadius: BorderRadius.circular(8),
                                 child: Container(
                                   decoration: BoxDecoration(
                                     color: ExampleColors.swatch24(),
                                     borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: ExampleColors.black
+                                            .withOpacity(0.25),
+                                        blurRadius: 4,
+                                        spreadRadius: 1,
+                                        offset: const Offset(0, 0),
+                                      ),
+                                    ],
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(2.0),
@@ -132,109 +135,122 @@ class _ScheduleListViewWithDaysViewState
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                           vertical: 16, horizontal: 8.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: ExampleColors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ExampleColors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 64,
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      DateFormat.d().format(date),
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 44,
-                                          height: 0.95),
-                                    ),
-                                    Text(
-                                      DateFormat.EEEE()
-                                          .format(date)
-                                          .substring(0, 3),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 16,
-                                        color: ExampleColors.swatch3,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => DaysViewPage(
+                                eventsCubit: context.read<EventsCubit>(),
+                                focusedDay: data.first.start,
+                                onAddClicked: _onAddClicked,
                               ),
-                              const SizedBox(width: 16),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  for (final event in events.take(2))
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4.0),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 4,
-                                            height: 12,
-                                            decoration: BoxDecoration(
-                                              color: event.label.color,
-                                              borderRadius: BorderRadius.all(
-                                                Radius.circular(12.0),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            event.title,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 16,
-                                              color: ExampleColors.black,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  if (events.length > 2)
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4.0),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 4,
-                                            height: 12,
-                                            decoration: BoxDecoration(
-                                              color: ExampleColors.swatch3,
-                                              borderRadius: BorderRadius.all(
-                                                Radius.circular(12.0),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            "+${events.length - 2} more ${events.length == 3 ? "event" : "events"}",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 16,
-                                              color: ExampleColors.black,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              )
+                            ),
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: ExampleColors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: ExampleColors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
                             ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 64,
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        DateFormat.d().format(date),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 44,
+                                            height: 0.95),
+                                      ),
+                                      Text(
+                                        DateFormat.EEEE()
+                                            .format(date)
+                                            .substring(0, 3),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 16,
+                                          color: ExampleColors.swatch3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    for (final event in events.take(2))
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4.0),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 4,
+                                              height: 12,
+                                              decoration: BoxDecoration(
+                                                color: event.label.color,
+                                                borderRadius: BorderRadius.all(
+                                                  Radius.circular(12.0),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              event.title,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 16,
+                                                color: ExampleColors.black,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    if (events.length > 2)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4.0),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 4,
+                                              height: 12,
+                                              decoration: BoxDecoration(
+                                                color: ExampleColors.swatch3,
+                                                borderRadius: BorderRadius.all(
+                                                  Radius.circular(12.0),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              "+${events.length - 2} more ${events.length == 3 ? "event" : "events"}",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 16,
+                                                color: ExampleColors.black,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                )
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -249,5 +265,25 @@ class _ScheduleListViewWithDaysViewState
         ),
       ),
     );
+  }
+
+  void _onAddClicked(
+    BuildContext c,
+    DateTime initialDate,
+    EventsCubit cubit,
+  ) {
+    Navigator.of(c)
+        .push(
+      MaterialPageRoute(
+        builder: (context) => AddEventPage(
+          initialDate: initialDate,
+        ),
+      ),
+    )
+        .then((value) {
+      if (value is EventWithLabel) {
+        cubit.addEvent(value);
+      }
+    });
   }
 }

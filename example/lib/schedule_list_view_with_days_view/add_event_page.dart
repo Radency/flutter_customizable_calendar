@@ -5,7 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class AddEventPage extends StatefulWidget {
-  const AddEventPage({super.key});
+  const AddEventPage({
+    super.key,
+    required this.initialDate,
+  });
+
+  final DateTime initialDate;
 
   @override
   State<AddEventPage> createState() => _AddEventPageState();
@@ -20,9 +25,11 @@ class _AddEventPageState extends State<AddEventPage> {
 
   @override
   void initState() {
-    _startDate = DateTime.now();
+    _startDate = widget.initialDate;
     _endDate = _startDate.add(
-      Duration(days: 1),
+      Duration(
+        hours: 2,
+      ),
     );
 
     super.initState();
@@ -92,12 +99,22 @@ class _AddEventPageState extends State<AddEventPage> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: ExampleColors.swatch24().withOpacity(0.25),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                          color: ExampleColors.swatch24().withAlpha(110),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ExampleColors.black.withOpacity(0.25),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 0),
+                            ),
+                          ]),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
-                        child: Icon(Icons.close),
+                        child: Icon(
+                          Icons.close,
+                          color: ExampleColors.white,
+                        ),
                       ),
                     ),
                   )

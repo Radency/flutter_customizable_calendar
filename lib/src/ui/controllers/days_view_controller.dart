@@ -12,8 +12,13 @@ class DaysViewController extends Cubit<DaysViewState> with CalendarController {
   DaysViewController({
     DateTime? initialDate,
     this.endDate,
+    DateTime? focusedDate,
   })  : initialDate = initialDate ?? DateTime(1970),
-        super(DaysViewInitial());
+        super(
+          DaysViewInitial(
+            focusDate: focusedDate,
+          ),
+        );
 
   @override
   final DateTime initialDate;
