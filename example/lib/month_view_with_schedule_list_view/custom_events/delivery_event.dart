@@ -1,4 +1,4 @@
-import 'package:example/complete_example/custom_events/event_attachment.dart';
+import 'package:example/month_view_with_schedule_list_view/custom_events/event_attachment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 

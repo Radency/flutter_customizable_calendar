@@ -1,6 +1,8 @@
-import 'package:example/complete_example/complete_example_page.dart';
+import 'package:example/month_view_with_schedule_list_view/month_view_with_schedule_list_view_page.dart';
 import 'package:example/playground/playground_page.dart';
 import 'package:flutter/material.dart';
+
+import 'schedule_list_view_with_days_view/schedule_list_view_with_days_view_page.dart';
 
 void main() => runApp(const App());
 
@@ -38,10 +40,16 @@ class HomePage extends StatelessWidget {
                 MaterialPageRoute(builder: (context) => PlaygroundPage())),
           ),
           ListTile(
-            title: const Text('Complete example'),
+            title: const Text('MonthView + ScheduleListView'),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => const CompleteExamplePage())),
+                builder: (context) =>
+                    const MonthViewWithScheduleListViewPage())),
           ),
+          ListTile(
+            title: const Text("ScheduleListView + DayView"),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => const ScheduleListViewWithDaysView())),
+          )
         ],
       ),
     );

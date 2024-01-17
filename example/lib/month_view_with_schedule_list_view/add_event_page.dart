@@ -1,8 +1,8 @@
-import 'package:example/complete_example/attachments_list_page.dart';
-import 'package:example/complete_example/bloc/events_cubit.dart';
-import 'package:example/complete_example/colors.dart';
-import 'package:example/complete_example/custom_events/delivery_event.dart';
-import 'package:example/complete_example/custom_events/event_attachment.dart';
+import 'package:example/month_view_with_schedule_list_view/attachments_list_page.dart';
+import 'package:example/month_view_with_schedule_list_view/cubit/events_cubit.dart';
+import 'package:example/month_view_with_schedule_list_view/colors.dart';
+import 'package:example/month_view_with_schedule_list_view/custom_events/delivery_event.dart';
+import 'package:example/month_view_with_schedule_list_view/custom_events/event_attachment.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

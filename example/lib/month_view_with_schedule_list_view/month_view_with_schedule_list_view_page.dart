@@ -1,23 +1,25 @@
 import 'dart:math';
 
-import 'package:example/complete_example/add_event_dialog.dart';
-import 'package:example/complete_example/bloc/events_cubit.dart';
-import 'package:example/complete_example/colors.dart';
-import 'package:example/complete_example/custom_events/delivery_event.dart';
-import 'package:example/complete_example/custom_events/event_attachment.dart';
+import 'package:example/month_view_with_schedule_list_view/add_event_page.dart';
+import 'package:example/month_view_with_schedule_list_view/cubit/events_cubit.dart';
+import 'package:example/month_view_with_schedule_list_view/colors.dart';
+import 'package:example/month_view_with_schedule_list_view/custom_events/delivery_event.dart';
+import 'package:example/month_view_with_schedule_list_view/custom_events/event_attachment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:intl/intl.dart';
 
-class CompleteExamplePage extends StatefulWidget {
-  const CompleteExamplePage({super.key});
+class MonthViewWithScheduleListViewPage extends StatefulWidget {
+  const MonthViewWithScheduleListViewPage({super.key});
 
   @override
-  State<CompleteExamplePage> createState() => _CompleteExamplePageState();
+  State<MonthViewWithScheduleListViewPage> createState() =>
+      _MonthViewWithScheduleListViewPageState();
 }
 
-class _CompleteExamplePageState extends State<CompleteExamplePage>
+class _MonthViewWithScheduleListViewPageState
+    extends State<MonthViewWithScheduleListViewPage>
     with TickerProviderStateMixin {
   final MonthViewController monthViewController = MonthViewController();
   final ScheduleListViewController scheduleListController =
