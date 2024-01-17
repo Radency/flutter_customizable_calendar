@@ -9,7 +9,7 @@ abstract class CalendarEvent extends Equatable
     required this.id,
     required this.start,
     required this.duration,
-    required this.color,
+    this.color = Colors.transparent,
   });
 
   /// Unique [Object] which allows to identify a specific event
@@ -48,7 +48,7 @@ abstract class FloatingCalendarEvent extends CalendarEvent {
     required super.id,
     required super.start,
     required super.duration,
-    required super.color,
+    super.color,
   });
 
   /// Returns modified instance of the event with given params
@@ -69,7 +69,7 @@ abstract class EditableCalendarEvent extends FloatingCalendarEvent {
     required super.id,
     required super.start,
     required super.duration,
-    required super.color,
+    super.color,
   });
 
   @override
@@ -84,7 +84,7 @@ abstract class AllDayCalendarEvent extends EditableCalendarEvent {
     required super.id,
     required super.start,
     required super.duration,
-    required super.color,
+    super.color,
   });
 }
 

@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:bloc/bloc.dart';
-import 'package:example/complete_example/custom_events/delivery_event.dart';
-import 'package:example/complete_example/custom_events/event_attachment.dart';
+import 'package:example/month_view_with_schedule_list_view/custom_events/delivery_event.dart';
+import 'package:example/month_view_with_schedule_list_view/custom_events/event_attachment.dart';
 import 'package:meta/meta.dart';
 
 part 'events_state.dart';
@@ -43,8 +43,8 @@ class EventsCubit extends Cubit<EventsState> {
     final random = Random.secure();
     //   generate current month events
 
-    final start = DateTime.now().subtract(const Duration(days: 30));
-    final end = DateTime.now().add(const Duration(days: 30));
+    final start = DateTime.now().subtract(const Duration(days: 90));
+    final end = DateTime.now().add(const Duration(days: 365));
     var current = start;
     while (current.isBefore(end)) {
       final addEvents = random.nextBool() || current.day == DateTime.now().day;
