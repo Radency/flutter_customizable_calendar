@@ -44,7 +44,10 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
   /// Switches calendar to shows the previous week
   @override
   void prev() {
-    final prevWeek = DateUtils.addDaysToDate(state.focusedDate, -7);
+    final prevWeek = DateUtils.addDaysToDate(
+      state.focusedDate,
+      -visibleDays,
+    );
 
     if (!initialDate.isAfter(prevWeek)) {
       final now = clock.now();
@@ -60,7 +63,10 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
   /// Switches calendar to shows the next week
   @override
   void next() {
-    final nextWeek = DateUtils.addDaysToDate(state.focusedDate, 7);
+    final nextWeek = DateUtils.addDaysToDate(
+      state.focusedDate,
+      visibleDays,
+    );
 
     if (!(endDate?.isBefore(nextWeek) ?? false)) {
       final now = clock.now();
