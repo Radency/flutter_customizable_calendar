@@ -53,8 +53,53 @@ class _WeekViewPageState extends State<WeekViewPage> {
                     saverConfig: null,
                     events: state.events,
                     pageViewPhysics: const ClampingScrollPhysics(),
+                    onEventUpdated: (event) {
+                      context.read<EventsWithLabelCubit>().updateEvent(event);
+                    },
                     weekPickerBuilder: (context, events, range) {
-                      return const SizedBox();
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  _controller.prev();
+                                },
+                                icon: Icon(Icons.chevron_left),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  showDatePicker(
+                                    context: context,
+                                    initialDate: range.start,
+                                    firstDate: DateTime(1970),
+                                    lastDate: DateTime(2100),
+                                  ).then((value) {
+                                    if (value != null) {
+                                      _controller.setDisplayedDate(value);
+                                    }
+                                  });
+                                },
+                                child: Text(
+                                  DateFormat.yMMMM().format(range.start),
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  _controller.next();
+                                },
+                                icon: Icon(Icons.chevron_right),
+                              ),
+                            ],
+                          )
+                        ],
+                      );
                     },
                     dayRowBuilder: (context, day, events) {
                       return Column(children: [

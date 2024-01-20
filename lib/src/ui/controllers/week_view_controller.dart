@@ -15,6 +15,8 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
     DateTime? initialDate,
     this.endDate,
   })  : initialDate = initialDate ?? DateTime(1970),
+        assert(visibleDays > 0, 'visibleDays must be greater than 0'),
+        assert(visibleDays <= 7, 'visibleDays must be less or equal to 7'),
         super(WeekViewInitial());
 
   final int visibleDays;
@@ -71,20 +73,34 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
     }
   }
 
+  void setDisplayedDate(DateTime date) {
+    emit(
+      WeekViewCurrentWeekIsSet(
+        focusedDate: DateTime(
+          date.year,
+          date.month,
+          date.day,
+        ),
+        reverseAnimation: state.focusedDate.isAfter(date),
+      ),
+    );
+  }
+
   @override
   void setPage(int page) {
-    final pageDate = DateUtils.addDaysToDate(
-      initialDate,
-      page * visibleDays,
+    final now = clock.now();
+    final focusedDate = initialDate.addWeeks(
+      visibleDays,
+      page,
     );
-    final focusedDate = DateTime(
-      pageDate.year,
-      pageDate.month,
-      pageDate.day,
-    );
+    final isCurrentWeek = focusedDate.isSameWeekAs(visibleDays, now);
+    if (DateUtils.isSameMonth(focusedDate, state.focusedDate)) {
+      return;
+    }
     emit(
-      WeekViewPrevWeekSelected(
-        focusedDate: focusedDate,
+      WeekViewCurrentWeekIsSet(
+        focusedDate: isCurrentWeek ? now : focusedDate,
+        reverseAnimation: state.focusedDate.isAfter(now),
       ),
     );
   }

@@ -23,10 +23,17 @@ extension WeekUtils on DateTime {
       );
     }
     final range = DateTimeRange(
-      start: DateUtils.addDaysToDate(this, 1),
-      end: DateUtils.addDaysToDate(this, visibleDays + 1),
+      start: DateUtils.addDaysToDate(this, 0),
+      end: DateUtils.addDaysToDate(this, visibleDays),
     );
     return range;
+  }
+
+  DateTime addWeeks(int visibleDays, int weeks) {
+    return DateUtils.addDaysToDate(
+      this,
+      weeks * visibleDays,
+    );
   }
 
   /// Returns result of check whether both dates are in the same week range.
