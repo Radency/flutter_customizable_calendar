@@ -10,7 +10,6 @@ class WeekViewTimelineWidget extends StatefulWidget {
     required this.controller,
     required this.timelineKey,
     required this.theme,
-    required this.height,
     required this.days,
     required this.initialScrollOffset,
     required this.buildChild,
@@ -23,7 +22,6 @@ class WeekViewTimelineWidget extends StatefulWidget {
   final GlobalKey timelineKey;
   final TimelineTheme theme;
   final WeekViewController controller;
-  final double height;
   final Widget Function(DateTime dayTime) buildChild;
 
   @override
@@ -31,24 +29,16 @@ class WeekViewTimelineWidget extends StatefulWidget {
 }
 
 class _WeekViewTimelineWidgetState extends State<WeekViewTimelineWidget> {
-  late final ScrollController _timelineController;
-
-  bool _initialized = false;
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
-
-    _timelineController = ScrollController(
+    _scrollController = ScrollController(
       initialScrollOffset: widget.initialScrollOffset,
     );
 
-    _timelineController.addListener(() {
-      if (!_initialized) {
-        _timelineController.jumpTo(widget.initialScrollOffset);
-        _initialized = true;
-      } else {
-        widget.scrollTo(_timelineController.offset);
-      }
+    _scrollController.addListener(() {
+      widget.scrollTo(_scrollController.offset);
     });
 
     super.initState();
@@ -56,7 +46,7 @@ class _WeekViewTimelineWidgetState extends State<WeekViewTimelineWidget> {
 
   @override
   void dispose() {
-    _timelineController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -64,9 +54,10 @@ class _WeekViewTimelineWidgetState extends State<WeekViewTimelineWidget> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       key: widget.timelineKey,
-      controller: _timelineController,
-      child: SizedBox(
-        height: widget.height,
+      controller: _scrollController,
+      child: Container(
+        color: Colors.transparent,
+        height: 2400,
         child: Row(
           children: [
             ...widget.days.map(widget.buildChild),

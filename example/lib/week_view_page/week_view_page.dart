@@ -59,9 +59,9 @@ class _WeekViewPageState extends State<WeekViewPage> {
                     onEventUpdated: (event) {
                       context.read<EventsWithLabelCubit>().updateEvent(event);
                     },
-                    overrideOnEventLongPress: (details, event) {
-                      print(event);
-                    },
+                    // overrideOnEventLongPress: (details, event) {
+                    //   print(event);
+                    // },
                     weekPickerBuilder: (context, events, range) {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.center,

@@ -147,7 +147,17 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   PageController? _weekPickerController;
   var _pointerLocation = Offset.zero;
   var _scrolling = false;
-  ScrollController? _timelineController;
+
+  ScrollController? get _timelineController {
+    final range = widget.controller.state.focusedDate.weekRange(
+      widget.controller.visibleDays,
+    );
+    if (WeekViewKeys.timeline.containsKey(range)) {
+      final widget = WeekViewKeys.timeline[range]!.currentWidget;
+      return (widget as SingleChildScrollView?)?.controller;
+    }
+    return null;
+  }
 
   final StreamController<int> _eventUpdatesStreamController =
       StreamController.broadcast();
@@ -164,9 +174,10 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   DateTimeRange get _initialWeek =>
       _initialDate.weekRange(widget.controller.visibleDays);
 
-  RenderBox? _getTimelineBox(dynamic key) =>
-      WeekViewKeys.timeline[key]?.currentContext?.findRenderObject()
-          as RenderBox?;
+  RenderBox? _getTimelineBox(DateTimeRange key) {
+    return WeekViewKeys.timeline[key]?.currentContext?.findRenderObject()
+        as RenderBox?;
+  }
 
   RenderBox? _getLayoutBox(DateTime dayDate) =>
       WeekViewKeys.layouts[dayDate]?.currentContext?.findRenderObject()
@@ -186,8 +197,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         .cast<T>();
   }
 
-  void _stopTimelineScrolling() =>
-      _timelineController?.jumpTo(_timelineController?.offset ?? 0);
+  void _stopTimelineScrolling() {
+    final controller = _timelineController;
+    if (controller?.offset == .0) return;
+    controller?.jumpTo(controller.offset);
+  }
 
   Future<void> _scrollIfNecessary() async {
     final timelineBox = _getTimelineBox(
@@ -198,10 +212,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     _scrolling = timelineBox != null;
 
     if (!_scrolling) return; // Scrollable isn't found
-    if (_timelineController == null) return;
+    final controller = _timelineController;
+    if (controller == null) return;
 
     final fingerPosition = timelineBox!.globalToLocal(_pointerLocation);
-    final timelineScrollPosition = _timelineController!.position;
+    final timelineScrollPosition = controller.position;
     var timelineScrollOffset = timelineScrollPosition.pixels;
 
     const detectionArea = 25;
@@ -264,11 +279,14 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   @override
   void initState() {
     super.initState();
+    final initialPage =
+        _displayedWeek.start.difference(_initialWeek.start).inWeeks(
+              widget.controller.visibleDays,
+            );
     _weekPickerController = PageController(
-      initialPage: _displayedWeek.start.difference(_initialWeek.start).inWeeks(
-            widget.controller.visibleDays,
-          ),
+      initialPage: initialPage,
     );
+    widget.controller.setPage(initialPage);
   }
 
   @override
@@ -292,13 +310,15 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               ),
           ]).whenComplete(() {
             // Scroll the timeline just after current week is displayed
+            final controller = _timelineController;
+
             final timelineOffset = min(
               state.focusedDate.hour * _hourExtent,
-              _timelineController?.position.maxScrollExtent ?? 0,
+              controller?.position.maxScrollExtent ?? 0,
             );
 
-            if (timelineOffset != _timelineController?.offset) {
-              _timelineController
+            if (timelineOffset != .0 && timelineOffset != controller?.offset) {
+              controller
                   ?.animateTo(
                 timelineOffset,
                 duration: const Duration(milliseconds: 300),
@@ -330,33 +350,39 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
         children: [
           _weekPicker(),
           Expanded(
-            child: DraggableEventOverlay<T>(
-              _elevatedEvent,
-              key: _overlayKey,
-              onEventLongPressStart: widget.overrideOnEventLongPress,
-              viewType: CalendarView.week,
-              timelineTheme: widget.timelineTheme,
-              padding: EdgeInsets.only(
-                top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
-              ),
-              eventBuilders: widget.eventBuilders,
-              onDateLongPress: _onDateLongPress,
-              onDragDown: _stopTimelineScrolling,
-              onDragUpdate: _autoScrolling,
-              onDragEnd: _stopAutoScrolling,
-              onSizeUpdate: _autoScrolling,
-              onResizingEnd: _stopAutoScrolling,
-              onDropped: widget.onDiscardChanges,
-              onChanged: widget.onEventUpdated,
-              getTimelineBox: () => _getTimelineBox(
-                widget.controller.state.focusedDate
-                    .weekRange(widget.controller.visibleDays),
-              ),
-              getLayoutBox: _getLayoutBox,
-              getEventBox: _getEventBox,
-              saverConfig: widget.saverConfig ?? SaverConfig.def(),
-              eventUpdatesStreamController: _eventUpdatesStreamController,
-              child: _weekTimeline(),
+            child: BlocBuilder<WeekViewController, WeekViewState>(
+              bloc: widget.controller,
+              builder: (context, state) {
+                return DraggableEventOverlay<T>(
+                  _elevatedEvent,
+                  key: _overlayKey,
+                  onEventLongPressStart: widget.overrideOnEventLongPress,
+                  viewType: CalendarView.week,
+                  timelineTheme: widget.timelineTheme,
+                  padding: EdgeInsets.only(
+                    top: widget.daysRowTheme.height +
+                        (widget.divider?.height ?? 0),
+                    left: widget.timelineTheme.timeScaleTheme.width,
+                  ),
+                  eventBuilders: widget.eventBuilders,
+                  onDateLongPress: _onDateLongPress,
+                  onDragDown: _stopTimelineScrolling,
+                  onDragUpdate: _autoScrolling,
+                  onDragEnd: _stopAutoScrolling,
+                  onSizeUpdate: _autoScrolling,
+                  onResizingEnd: _stopAutoScrolling,
+                  onDropped: widget.onDiscardChanges,
+                  onChanged: widget.onEventUpdated,
+                  getTimelineBox: () => _getTimelineBox(
+                    state.focusedDate.weekRange(widget.controller.visibleDays),
+                  ),
+                  getLayoutBox: _getLayoutBox,
+                  getEventBox: _getEventBox,
+                  saverConfig: widget.saverConfig ?? SaverConfig.def(),
+                  eventUpdatesStreamController: _eventUpdatesStreamController,
+                  child: _weekTimeline(),
+                );
+              },
             ),
           ),
         ],
@@ -374,7 +400,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   void dispose() {
     _elevatedEvent.dispose();
     _weekPickerController?.dispose();
-    _timelineController?.dispose();
     _eventUpdatesStreamController.close();
     super.dispose();
   }
@@ -440,7 +465,9 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
           timelineKey: (days) {
             final timeRange = DateTimeRange(
               start: days.first,
-              end: days.last,
+              end: days.last.add(
+                const Duration(days: 1),
+              ),
             );
             if (!WeekViewKeys.timeline.containsKey(
               timeRange,

@@ -94,19 +94,14 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
 
   @override
   void setPage(int page) {
-    final now = clock.now();
     final focusedDate = initialDate.addWeeks(
       visibleDays,
       page,
     );
-    final isCurrentWeek = focusedDate.isSameWeekAs(visibleDays, now);
-    if (DateUtils.isSameMonth(focusedDate, state.focusedDate)) {
-      return;
-    }
     emit(
       WeekViewCurrentWeekIsSet(
-        focusedDate: isCurrentWeek ? now : focusedDate,
-        reverseAnimation: state.focusedDate.isAfter(now),
+        focusedDate: focusedDate,
+        reverseAnimation: state.focusedDate.isAfter(focusedDate),
       ),
     );
   }
