@@ -1,9 +1,9 @@
-import 'package:example/month_view_with_schedule_list_view/colors.dart';
+import 'package:example/colors.dart';
+import 'package:example/common/event_with_label/events_with_label_cubit.dart';
 import 'package:example/schedule_list_view_with_days_view/add_event_page.dart';
-import 'package:example/schedule_list_view_with_days_view/cubit/events_cubit.dart';
 import 'package:example/schedule_list_view_with_days_view/days_view_page.dart';
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_label.dart';
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_with_label.dart';
+import 'package:example/common/event_with_label/event_label.dart';
+import 'package:example/common/event_with_label/event_with_label.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
@@ -30,21 +30,21 @@ class _ScheduleListViewWithDaysViewState
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<EventsCubit>(
-      create: (context) => EventsCubit()..init(),
+    return BlocProvider<EventsWithLabelCubit>(
+      create: (context) => EventsWithLabelCubit()..init(),
       child: Scaffold(
         backgroundColor: ExampleColors.white,
         body: SafeArea(
           bottom: false,
-          child: BlocBuilder<EventsCubit, EventsState>(
+          child: BlocBuilder<EventsWithLabelCubit, EventsWithLabelState>(
             builder: (context, state) {
-              if (state is EventsInitial) {
+              if (state is EventsWithLabelInitial) {
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
               }
 
-              if (state is EventsInitialized) {
+              if (state is EventsWithLabelInitialized) {
                 return ScheduleListView(
                   controller: _scheduleListViewController,
                   events: state.events,
@@ -96,7 +96,7 @@ class _ScheduleListViewWithDaysViewState
                                   _onAddClicked(
                                     context,
                                     currentTime,
-                                    context.read<EventsCubit>(),
+                                    context.read<EventsWithLabelCubit>(),
                                   );
                                 },
                                 borderRadius: BorderRadius.circular(8),
@@ -140,7 +140,8 @@ class _ScheduleListViewWithDaysViewState
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => DaysViewPage(
-                                eventsCubit: context.read<EventsCubit>(),
+                                eventsCubit:
+                                    context.read<EventsWithLabelCubit>(),
                                 focusedDay: data.first.start,
                                 onAddClicked: _onAddClicked,
                               ),
@@ -270,7 +271,7 @@ class _ScheduleListViewWithDaysViewState
   void _onAddClicked(
     BuildContext c,
     DateTime initialDate,
-    EventsCubit cubit,
+    EventsWithLabelCubit cubit,
   ) {
     Navigator.of(c)
         .push(

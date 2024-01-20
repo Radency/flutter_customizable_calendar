@@ -9,21 +9,30 @@ extension CapitalizedString on String {
 ///
 extension DurationInWeeks on Duration {
   /// The number of entire weeks spanned by this Duration.
-  int get inWeeks => inDays ~/ 7;
+  int inWeeks(int visibleDay) => inDays ~/ visibleDay;
 }
 
 ///
 extension WeekUtils on DateTime {
   /// Returns all day dates of current week from Monday (1) to Sunday (7).
-  DateTimeRange get weekRange => DateTimeRange(
+  DateTimeRange weekRange(int visibleDays) {
+    if (visibleDays == 7) {
+      return DateTimeRange(
         start: DateUtils.addDaysToDate(this, 1 - weekday),
         end: DateUtils.addDaysToDate(this, 8 - weekday),
       );
+    }
+    final range = DateTimeRange(
+      start: DateUtils.addDaysToDate(this, 1),
+      end: DateUtils.addDaysToDate(this, visibleDays + 1),
+    );
+    return range;
+  }
 
   /// Returns result of check whether both dates are in the same week range.
-  bool isSameWeekAs(DateTime? other) {
+  bool isSameWeekAs(int visibleDays, DateTime? other) {
     if (other == null) return false;
-    final week = weekRange;
+    final week = weekRange(visibleDays);
     return !other.isBefore(week.start) && other.isBefore(week.end);
   }
 }

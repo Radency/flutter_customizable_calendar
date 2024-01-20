@@ -22,6 +22,7 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
     required this.eventKeys,
     required this.allDayEventsTheme,
     this.eventBuilders = const {},
+    this.dayRowBuilder,
     this.onEventTap,
     this.divider,
     this.allDayEventsShowMoreBuilder,
@@ -58,6 +59,11 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
   final List<DateTime> weekDays;
   final TimelineTheme theme;
   final DaysRowTheme daysRowTheme;
+  final Widget Function(
+    BuildContext context,
+    DateTime day,
+    List<T> events,
+  )? dayRowBuilder;
   final Widget? divider;
   final void Function(T)? onEventTap;
 
@@ -164,6 +170,28 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
   }
 
   Widget _daysRow(List<DateTime> days) {
+    if (widget.dayRowBuilder != null) {
+      return Row(
+        children: days
+            .map(
+              (dayDate) => Expanded(
+                child: widget.dayRowBuilder!(
+                  context,
+                  dayDate,
+                  widget.events
+                      .where(
+                        (element) =>
+                            element.start.isAfter(dayDate) &&
+                            element.start.isBefore(dayDate),
+                      )
+                      .toList(),
+                ),
+              ),
+            )
+            .toList(),
+      );
+    }
+
     final theme = widget.daysRowTheme;
 
     return SizedBox(
@@ -213,7 +241,8 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
 
   Widget _timeline(List<DateTime> days) {
     final theme = widget.theme;
-    final isCurrentWeek = days.first.isSameWeekAs(_now);
+    final isCurrentWeek =
+        days.first.isSameWeekAs(widget.controller.visibleDays, _now);
 
     return SingleChildScrollView(
       key: widget.timelineKey,

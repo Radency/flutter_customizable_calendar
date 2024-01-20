@@ -1,6 +1,6 @@
-import 'package:example/month_view_with_schedule_list_view/colors.dart';
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_label.dart';
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_with_label.dart';
+import 'package:example/colors.dart';
+import 'package:example/common/event_with_label/event_label.dart';
+import 'package:example/common/event_with_label/event_with_label.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

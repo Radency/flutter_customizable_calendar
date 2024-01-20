@@ -1,14 +1,14 @@
 import 'dart:math';
 
 import 'package:bloc/bloc.dart';
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_label.dart';
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_with_label.dart';
+import 'package:example/common/event_with_label/event_label.dart';
+import 'package:example/common/event_with_label/event_with_label.dart';
 import 'package:meta/meta.dart';
 
-part 'events_state.dart';
+part 'events_with_label_state.dart';
 
-class EventsCubit extends Cubit<EventsState> {
-  EventsCubit() : super(EventsInitial());
+class EventsWithLabelCubit extends Cubit<EventsWithLabelState> {
+  EventsWithLabelCubit() : super(EventsWithLabelInitial());
 
   static const Map<String, EventLabel> titles = {
     "Project Meeting": EventLabel.work,
@@ -125,27 +125,27 @@ class EventsCubit extends Cubit<EventsState> {
       );
     }
 
-    emit(EventsInitialized(events: events));
+    emit(EventsWithLabelInitialized(events: events));
   }
 
   void updateEvent(EventWithLabel value) {
     final state = this.state;
-    if (state is EventsInitialized) {
+    if (state is EventsWithLabelInitialized) {
       final events = state.events;
       final index = events.indexWhere((element) => element.id == value.id);
       if (index != -1) {
         events[index] = value;
-        emit(EventsInitialized(events: events));
+        emit(EventsWithLabelInitialized(events: events));
       }
     }
   }
 
   void addEvent(EventWithLabel value) {
     final state = this.state;
-    if (state is EventsInitialized) {
+    if (state is EventsWithLabelInitialized) {
       final events = state.events;
       events.add(value);
-      emit(EventsInitialized(events: events));
+      emit(EventsWithLabelInitialized(events: events));
     }
   }
 }

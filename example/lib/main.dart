@@ -1,5 +1,6 @@
 import 'package:example/month_view_with_schedule_list_view/month_view_with_schedule_list_view_page.dart';
 import 'package:example/playground/playground_page.dart';
+import 'package:example/week_view_page/week_view_page.dart';
 import 'package:flutter/material.dart';
 
 import 'schedule_list_view_with_days_view/schedule_list_view_with_days_view_page.dart';
@@ -49,7 +50,15 @@ class HomePage extends StatelessWidget {
             title: const Text("ScheduleListView + DaysView"),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => const ScheduleListViewWithDaysView())),
-          )
+          ),
+          ListTile(
+            title: const Text("WeekView"),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const WeekViewPage(),
+              ),
+            ),
+          ),
         ],
       ),
     );

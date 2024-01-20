@@ -1,4 +1,4 @@
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_label.dart';
+import 'package:example/common/event_with_label/event_label.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 
 class EventWithLabel extends EditableCalendarEvent {

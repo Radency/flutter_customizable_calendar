@@ -28,11 +28,13 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Creates a Week view, [controller] is required.
   const WeekView({
     required this.controller,
-    required this.saverConfig,
+    this.saverConfig,
     super.key,
     this.weekPickerTheme = const DisplayedPeriodPickerTheme(),
+    this.weekPickerBuilder,
     this.divider,
     this.daysRowTheme = const DaysRowTheme(),
+    this.dayRowBuilder,
     this.timelineTheme = const TimelineTheme(),
     this.floatingEventTheme = const FloatingEventsTheme(),
     this.breaks = const [],
@@ -64,14 +66,30 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
       overrideOnEventLongPress;
 
   /// The month picker customization params
+  /// Works only if [weekPickerBuilder] is null
   final DisplayedPeriodPickerTheme weekPickerTheme;
+
+  /// The month picker builder
+  final Widget Function(
+    BuildContext context,
+    List<T> events,
+    DateTimeRange range,
+  )? weekPickerBuilder;
 
   /// A divider which separates the days list and the timeline.
   /// You can set it to null if you don't need it.
   final Divider? divider;
 
-  /// /// The days row customization params
+  /// The days row customization params
+  /// Works only if [dayRowBuilder] is null
   final DaysRowTheme daysRowTheme;
+
+  /// Day row builder
+  final Widget Function(
+    BuildContext context,
+    DateTime day,
+    List<T> events,
+  )? dayRowBuilder;
 
   /// The timeline customization params
   final TimelineTheme timelineTheme;
@@ -116,7 +134,7 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final void Function(T)? onDiscardChanges;
 
   /// Properties for widget which is used to save edited event
-  final SaverConfig saverConfig;
+  final SaverConfig? saverConfig;
 
   @override
   State<WeekView<T>> createState() => _WeekViewState<T>();
@@ -140,9 +158,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
   double get _hourExtent => widget.timelineTheme.timeScaleTheme.hourExtent;
 
-  DateTimeRange get _displayedWeek => widget.controller.state.displayedWeek;
+  DateTimeRange get _displayedWeek =>
+      widget.controller.state.displayedWeek(widget.controller.visibleDays);
 
-  DateTimeRange get _initialWeek => _initialDate.weekRange;
+  DateTimeRange get _initialWeek =>
+      _initialDate.weekRange(widget.controller.visibleDays);
 
   RenderBox? _getTimelineBox() =>
       WeekViewKeys.timeline?.currentContext?.findRenderObject() as RenderBox?;
@@ -241,7 +261,9 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   void initState() {
     super.initState();
     _weekPickerController = PageController(
-      initialPage: _displayedWeek.start.difference(_initialWeek.start).inWeeks,
+      initialPage: _displayedWeek.start.difference(_initialWeek.start).inWeeks(
+            widget.controller.visibleDays,
+          ),
     );
   }
 
@@ -250,8 +272,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     return BlocListener<WeekViewController, WeekViewState>(
       bloc: widget.controller,
       listener: (context, state) {
-        final weeksOffset =
-            state.displayedWeek.start.difference(_initialWeek.start).inWeeks;
+        final weeksOffset = state
+            .displayedWeek(widget.controller.visibleDays)
+            .start
+            .difference(_initialWeek.start)
+            .inWeeks(widget.controller.visibleDays);
 
         if (state is WeekViewCurrentWeekIsSet) {
           Future.wait([
@@ -322,7 +347,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               getTimelineBox: _getTimelineBox,
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
-              saverConfig: widget.saverConfig,
+              saverConfig: widget.saverConfig ?? SaverConfig.def(),
               eventUpdatesStreamController: _eventUpdatesStreamController,
               child: _weekTimeline(),
             ),
@@ -350,22 +375,43 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   Widget _weekPicker() => BlocBuilder<WeekViewController, WeekViewState>(
         bloc: widget.controller,
         builder: (context, state) {
-          final days = state.displayedWeek.days;
+          final days = state.displayedWeek(widget.controller.visibleDays).days;
+
+          if (widget.weekPickerBuilder != null) {
+            final range = DateTimeRange(
+              start: days.first,
+              end: days.last,
+            );
+            return widget.weekPickerBuilder!(
+              context,
+              widget.events
+                  .where(
+                    (element) =>
+                        element.start.isAfter(range.start) &&
+                        element.start.isBefore(range.end),
+                  )
+                  .toList()
+                  .cast<T>(),
+              state.displayedWeek(widget.controller.visibleDays),
+            );
+          }
 
           return DisplayedPeriodPicker(
             period: DisplayedPeriod(days.first, days.last),
             theme: widget.weekPickerTheme,
             reverseAnimation: state.reverseAnimation,
-            onLeftButtonPressed: state.focusedDate.isSameWeekAs(_initialDate)
+            onLeftButtonPressed: state.focusedDate
+                    .isSameWeekAs(widget.controller.visibleDays, _initialDate)
                 ? null
                 : widget.controller.prev,
-            onRightButtonPressed: state.focusedDate.isSameWeekAs(_endDate)
+            onRightButtonPressed: state.focusedDate
+                    .isSameWeekAs(widget.controller.visibleDays, _endDate)
                 ? null
                 : widget.controller.next,
           );
         },
-        buildWhen: (previous, current) =>
-            !current.focusedDate.isSameWeekAs(previous.focusedDate),
+        buildWhen: (previous, current) => !current.focusedDate
+            .isSameWeekAs(widget.controller.visibleDays, previous.focusedDate),
       );
 
   Widget _weekTimeline() {
@@ -373,7 +419,9 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
 
     _weekPickerController?.dispose();
     _weekPickerController = PageController(
-      initialPage: _displayedWeek.start.difference(_initialWeek.start).inWeeks,
+      initialPage: _displayedWeek.start
+          .difference(_initialWeek.start)
+          .inWeeks(widget.controller.visibleDays),
     );
 
     return PageView.builder(
@@ -385,8 +433,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
       itemBuilder: (context, pageIndex) {
         final weekdays = DateUtils.addDaysToDate(
           widget.controller.initialDate,
-          pageIndex * 7,
-        ).weekRange.days;
+          pageIndex * widget.controller.visibleDays,
+        ).weekRange(widget.controller.visibleDays).days;
 
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -399,6 +447,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               weekDays: weekdays,
               theme: theme,
               daysRowTheme: widget.daysRowTheme,
+              dayRowBuilder: widget.dayRowBuilder,
               controller: widget.controller,
               overlayKey: _overlayKey,
               breaks: widget.breaks,

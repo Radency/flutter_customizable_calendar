@@ -11,11 +11,13 @@ part 'week_view_state.dart';
 class WeekViewController extends Cubit<WeekViewState> with CalendarController {
   /// Creates WeekView controller instance.
   WeekViewController({
+    this.visibleDays = 7,
     DateTime? initialDate,
     this.endDate,
   })  : initialDate = initialDate ?? DateTime(1970),
         super(WeekViewInitial());
 
+  final int visibleDays;
   @override
   final DateTime initialDate;
 
@@ -44,7 +46,7 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
 
     if (!initialDate.isAfter(prevWeek)) {
       final now = clock.now();
-      final isCurrentWeek = prevWeek.isSameWeekAs(now);
+      final isCurrentWeek = prevWeek.isSameWeekAs(visibleDays, now);
       emit(
         WeekViewPrevWeekSelected(
           focusedDate: isCurrentWeek ? now : prevWeek,
@@ -60,7 +62,7 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
 
     if (!(endDate?.isBefore(nextWeek) ?? false)) {
       final now = clock.now();
-      final isCurrentWeek = nextWeek.isSameWeekAs(now);
+      final isCurrentWeek = nextWeek.isSameWeekAs(visibleDays, now);
       emit(
         WeekViewNextWeekSelected(
           focusedDate: isCurrentWeek ? now : nextWeek,
@@ -71,30 +73,19 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
 
   @override
   void setPage(int page) {
-    final now = clock.now();
-
     final pageDate = DateUtils.addDaysToDate(
       initialDate,
-      page * 7,
+      page * visibleDays,
     );
     final focusedDate = DateTime(
       pageDate.year,
       pageDate.month,
       pageDate.day,
     );
-    final isCurrentWeek = focusedDate.isSameWeekAs(now);
-    if (focusedDate.isBefore(state.focusedDate)) {
-      emit(
-        WeekViewPrevWeekSelected(
-          focusedDate: isCurrentWeek ? now : focusedDate,
-        ),
-      );
-    } else {
-      emit(
-        WeekViewNextWeekSelected(
-          focusedDate: isCurrentWeek ? now : focusedDate,
-        ),
-      );
-    }
+    emit(
+      WeekViewPrevWeekSelected(
+        focusedDate: focusedDate,
+      ),
+    );
   }
 }
