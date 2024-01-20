@@ -14,7 +14,7 @@ import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 @visibleForTesting
 abstract class WeekViewKeys {
   /// A key for the timeline view
-  static GlobalKey? timeline;
+  static Map<DateTimeRange, GlobalKey?> timeline = {};
 
   /// Map of keys for the events layouts (by day date)
   static final layouts = <DateTime, GlobalKey>{};
@@ -164,8 +164,9 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   DateTimeRange get _initialWeek =>
       _initialDate.weekRange(widget.controller.visibleDays);
 
-  RenderBox? _getTimelineBox() =>
-      WeekViewKeys.timeline?.currentContext?.findRenderObject() as RenderBox?;
+  RenderBox? _getTimelineBox(dynamic key) =>
+      WeekViewKeys.timeline[key]?.currentContext?.findRenderObject()
+          as RenderBox?;
 
   RenderBox? _getLayoutBox(DateTime dayDate) =>
       WeekViewKeys.layouts[dayDate]?.currentContext?.findRenderObject()
@@ -189,7 +190,10 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
       _timelineController?.jumpTo(_timelineController?.offset ?? 0);
 
   Future<void> _scrollIfNecessary() async {
-    final timelineBox = _getTimelineBox();
+    final timelineBox = _getTimelineBox(
+      widget.controller.state.focusedDate
+          .weekRange(widget.controller.visibleDays),
+    );
 
     _scrolling = timelineBox != null;
 
@@ -344,7 +348,10 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               onResizingEnd: _stopAutoScrolling,
               onDropped: widget.onDiscardChanges,
               onChanged: widget.onEventUpdated,
-              getTimelineBox: _getTimelineBox,
+              getTimelineBox: () => _getTimelineBox(
+                widget.controller.state.focusedDate
+                    .weekRange(widget.controller.visibleDays),
+              ),
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
               saverConfig: widget.saverConfig ?? SaverConfig.def(),
@@ -424,44 +431,43 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
           .inWeeks(widget.controller.visibleDays),
     );
 
-    return PageView.builder(
-      controller: _weekPickerController,
-      onPageChanged: (pageIndex) {
-        widget.controller.setPage(pageIndex);
-      },
-      physics: widget.pageViewPhysics ?? const NeverScrollableScrollPhysics(),
-      itemBuilder: (context, pageIndex) {
-        final weekdays = DateUtils.addDaysToDate(
-          widget.controller.initialDate,
-          pageIndex * widget.controller.visibleDays,
-        ).weekRange(widget.controller.visibleDays).days;
-
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            return WeekViewTimelinePage(
-              timelineKey: WeekViewKeys.timeline = GlobalKey(),
-              layoutKeys: WeekViewKeys.layouts,
-              eventKeys: WeekViewKeys.events,
-              eventBuilders: widget.eventBuilders,
-              constraints: constraints,
-              weekDays: weekdays,
-              theme: theme,
-              daysRowTheme: widget.daysRowTheme,
-              dayRowBuilder: widget.dayRowBuilder,
-              controller: widget.controller,
-              overlayKey: _overlayKey,
-              breaks: widget.breaks,
-              events: _events,
-              allDayEvents: _allDayEvents,
-              allDayEventsTheme: widget.allDayEventsTheme,
-              allDayEventsShowMoreBuilder: widget.allDayEventsShowMoreBuilder,
-              onAllDayEventsShowMoreTap: widget.onAllDayEventsShowMoreTap,
-              onAllDayEventTap: widget.onAllDayEventTap,
-              elevatedEvent: _elevatedEvent,
-              divider: widget.divider,
-              onEventTap: widget.onEventTap,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return WeekViewTimelinePage(
+          weekPickerController: _weekPickerController!,
+          pageViewPhysics:
+              widget.pageViewPhysics ?? const NeverScrollableScrollPhysics(),
+          timelineKey: (days) {
+            final timeRange = DateTimeRange(
+              start: days.first,
+              end: days.last,
             );
+            if (!WeekViewKeys.timeline.containsKey(
+              timeRange,
+            )) {
+              WeekViewKeys.timeline[timeRange] = GlobalKey();
+            }
+            return WeekViewKeys.timeline[timeRange]!;
           },
+          layoutKeys: WeekViewKeys.layouts,
+          eventKeys: WeekViewKeys.events,
+          eventBuilders: widget.eventBuilders,
+          constraints: constraints,
+          theme: theme,
+          daysRowTheme: widget.daysRowTheme,
+          dayRowBuilder: widget.dayRowBuilder,
+          controller: widget.controller,
+          overlayKey: _overlayKey,
+          breaks: widget.breaks,
+          events: _events,
+          allDayEvents: _allDayEvents,
+          allDayEventsTheme: widget.allDayEventsTheme,
+          allDayEventsShowMoreBuilder: widget.allDayEventsShowMoreBuilder,
+          onAllDayEventsShowMoreTap: widget.onAllDayEventsShowMoreTap,
+          onAllDayEventTap: widget.onAllDayEventTap,
+          elevatedEvent: _elevatedEvent,
+          divider: widget.divider,
+          onEventTap: widget.onEventTap,
         );
       },
     );

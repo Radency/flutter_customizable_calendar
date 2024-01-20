@@ -74,6 +74,7 @@ void main() {
         );
 
         when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.visibleDays).thenReturn(7);
         when(() => controller.endDate).thenReturn(currentWeekEnd);
         when(() => controller.state).thenReturn(initialStateWithDate(now));
 
@@ -81,9 +82,14 @@ void main() {
 
         final padding = view.timelineTheme.padding;
         final currentHourOrigin = Offset(padding.left, padding.top);
-        final currentHourPosition =
-            widgetTester.getTopLeft(find.byKey(WeekViewKeys.timeline!)) +
-                currentHourOrigin;
+        final range = now.weekRange(7).days;
+        final currentHourPosition = widgetTester.getTopLeft(
+              find.byKey(
+                WeekViewKeys.timeline[
+                    DateTimeRange(start: range.first, end: range.last)]!,
+              ),
+            ) +
+            currentHourOrigin;
 
         await widgetTester.longPressAt(currentHourPosition);
 
@@ -104,7 +110,7 @@ void main() {
           id: 'SimpleEvent1',
           start: now,
           duration: const Duration(hours: 1),
-          title: '',
+          title: 'SimpleEvent1',
         );
         final view = WeekView<FloatingCalendarEvent>(
           controller: controller,
@@ -114,15 +120,14 @@ void main() {
         );
 
         when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.visibleDays).thenReturn(7);
         when(() => controller.endDate).thenReturn(currentWeekEnd);
         when(() => controller.state)
             .thenReturn(initialStateWithDate(event.start));
 
         await widgetTester.pumpWidget(runTestApp(view));
 
-        final eventKey = WeekViewKeys.events[event]!;
-
-        await widgetTester.tap(find.byKey(eventKey));
+        await widgetTester.tap(find.text(event.title));
 
         expect(tappedEvent, event);
       },
@@ -138,6 +143,7 @@ void main() {
         );
 
         when(() => controller.initialDate).thenReturn(currentMonth);
+        when(() => controller.visibleDays).thenReturn(7);
         when(() => controller.endDate).thenReturn(currentMonthEnd);
         when(() => controller.state).thenReturn(
           withClock(
@@ -176,6 +182,7 @@ void main() {
         );
 
         when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.visibleDays).thenReturn(7);
         when(() => controller.endDate).thenReturn(currentWeekEnd);
         when(() => controller.state)
             .thenReturn(initialStateWithDate(event.start));
@@ -210,6 +217,7 @@ void main() {
         );
 
         when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.visibleDays).thenReturn(7);
         when(() => controller.endDate).thenReturn(currentWeekEnd);
         when(() => controller.state)
             .thenReturn(initialStateWithDate(event.start));
@@ -256,6 +264,7 @@ void main() {
         );
 
         when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.visibleDays).thenReturn(7);
         when(() => controller.endDate).thenReturn(currentWeekEnd);
         when(() => controller.state)
             .thenReturn(initialStateWithDate(event.start));
@@ -306,6 +315,7 @@ void main() {
         );
 
         when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.visibleDays).thenReturn(7);
         when(() => controller.endDate).thenReturn(currentWeekEnd);
         when(() => controller.state)
             .thenReturn(initialStateWithDate(event.start));
@@ -366,6 +376,7 @@ void main() {
         );
 
         when(() => controller.initialDate).thenReturn(currentWeek);
+        when(() => controller.visibleDays).thenReturn(7);
         when(() => controller.endDate).thenReturn(currentWeekEnd);
         when(() => controller.state).thenReturn(
           withClock(

@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/all_days_events_list.dart';
+import 'package:flutter_customizable_calendar/src/ui/custom_widgets/widget_size.dart';
+import 'package:flutter_customizable_calendar/src/ui/views/week_view/week_view_timeline_widget.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
 class WeekViewTimelinePage<T extends FloatingCalendarEvent>
     extends StatefulWidget {
   const WeekViewTimelinePage({
-    required this.weekDays,
+    required this.weekPickerController,
+    required this.pageViewPhysics,
     required this.theme,
     required this.daysRowTheme,
     required this.controller,
@@ -31,6 +37,10 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
     super.key,
   });
 
+  final ScrollPhysics? pageViewPhysics;
+
+  final PageController weekPickerController;
+
   final void Function(
     List<AllDayCalendarEvent> visibleEvents,
     List<AllDayCalendarEvent> events,
@@ -47,7 +57,7 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
   final Map<DateTime, GlobalKey> layoutKeys;
   final Map<CalendarEvent, GlobalKey> eventKeys;
 
-  final GlobalKey timelineKey;
+  final GlobalKey Function(List<DateTime> days) timelineKey;
   final BoxConstraints constraints;
   final FloatingEventNotifier<T> elevatedEvent;
   final List<Break> breaks;
@@ -56,7 +66,6 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
   final Map<Type, EventBuilder> eventBuilders;
   final GlobalKey<DraggableEventOverlayState<T>> overlayKey;
   final WeekViewController controller;
-  final List<DateTime> weekDays;
   final TimelineTheme theme;
   final DaysRowTheme daysRowTheme;
   final Widget Function(
@@ -73,7 +82,7 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
 
 class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
     extends State<WeekViewTimelinePage<T>> {
-  late final ScrollController _timelineController;
+  late ScrollController _timelineController;
 
   DateTime get _focusedDate => widget.controller.state.focusedDate;
 
@@ -81,24 +90,19 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
 
   static DateTime get _now => clock.now();
 
+  double _daysRowsHeight = 0;
+  double _allDayEventsHeight = 0;
+  double _timelineHeight = 0;
+
+  late final double _initScroll =
+      widget.controller.timelineOffset ?? _focusedDate.hour * _hourExtent;
+
   @override
   void initState() {
-    widget.controller.timelineOffset =
-        widget.controller.timelineOffset ?? _focusedDate.hour * _hourExtent;
     _timelineController = ScrollController(
-      initialScrollOffset:
-          widget.controller.timelineOffset ?? _focusedDate.hour * _hourExtent,
+      initialScrollOffset: _initScroll,
     );
-    _timelineController.addListener(() {
-      widget.controller.timelineOffset = _timelineController.offset;
-    });
-
     super.initState();
-  }
-
-  @override
-  void didUpdateWidget(covariant WeekViewTimelinePage<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -110,6 +114,72 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
   @override
   Widget build(BuildContext context) {
     final timeScaleWidth = widget.theme.timeScaleTheme.width;
+    return Row(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: EdgeInsets.only(
+            top: _daysRowsHeight + _allDayEventsHeight,
+          ),
+          child: BlocBuilder<WeekViewController, WeekViewState>(
+            bloc: widget.controller,
+            builder: (context, state) {
+              final weekDays = state.focusedDate
+                  .weekRange(widget.controller.visibleDays)
+                  .days;
+
+              return SingleChildScrollView(
+                controller: _timelineController,
+                physics: const NeverScrollableScrollPhysics(),
+                child: WidgetSize(
+                  onChange: (size) {
+                    if (size == null) return;
+                    setState(() {
+                      _timelineHeight = size.height;
+                    });
+                  },
+                  child: IntrinsicHeight(
+                    child: Container(
+                      padding: EdgeInsets.only(
+                        top: widget.theme.padding.top,
+                        bottom: widget.theme.padding.bottom,
+                      ),
+                      color: Colors.transparent, // Needs for hitTesting
+                      child: TimeScale(
+                        showCurrentTimeMark: weekDays.first.isSameWeekAs(
+                          widget.controller.visibleDays,
+                          _now,
+                        ),
+                        theme: widget.theme.timeScaleTheme,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Expanded(
+          child: PageView.builder(
+            controller: widget.weekPickerController,
+            physics: widget.pageViewPhysics,
+            onPageChanged: (index) {
+              widget.controller.setPage(index);
+            },
+            itemBuilder: (context, pageIndex) {
+              final weekDays = _getWeekDays(pageIndex);
+
+              return _buildBody(weekDays);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Padding _buildBody(
+    List<DateTime> weekDays,
+  ) {
     return Padding(
       padding: EdgeInsets.only(
         left: widget.theme.padding.left,
@@ -118,55 +188,84 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.only(left: timeScaleWidth),
-            child: _daysRow(widget.weekDays),
+          WidgetSize(
+            onChange: (size) {
+              if (size == null) return;
+              setState(() {
+                _allDayEventsHeight = size.height;
+              });
+            },
+            child: _daysRow(
+              weekDays,
+            ),
           ),
-          Padding(
-            padding: EdgeInsets.only(left: timeScaleWidth),
-            child: SizedBox(
-              child: AllDaysEventsList(
-                eventKeys: widget.eventKeys,
-                width: widget.constraints.maxWidth - timeScaleWidth,
-                theme: widget.allDayEventsTheme,
-                weekRange: DateTimeRange(
-                  start: widget.weekDays.first,
-                  end: widget.weekDays.last,
-                ),
-                allDayEvents: widget.allDayEvents
-                    .where(
-                      (element) =>
-                          DateTimeRange(start: element.start, end: element.end)
-                              .days
-                              .any(
-                                (d1) => widget.weekDays.any(
-                                  (d2) => DateUtils.isSameDay(d1, d2),
-                                ),
-                              ),
-                    )
-                    .toList(),
-                onEventTap: widget.onAllDayEventTap,
-                onShowMoreTap: widget.onAllDayEventsShowMoreTap,
-                showMoreBuilder: widget.allDayEventsShowMoreBuilder,
-                view: CalendarView.week,
+          WidgetSize(
+            onChange: (size) {
+              if (size == null) return;
+              setState(() {
+                _daysRowsHeight = size.height;
+              });
+            },
+            child: AllDaysEventsList(
+              eventKeys: widget.eventKeys,
+              width: widget.constraints.maxWidth,
+              theme: widget.allDayEventsTheme,
+              weekRange: DateTimeRange(
+                start: weekDays.first,
+                end: weekDays.last,
               ),
+              allDayEvents: widget.allDayEvents
+                  .where(
+                    (element) =>
+                        DateTimeRange(start: element.start, end: element.end)
+                            .days
+                            .any(
+                              (d1) => weekDays.any(
+                                (d2) => DateUtils.isSameDay(d1, d2),
+                              ),
+                            ),
+                  )
+                  .toList(),
+              onEventTap: widget.onAllDayEventTap,
+              onShowMoreTap: widget.onAllDayEventsShowMoreTap,
+              showMoreBuilder: widget.allDayEventsShowMoreBuilder,
+              view: CalendarView.week,
             ),
           ),
           widget.divider ?? const SizedBox.shrink(),
           Expanded(
             child: Stack(
+              fit: StackFit.expand,
               children: [
                 Positioned.fill(
-                  left: timeScaleWidth,
-                  child: _stripesRow(widget.weekDays),
+                  child: _stripesRow(weekDays),
                 ),
-                _timeline(widget.weekDays),
+                WeekViewTimelineWidget(
+                  days: weekDays,
+                  scrollTo: (offset) {
+                    _timelineController.jumpTo(offset);
+                  },
+                  initialScrollOffset: _timelineController.offset,
+                  height: _timelineHeight,
+                  controller: widget.controller,
+                  timelineKey: widget.timelineKey(weekDays),
+                  theme: widget.theme,
+                  buildChild: _singleDayView,
+                ),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  List<DateTime> _getWeekDays(int pageIndex) {
+    final weekDays = DateUtils.addDaysToDate(
+      widget.controller.initialDate,
+      pageIndex * widget.controller.visibleDays,
+    ).weekRange(widget.controller.visibleDays).days;
+    return weekDays;
   }
 
   Widget _daysRow(List<DateTime> days) {
@@ -238,38 +337,6 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
           growable: false,
         ),
       );
-
-  Widget _timeline(List<DateTime> days) {
-    final theme = widget.theme;
-    final isCurrentWeek =
-        days.first.isSameWeekAs(widget.controller.visibleDays, _now);
-
-    return SingleChildScrollView(
-      key: widget.timelineKey,
-      controller: _timelineController,
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            RenderIdProvider(
-              id: days.first, // TimeScale marked as a part of the first day
-              child: Container(
-                padding: EdgeInsets.only(
-                  top: theme.padding.top,
-                  bottom: theme.padding.bottom,
-                ),
-                color: Colors.transparent, // Needs for hitTesting
-                child: TimeScale(
-                  showCurrentTimeMark: isCurrentWeek,
-                  theme: theme.timeScaleTheme,
-                ),
-              ),
-            ),
-            ...days.map(_singleDayView),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _singleDayView(DateTime dayDate) {
     return Expanded(

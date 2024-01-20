@@ -53,8 +53,14 @@ class _WeekViewPageState extends State<WeekViewPage> {
                     saverConfig: null,
                     events: state.events,
                     pageViewPhysics: const ClampingScrollPhysics(),
+                    onEventTap: (event) {
+                      print(event);
+                    },
                     onEventUpdated: (event) {
                       context.read<EventsWithLabelCubit>().updateEvent(event);
+                    },
+                    overrideOnEventLongPress: (details, event) {
+                      print(event);
                     },
                     weekPickerBuilder: (context, events, range) {
                       return Column(
@@ -159,7 +165,7 @@ class _WeekViewPageState extends State<WeekViewPage> {
                           if (hour.hour < 10) {
                             formatted = formatted.substring(1);
                           }
-                          return "$formatted ";
+                          return "$formatted";
                         },
                       ),
                     ),
