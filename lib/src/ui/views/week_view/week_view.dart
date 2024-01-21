@@ -160,9 +160,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     return null;
   }
 
-  final StreamController<int> _eventUpdatesStreamController =
-      StreamController.broadcast();
-
   DateTime get _initialDate => widget.controller.initialDate;
 
   DateTime? get _endDate => widget.controller.endDate;
@@ -319,17 +316,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             );
 
             if (timelineOffset != .0 && timelineOffset != controller?.offset) {
-              controller
-                  ?.animateTo(
+              controller?.animateTo(
                 timelineOffset,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.fastLinearToSlowEaseIn,
-              )
-                  .then((value) {
-                _requestDraggableEventOverlayUpdate();
-              });
-            } else {
-              _requestDraggableEventOverlayUpdate();
+              );
             }
             setState(() {});
           });
@@ -342,7 +333,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               curve: Curves.linearToEaseOut,
             ),
           ]).whenComplete(() {
-            _requestDraggableEventOverlayUpdate();
             setState(() {});
           });
         }
@@ -354,35 +344,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             child: BlocBuilder<WeekViewController, WeekViewState>(
               bloc: widget.controller,
               builder: (context, state) {
-                return DraggableEventOverlay<T>(
-                  _elevatedEvent,
-                  key: _overlayKey,
-                  onEventLongPressStart: widget.overrideOnEventLongPress,
-                  viewType: CalendarView.week,
-                  timelineTheme: widget.timelineTheme,
-                  padding: EdgeInsets.only(
-                    top: widget.daysRowTheme.height +
-                        (widget.divider?.height ?? 0),
-                    left: widget.timelineTheme.timeScaleTheme.width,
-                  ),
-                  eventBuilders: widget.eventBuilders,
-                  onDateLongPress: _onDateLongPress,
-                  onDragDown: _stopTimelineScrolling,
-                  onDragUpdate: _autoScrolling,
-                  onDragEnd: _stopAutoScrolling,
-                  onSizeUpdate: _autoScrolling,
-                  onResizingEnd: _stopAutoScrolling,
-                  onDropped: widget.onDiscardChanges,
-                  onChanged: widget.onEventUpdated,
-                  getTimelineBox: () => _getTimelineBox(
-                    state.focusedDate.weekRange(widget.controller.visibleDays),
-                  ),
-                  getLayoutBox: _getLayoutBox,
-                  getEventBox: _getEventBox,
-                  saverConfig: widget.saverConfig ?? SaverConfig.def(),
-                  eventUpdatesStreamController: _eventUpdatesStreamController,
-                  child: _weekTimeline(),
-                );
+                return _weekTimeline(state);
               },
             ),
           ),
@@ -391,17 +353,10 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     );
   }
 
-  void _requestDraggableEventOverlayUpdate() {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      _eventUpdatesStreamController.add(0);
-    });
-  }
-
   @override
   void dispose() {
     _elevatedEvent.dispose();
     _weekPickerController?.dispose();
-    _eventUpdatesStreamController.close();
     super.dispose();
   }
 
@@ -447,7 +402,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             .isSameWeekAs(widget.controller.visibleDays, previous.focusedDate),
       );
 
-  Widget _weekTimeline() {
+  Widget _weekTimeline(WeekViewState state) {
     final theme = widget.timelineTheme;
 
     return LayoutBuilder(
@@ -490,6 +445,31 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
           elevatedEvent: _elevatedEvent,
           divider: widget.divider,
           onEventTap: widget.onEventTap,
+          overlayBuilder: (Widget child) {
+            return DraggableEventOverlay<T>(
+              _elevatedEvent,
+              key: _overlayKey,
+              onEventLongPressStart: widget.overrideOnEventLongPress,
+              viewType: CalendarView.week,
+              timelineTheme: widget.timelineTheme,
+              eventBuilders: widget.eventBuilders,
+              onDateLongPress: _onDateLongPress,
+              onDragDown: _stopTimelineScrolling,
+              onDragUpdate: _autoScrolling,
+              onDragEnd: _stopAutoScrolling,
+              onSizeUpdate: _autoScrolling,
+              onResizingEnd: _stopAutoScrolling,
+              onDropped: widget.onDiscardChanges,
+              onChanged: widget.onEventUpdated,
+              getTimelineBox: () => _getTimelineBox(
+                state.focusedDate.weekRange(widget.controller.visibleDays),
+              ),
+              getLayoutBox: _getLayoutBox,
+              getEventBox: _getEventBox,
+              saverConfig: widget.saverConfig ?? SaverConfig.def(),
+              child: child,
+            );
+          },
         );
       },
     );

@@ -1,18 +1,15 @@
-import 'dart:async';
-
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/all_days_events_list.dart';
-import 'package:flutter_customizable_calendar/src/ui/custom_widgets/widget_size.dart';
 import 'package:flutter_customizable_calendar/src/ui/views/week_view/week_view_timeline_widget.dart';
 import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 
 class WeekViewTimelinePage<T extends FloatingCalendarEvent>
     extends StatefulWidget {
   const WeekViewTimelinePage({
+    required this.overlayBuilder,
     required this.weekPickerController,
     required this.weekPickerKey,
     required this.pageViewPhysics,
@@ -42,6 +39,7 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
   final ScrollPhysics? pageViewPhysics;
 
   final GlobalKey weekPickerKey;
+  final Widget Function(Widget child) overlayBuilder;
   final PageController weekPickerController;
 
   final void Function(
@@ -95,7 +93,6 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
   static DateTime get _now => clock.now();
 
   final GlobalKey _timelineKey = GlobalKey();
-  final GlobalKey _pageViewKey = GlobalKey();
   final GlobalKey _daysRowKey = GlobalKey();
 
   bool _weekPickerScrolling = false;
@@ -179,7 +176,12 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
               controller: _daysRowController,
               itemBuilder: (context, pageIndex) {
                 final weekDays = _getWeekDays(pageIndex);
-                return _daysRow(weekDays);
+                return Column(
+                  children: [
+                    _buildAllDayEventsList(weekDays),
+                    _daysRow(weekDays),
+                  ],
+                );
               },
             ),
           ),
@@ -193,7 +195,12 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
               maintainState: true,
               child: Padding(
                 padding: EdgeInsets.only(left: timeScaleWidth),
-                child: _daysRow(weekDays),
+                child: Column(
+                  children: [
+                    _daysRow(weekDays),
+                    _buildAllDayEventsList(weekDays),
+                  ],
+                ),
               ),
             ),
             Expanded(
@@ -233,33 +240,36 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
                     ),
                   ),
                   Expanded(
-                    child: NotificationListener(
-                      onNotification: (notification) {
-                        if (notification is UserScrollNotification) {
-                          if (notification.direction != ScrollDirection.idle) {
-                            (_daysRowController.position
-                                    as ScrollPositionWithSingleContext)
-                                .goIdle();
-                            _weekPickerScrolling = true;
-                            _daysRowScrolling = false;
-                          } else {
-                            _weekPickerScrolling = false;
+                    child: widget.overlayBuilder(
+                      NotificationListener(
+                        onNotification: (notification) {
+                          if (notification is UserScrollNotification) {
+                            if (notification.direction !=
+                                ScrollDirection.idle) {
+                              (_daysRowController.position
+                                      as ScrollPositionWithSingleContext)
+                                  .goIdle();
+                              _weekPickerScrolling = true;
+                              _daysRowScrolling = false;
+                            } else {
+                              _weekPickerScrolling = false;
+                            }
                           }
-                        }
-                        return false;
-                      },
-                      child: PageView.builder(
-                        key: widget.weekPickerKey,
-                        controller: widget.weekPickerController,
-                        physics: widget.pageViewPhysics,
-                        onPageChanged: (index) {
-                          widget.controller.setPage(index);
+                          return false;
                         },
-                        itemBuilder: (context, pageIndex) {
-                          final weekDays = _getWeekDays(pageIndex);
+                        child: PageView.builder(
+                          key: widget.weekPickerKey,
+                          controller: widget.weekPickerController,
+                          physics: widget.pageViewPhysics,
+                          onPageChanged: (index) {
+                            widget.controller.setPage(index);
+                          },
+                          itemBuilder: (context, pageIndex) {
+                            final weekDays = _getWeekDays(pageIndex);
 
-                          return _buildBody(weekDays);
-                        },
+                            return _buildBody(weekDays);
+                          },
+                        ),
                       ),
                     ),
                   ),

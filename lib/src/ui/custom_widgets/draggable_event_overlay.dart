@@ -31,7 +31,6 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     required this.saverConfig,
     required this.getEventBox,
     required this.child,
-    required this.eventUpdatesStreamController,
     super.key,
     this.padding = EdgeInsets.zero,
     this.eventBuilders = const {},
@@ -48,9 +47,6 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
 
   /// Event builders
   final Map<Type, EventBuilder> eventBuilders;
-
-  /// Stream which allows to request event view's data update
-  final StreamController<int> eventUpdatesStreamController;
 
   /// A notifier which needs to control elevated event
   final FloatingEventNotifier<T> event;
@@ -461,33 +457,23 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   void _eventHeightLimiter() => _eventBounds.height =
       max(_eventBounds.height, _minuteExtent * _cellExtent);
 
-  late StreamSubscription<int> _streamSubscription;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initEventStreamSubscription();
     _initAnimationController();
     _initAnimation();
     _eventBounds.addListener(_eventHeightLimiter);
   }
 
-  void _initEventStreamSubscription() {
-    _streamSubscription =
-        widget.eventUpdatesStreamController.stream.listen((event) {
-      _onEventUpdateController();
-    });
-  }
-
-  void _onEventUpdateController() {
+  Future<void> _beforeEventUpdate() async {
     try {
       _pointerTimePoint =
           _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
       if (!_updateEventOriginAndStart()) {
-        Future.delayed(
+        await Future.delayed(
           const Duration(milliseconds: 100),
-          _onEventUpdateController,
+          _beforeEventUpdate,
         );
         return;
       }
@@ -689,16 +675,20 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                 Saver(
                   alignment: widget.saverConfig.alignment,
                   onPressed: () {
-                    widget.onChanged?.call(widget.event.value!);
-                    // _dropEvent(widget.event.value!);
-                    _edited = false;
-                    _removeEntries();
-                    widget.event.value = null;
-                    _resizing = false;
-                    _dragging = false;
-                    if (mounted) {
-                      setState(() {});
-                    }
+                    _beforeEventUpdate().then((value) {
+                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                        widget.onChanged?.call(widget.event.value!);
+                        // _dropEvent(widget.event.value!);
+                        _edited = false;
+                        _removeEntries();
+                        widget.event.value = null;
+                        _resizing = false;
+                        _dragging = false;
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      });
+                    });
                   },
                   child: widget.saverConfig.child,
                 ),
@@ -714,7 +704,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
     _eventBounds.dispose();
-    _streamSubscription.cancel();
     super.dispose();
   }
 

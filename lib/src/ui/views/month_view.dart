@@ -182,9 +182,6 @@ class _MonthViewState<T extends FloatingCalendarEvent>
       MonthViewKeys.events[event]?.currentContext?.findRenderObject()
           as RenderBox?;
 
-  final StreamController<int> _eventUpdatesStreamController =
-      StreamController.broadcast();
-
   Future<void> _scrollIfNecessary() async {
     final timelineBox = _getTimelineBox();
 
@@ -290,24 +287,16 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                 curve: Curves.linearToEaseOut,
               ),
           ]).whenComplete(() {
-            _requestDraggableEventOverlayUpdate();
             setState(() {});
           });
         } else if (state is MonthViewNextMonthSelected ||
             state is MonthViewPrevMonthSelected) {
-          _monthPickerController
-              ?.animateToPage(
+          _monthPickerController?.animateToPage(
             displayedMonth,
             duration: const Duration(milliseconds: 300),
             curve: Curves.linearToEaseOut,
-          )
-              .then((value) {
-            _requestDraggableEventOverlayUpdate();
-          });
-        } else {
-          _requestDraggableEventOverlayUpdate();
+          );
         }
-
         if (displayedMonth != _monthPickerController?.page?.round()) {
           _initDailyEventsAndControllers();
         }
@@ -341,7 +330,6 @@ class _MonthViewState<T extends FloatingCalendarEvent>
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
               saverConfig: widget.saverConfig ?? SaverConfig.def(),
-              eventUpdatesStreamController: _eventUpdatesStreamController,
               child: _monthSection(),
             ),
           ),
@@ -355,14 +343,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     _forward.dispose();
     _backward.dispose();
     _monthPickerController?.dispose();
-    _eventUpdatesStreamController.close();
     super.dispose();
-  }
-
-  void _requestDraggableEventOverlayUpdate() {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      _eventUpdatesStreamController.add(0);
-    });
   }
 
   Widget _monthPicker() => BlocBuilder<MonthViewController, MonthViewState>(
