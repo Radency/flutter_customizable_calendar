@@ -145,6 +145,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   final _overlayKey = GlobalKey<DraggableEventOverlayState<T>>();
   final _elevatedEvent = FloatingEventNotifier<T>();
   PageController? _weekPickerController;
+  final GlobalKey _weekPickerKey = GlobalKey();
   var _pointerLocation = Offset.zero;
   var _scrolling = false;
 
@@ -449,17 +450,11 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   Widget _weekTimeline() {
     final theme = widget.timelineTheme;
 
-    _weekPickerController?.dispose();
-    _weekPickerController = PageController(
-      initialPage: _displayedWeek.start
-          .difference(_initialWeek.start)
-          .inWeeks(widget.controller.visibleDays),
-    );
-
     return LayoutBuilder(
       builder: (context, constraints) {
         return WeekViewTimelinePage(
           weekPickerController: _weekPickerController!,
+          weekPickerKey: _weekPickerKey,
           pageViewPhysics:
               widget.pageViewPhysics ?? const NeverScrollableScrollPhysics(),
           timelineKey: (days) {
