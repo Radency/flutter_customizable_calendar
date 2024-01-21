@@ -144,6 +144,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   List<Rect> _rects = [];
   bool _scrolling = false;
 
+  bool _needsBeforeEventUpdate = false;
+
   T? _getEventAt(Offset globalPosition) {
     final renderIds = _timelineHitTest(globalPosition);
     final targets = renderIds.whereType<RenderId<T>>();
@@ -302,7 +304,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     final result = BoxHitTestResult();
     final localPosition = timelineBox.globalToLocal(globalPosition);
-
     timelineBox.hitTest(result, position: localPosition);
 
     return result.path
@@ -468,8 +469,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   Future<void> _beforeEventUpdate() async {
     try {
-      _pointerTimePoint =
-          _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+      if (_needsBeforeEventUpdate) {
+        _pointerTimePoint =
+            _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+      }
       if (!_updateEventOriginAndStart()) {
         await Future.delayed(
           const Duration(milliseconds: 100),
@@ -602,7 +605,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   _eventBounds.height += details.delta.dy;
                 } else if (_dragging) {
                   widget.onDragUpdate?.call(details);
-                  _eventBounds.origin += details.delta;
+                  _eventBounds.origin =
+                      details.localPosition - Offset(_eventBounds.width / 2, 0);
                   if (!_resetPointerLocation(details.globalPosition)) return;
                   _pointerTimePoint =
                       _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
@@ -636,6 +640,9 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               NotificationListener<ScrollUpdateNotification>(
                 onNotification: (event) {
                   final scrollDelta = event.scrollDelta ?? 0;
+
+                  _needsBeforeEventUpdate =
+                      event.metrics.axis == Axis.horizontal;
 
                   if (_dragging && event.metrics.axis == Axis.vertical) {
                     _scrolling = scrollDelta.abs() > 0;

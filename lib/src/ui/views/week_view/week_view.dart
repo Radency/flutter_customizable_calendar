@@ -284,7 +284,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
     _weekPickerController = PageController(
       initialPage: initialPage,
     );
-    widget.controller.setPage(initialPage);
   }
 
   @override
