@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -15,6 +14,7 @@ import 'package:flutter_customizable_calendar/src/utils/utils.dart';
 abstract class DraggableEventOverlayKeys {
   /// A key for the elevated (floating) event view
   static const elevatedEvent = ValueKey('elevatedEvent');
+// static GlobalKey elevatedEvent = GlobalKey(debugLabel: 'elevatedEvent');
 }
 
 /// Wrapper which needs to wrap a scrollable [child] widget and display an
@@ -188,20 +188,16 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     _boundsTween = RectTween(
       begin: Rect.fromLTWH(
         widget.viewType == CalendarView.month
-            ? eventPosition.dx + dayWidth * (_dayOffsets.firstOrNull ?? 0)
+            ? eventPosition.dx + dayWidth
             : eventPosition.dx,
         eventPosition.dy,
         eventBox.size.width,
         eventBox.size.height,
       ),
       end: Rect.fromLTWH(
-        widget.viewType == CalendarView.month
-            ? layoutPosition.dx + dayWidth * (_dayOffsets.firstOrNull ?? 0)
-            : layoutPosition.dx,
+        layoutPosition.dx,
         eventPosition.dy,
-        widget.viewType == CalendarView.month
-            ? dayWidth * _dayOffsets.length
-            : layoutBox.size.width,
+        widget.viewType == CalendarView.month ? dayWidth : layoutBox.size.width,
         eventBox.size.height,
       ),
     );
@@ -358,22 +354,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   bool _updateEventOriginAndStart() {
     final isMonth = widget.viewType == CalendarView.month;
-    var dayDate = _getTargetDayAt(_pointerLocation); // <- temporary
+    final dayDate = _getTargetDayAt(_pointerLocation); // <- temporary
     if (dayDate == null) return false;
 
-    var xOffset = 0.0;
-
-    if (isMonth) {
-      dayDate = dayDate.add(Duration(days: _dayOffsets.firstOrNull ?? 0));
-    }
     final layoutBox = widget.getLayoutBox(dayDate);
-    if (isMonth && layoutBox == null) {
-      final diff = 8 - dayDate.weekday;
-      dayDate = dayDate.add(Duration(days: diff));
-      if (layoutBox != null) {
-        xOffset = layoutBox.size.width / 13 * diff;
-      }
-    }
     if (layoutBox == null) return false;
 
     final timelineBox = widget.getTimelineBox();
@@ -388,7 +372,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
     final offset = (minutes - roundedMinutes) * _minuteExtent;
 
     _eventBounds.update(
-      dx: layoutPosition.dx - xOffset,
+      dx: layoutPosition.dx,
       dy: isMonth ? layoutPosition.dy : _eventBounds.dy - offset,
     );
 
@@ -436,7 +420,8 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
     _eventBounds.height = eventDuration.inMinutes * _minuteExtent;
 
-    if (event is EditableCalendarEvent) {
+    if (widget.viewType != CalendarView.month &&
+        event is EditableCalendarEvent) {
       widget.event.value = event.copyWith(duration: eventDuration) as T;
     }
   }
@@ -469,12 +454,13 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   Future<void> _beforeEventUpdate() async {
     try {
-      if (_needsBeforeEventUpdate) {
-        _pointerTimePoint =
-            _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
+      if (!_needsBeforeEventUpdate) {
+        return;
       }
+
+      _pointerTimePoint =
+          _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
       if (!_updateEventOriginAndStart()) {
-        print('Event update failed');
         await Future.delayed(
           const Duration(milliseconds: 100),
           _beforeEventUpdate,
@@ -499,36 +485,6 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       _initAnimationController();
       _initAnimation();
     }
-  }
-
-  Future<void> _onUpdateLayout() async {
-    SchedulerBinding.instance.addPostFrameCallback((timeStamp) async {
-      // try {
-      //   final event = widget.event.value;
-      //   if (event == null) return;
-      //   final dayDate = DateUtils.dateOnly(event.start);
-      //   final layoutBox = widget.getLayoutBox(dayDate);
-      //   if (layoutBox == null || layoutBox.parent == null) return;
-      //   final timelineBox = widget.getTimelineBox();
-      //   if (timelineBox?.parent == null) return;
-      //
-      //   final layoutPosition =
-      //       layoutBox.localToGlobal(Offset.zero, ancestor: timelineBox);
-      //
-      //   _eventBounds.update(
-      //     dx: layoutPosition.dx,
-      //     width: layoutBox.size.width,
-      //   );
-      // } on Exception {
-      //   // ignore
-      // }
-    });
-  }
-
-  @override
-  void didChangeMetrics() {
-    super.didChangeMetrics();
-    _onUpdateLayout();
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:example/playground/image_calendar_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
+import 'package:intl/intl.dart';
 
 class EventsListPage extends StatelessWidget {
   const EventsListPage({super.key, required this.events, required this.day});
@@ -54,7 +55,7 @@ class EventsListPage extends StatelessWidget {
                                       )
                                     ],
                                   ),
-                                  child: Row(
+                                  child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Flexible(
@@ -118,11 +119,8 @@ class EventsListPage extends StatelessWidget {
     final start = event.start;
     final end = event.end;
 
-    final startString =
-        '${start.hour}:${start.minute}${start.minute < 10 ? '0' : ''}';
-    final endString = '${end.hour}:${end.minute}${end.minute < 10 ? '0' : ''}';
-
-    return '$startString - $endString';
+    final format = DateFormat("MMM DD HH:mm");
+    return "${format.format(start)} - ${format.format(end)}";
   }
 
   String _getEventText(CalendarEvent event) {

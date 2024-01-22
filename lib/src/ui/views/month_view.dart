@@ -15,7 +15,7 @@ import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.
 @visibleForTesting
 abstract class MonthViewKeys {
   /// A key for the timeline view
-  static GlobalKey? timeline;
+  static Map<DateTimeRange, GlobalKey> timeline = {};
 
   /// Map of keys for the events layouts (by day date)
   static final layouts = <DateTime, GlobalKey>{};
@@ -171,8 +171,23 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   late final ScrollController _forward;
   late final ScrollController _backward;
 
-  RenderBox? _getTimelineBox() =>
-      MonthViewKeys.timeline?.currentContext?.findRenderObject() as RenderBox?;
+  RenderBox? _getTimelineBox(DateTimeRange key) {
+    return MonthViewKeys
+        .timeline[DateTimeRange(
+      start: DateTime(
+        key.start.year,
+        key.start.month,
+        key.start.day,
+      ),
+      end: DateTime(
+        key.end.year,
+        key.end.month,
+        key.end.day,
+      ),
+    )]
+        ?.currentContext
+        ?.findRenderObject() as RenderBox?;
+  }
 
   RenderBox? _getLayoutBox(DateTime dayDate) =>
       MonthViewKeys.layouts[dayDate]?.currentContext?.findRenderObject()
@@ -183,7 +198,11 @@ class _MonthViewState<T extends FloatingCalendarEvent>
           as RenderBox?;
 
   Future<void> _scrollIfNecessary() async {
-    final timelineBox = _getTimelineBox();
+    final timelineBox = _getTimelineBox(
+      widget.controller.state.displayedMonth(
+        weekStartsOnSunday: widget.weekStartsOnSunday,
+      ),
+    );
 
     _scrolling = timelineBox != null;
 
@@ -304,34 +323,46 @@ class _MonthViewState<T extends FloatingCalendarEvent>
       child: Column(
         children: [
           _monthPicker(),
-          Expanded(
-            child: DraggableEventOverlay<T>(
-              _elevatedEvent,
-              key: _overlayKey,
-              onEventLongPressStart: widget.overrideOnEventLongPress,
-              eventBuilders: widget.eventBuilders,
-              viewType: CalendarView.month,
-              timelineTheme: widget.timelineTheme,
-              padding: EdgeInsets.only(
-                top: widget.daysRowTheme.height + (widget.divider?.height ?? 0),
-              ),
-              onDateLongPress: _onLongPressStart,
-              onDragUpdate: _autoScrolling,
-              onDragEnd: _stopAutoScrolling,
-              onDropped: widget.onDiscardChanges,
-              onChanged: (event) async {
-                events
-                  ..removeWhere((element) => element.id == event.id)
-                  ..add(event);
-                widget.onEventUpdated?.call(event);
-                _initDailyEventsAndControllers();
-              },
-              getTimelineBox: _getTimelineBox,
-              getLayoutBox: _getLayoutBox,
-              getEventBox: _getEventBox,
-              saverConfig: widget.saverConfig ?? SaverConfig.def(),
-              child: _monthSection(),
-            ),
+          BlocBuilder<MonthViewController, MonthViewState>(
+            bloc: widget.controller,
+            builder: (context, state) {
+              return Expanded(
+                child: DraggableEventOverlay<T>(
+                  _elevatedEvent,
+                  key: _overlayKey,
+                  onEventLongPressStart: widget.overrideOnEventLongPress,
+                  eventBuilders: widget.eventBuilders,
+                  viewType: CalendarView.month,
+                  timelineTheme: widget.timelineTheme,
+                  padding: EdgeInsets.only(
+                    top: widget.daysRowTheme.height +
+                        (widget.divider?.height ?? 0),
+                  ),
+                  onDateLongPress: _onLongPressStart,
+                  onDragUpdate: _autoScrolling,
+                  onDragEnd: _stopAutoScrolling,
+                  onDropped: widget.onDiscardChanges,
+                  onChanged: (event) async {
+                    events
+                      ..removeWhere((element) => element.id == event.id)
+                      ..add(event);
+                    widget.onEventUpdated?.call(event);
+                    _initDailyEventsAndControllers();
+                  },
+                  getTimelineBox: () {
+                    return _getTimelineBox(
+                      state.displayedMonth(
+                        weekStartsOnSunday: widget.weekStartsOnSunday,
+                      ),
+                    );
+                  },
+                  getLayoutBox: _getLayoutBox,
+                  getEventBox: _getEventBox,
+                  saverConfig: widget.saverConfig ?? SaverConfig.def(),
+                  child: _monthSection(),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -496,7 +527,12 @@ class _MonthViewState<T extends FloatingCalendarEvent>
             }
           },
           child: Container(
-            key: MonthViewKeys.timeline = GlobalKey(),
+            key: MonthViewKeys.timeline[DateTimeRange(
+              start: days.first,
+              end: days.last.add(
+                const Duration(days: 1),
+              ),
+            )] = GlobalKey(),
             padding: const EdgeInsets.only(
               bottom: 1,
             ),

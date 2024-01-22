@@ -173,8 +173,6 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
       _initialDate.weekRange(widget.controller.visibleDays);
 
   RenderBox? _getTimelineBox(DateTimeRange key) {
-    print(key);
-    final timeline = WeekViewKeys.timeline;
     return WeekViewKeys.timeline[key]?.currentContext?.findRenderObject()
         as RenderBox?;
   }
