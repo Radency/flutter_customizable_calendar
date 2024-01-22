@@ -199,7 +199,6 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
   Widget _buildMonthViewEvents(List<T> eventsToDisplay) {
     final filteredEventsToDisplay =
         _getFilteredEventsToDisplay(eventsToDisplay);
-
     if (widget.eventsListBuilder != null) {
       return Column(
         key: ValueKey(widget.controller),
@@ -234,7 +233,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
         child: Column(
           key: ValueKey(widget.controller),
           children: [
-            ...eventsToDisplay.take(maxEvents).map(
+            ...filteredEventsToDisplay.take(maxEvents).map(
                   (e) => _buildMonthViewEventItem(
                     e,
                     _buildEventView(e),
@@ -251,20 +250,18 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
       controller: widget.controller,
       physics: const BouncingScrollPhysics(),
       itemBuilder: (context, index) => _buildMonthViewEventItem(
-        eventsToDisplay[index],
+        filteredEventsToDisplay[index],
         _buildEventView(
-          eventsToDisplay[index],
+          filteredEventsToDisplay[index],
         ),
       ),
-      itemCount: eventsToDisplay.length,
+      itemCount: filteredEventsToDisplay.length,
     );
   }
 
   List<T> _getFilteredEventsToDisplay(List<T> eventsToDisplay) {
     return eventsToDisplay.where((element) {
-      return DateUtils.dateOnly(element.start) ==
-              DateUtils.dateOnly(widget.dayDate) ||
-          widget.dayDate.weekday == 1;
+      return DateUtils.isSameDay(widget.dayDate, element.start);
     }).toList();
   }
 

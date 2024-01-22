@@ -42,14 +42,14 @@ class PlaygroundPage extends StatelessWidget {
       ),
       SimpleAllDayEvent(
         id: 'All-day 4',
-        start: today.add(Duration(days: 2)),
+        start: today,
         duration: const Duration(days: 2),
         title: 'Event 4',
         color: Colors.greenAccent.shade200,
       ),
       SimpleAllDayEvent(
         id: 'All-day 5',
-        start: today,
+        start: today.add(Duration(days: 1)),
         duration: const Duration(days: 2),
         title: 'Event 5',
         color: Colors.greenAccent.shade200,
