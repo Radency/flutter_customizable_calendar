@@ -1,6 +1,6 @@
-import 'package:example/month_view_with_schedule_list_view/colors.dart';
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_label.dart';
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_with_label.dart';
+import 'package:example/colors.dart';
+import 'package:example/common/event_with_label/event_label.dart';
+import 'package:example/common/event_with_label/event_with_label.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -8,9 +8,11 @@ class AddEventPage extends StatefulWidget {
   const AddEventPage({
     super.key,
     required this.initialDate,
+    this.timePicker = true,
   });
 
   final DateTime initialDate;
+  final bool timePicker;
 
   @override
   State<AddEventPage> createState() => _AddEventPageState();
@@ -256,24 +258,50 @@ class _AddEventPageState extends State<AddEventPage> {
                               ),
                               visualDensity: VisualDensity.compact,
                               onTap: () {
-                                showDatePicker(
-                                  context: context,
-                                  initialDate: _startDate,
-                                  firstDate: DateTime.now(),
-                                  lastDate: DateTime(2100),
-                                ).then((value) {
-                                  if (value != null) {
-                                    _startDate = value;
-                                    if (_endDate.isBefore(_startDate)) {
-                                      _endDate = _startDate.add(
-                                        Duration(days: 1),
+                                if (widget.timePicker) {
+                                  showTimePicker(
+                                          context: context,
+                                          initialTime: TimeOfDay.fromDateTime(
+                                              _startDate))
+                                      .then((value) {
+                                    if (value != null) {
+                                      _startDate = DateTime(
+                                        _startDate.year,
+                                        _startDate.month,
+                                        _startDate.day,
+                                        value.hour,
+                                        value.minute,
                                       );
+                                      if (_endDate.isBefore(_startDate)) {
+                                        _endDate = _startDate.add(
+                                          Duration(hours: 2),
+                                        );
+                                      }
+                                      if (mounted) {
+                                        setState(() {});
+                                      }
                                     }
-                                    if (mounted) {
-                                      setState(() {});
+                                  });
+                                } else {
+                                  showDatePicker(
+                                    context: context,
+                                    initialDate: _startDate,
+                                    firstDate: DateTime.now(),
+                                    lastDate: DateTime(2100),
+                                  ).then((value) {
+                                    if (value != null) {
+                                      _startDate = value;
+                                      if (_endDate.isBefore(_startDate)) {
+                                        _endDate = _startDate.add(
+                                          Duration(days: 1),
+                                        );
+                                      }
+                                      if (mounted) {
+                                        setState(() {});
+                                      }
                                     }
-                                  }
-                                });
+                                  });
+                                }
                               },
                               title: Row(
                                 children: [
@@ -285,7 +313,7 @@ class _AddEventPageState extends State<AddEventPage> {
                                     ),
                                   ),
                                   Spacer(),
-                                  Text(DateFormat.yMMMEd().format(_startDate)),
+                                  Text(_getTimeFormat().format(_startDate)),
                                 ],
                               ),
                             ),
@@ -295,24 +323,50 @@ class _AddEventPageState extends State<AddEventPage> {
                               ),
                               visualDensity: VisualDensity.compact,
                               onTap: () {
-                                showDatePicker(
-                                  context: context,
-                                  initialDate: _endDate,
-                                  firstDate: DateTime.now(),
-                                  lastDate: DateTime(2100),
-                                ).then((value) {
-                                  if (value != null) {
-                                    _endDate = value;
-                                    if (_endDate.isBefore(_startDate)) {
-                                      _startDate = _endDate.subtract(
-                                        Duration(days: 1),
+                                if (widget.timePicker) {
+                                  showTimePicker(
+                                          context: context,
+                                          initialTime:
+                                              TimeOfDay.fromDateTime(_endDate))
+                                      .then((value) {
+                                    if (value != null) {
+                                      _endDate = DateTime(
+                                        _endDate.year,
+                                        _endDate.month,
+                                        _endDate.day,
+                                        value.hour,
+                                        value.minute,
                                       );
+                                      if (_endDate.isBefore(_startDate)) {
+                                        _startDate = _endDate.subtract(
+                                          Duration(hours: 2),
+                                        );
+                                      }
+                                      if (mounted) {
+                                        setState(() {});
+                                      }
                                     }
-                                    if (mounted) {
-                                      setState(() {});
+                                  });
+                                } else {
+                                  showDatePicker(
+                                    context: context,
+                                    initialDate: _endDate,
+                                    firstDate: DateTime.now(),
+                                    lastDate: DateTime(2100),
+                                  ).then((value) {
+                                    if (value != null) {
+                                      _endDate = value;
+                                      if (_endDate.isBefore(_startDate)) {
+                                        _startDate = _endDate.subtract(
+                                          Duration(days: 1),
+                                        );
+                                      }
+                                      if (mounted) {
+                                        setState(() {});
+                                      }
                                     }
-                                  }
-                                });
+                                  });
+                                }
                               },
                               title: Row(
                                 children: [
@@ -324,7 +378,7 @@ class _AddEventPageState extends State<AddEventPage> {
                                     ),
                                   ),
                                   Spacer(),
-                                  Text(DateFormat.yMMMEd().format(_endDate)),
+                                  Text(_getTimeFormat().format(_endDate)),
                                 ],
                               ),
                             ),
@@ -346,5 +400,9 @@ class _AddEventPageState extends State<AddEventPage> {
         ),
       ),
     );
+  }
+
+  DateFormat _getTimeFormat() {
+    return widget.timePicker ? DateFormat("hh:mm a") : DateFormat.yMMMd();
   }
 }

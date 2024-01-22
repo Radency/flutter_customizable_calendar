@@ -1,12 +1,11 @@
-import 'package:example/month_view_with_schedule_list_view/colors.dart';
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_label.dart';
-import 'package:example/schedule_list_view_with_days_view/event_with_label/event_with_label.dart';
+import 'package:example/colors.dart';
+import 'package:example/common/event_with_label/event_label.dart';
+import 'package:example/common/event_with_label/event_with_label.dart';
+import 'package:example/common/event_with_label/events_with_label_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:intl/intl.dart';
-
-import 'cubit/events_cubit.dart';
 
 class DaysViewPage extends StatefulWidget {
   const DaysViewPage({
@@ -19,9 +18,8 @@ class DaysViewPage extends StatefulWidget {
   final void Function(
     BuildContext context,
     DateTime focusDate,
-    EventsCubit cubit,
   ) onAddClicked;
-  final EventsCubit eventsCubit;
+  final EventsWithLabelCubit eventsCubit;
   final DateTime focusedDay;
 
   @override
@@ -54,10 +52,10 @@ class _DaysViewPageState extends State<DaysViewPage> {
         child: Column(
           children: [
             Expanded(
-              child: BlocBuilder<EventsCubit, EventsState>(
+              child: BlocBuilder<EventsWithLabelCubit, EventsWithLabelState>(
                 bloc: widget.eventsCubit,
                 builder: (context, state) {
-                  if (state is! EventsInitialized) {
+                  if (state is! EventsWithLabelInitialized) {
                     return const Center(
                       child: CircularProgressIndicator(),
                     );
@@ -195,7 +193,6 @@ class _DaysViewPageState extends State<DaysViewPage> {
                                   widget.onAddClicked(
                                     context,
                                     focusedDate,
-                                    widget.eventsCubit,
                                   );
                                 },
                                 borderRadius: BorderRadius.circular(8),

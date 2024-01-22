@@ -11,11 +11,15 @@ part 'week_view_state.dart';
 class WeekViewController extends Cubit<WeekViewState> with CalendarController {
   /// Creates WeekView controller instance.
   WeekViewController({
+    this.visibleDays = 7,
     DateTime? initialDate,
     this.endDate,
   })  : initialDate = initialDate ?? DateTime(1970),
+        assert(visibleDays > 0, 'visibleDays must be greater than 0'),
+        assert(visibleDays <= 7, 'visibleDays must be less or equal to 7'),
         super(WeekViewInitial());
 
+  final int visibleDays;
   @override
   final DateTime initialDate;
 
@@ -40,11 +44,14 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
   /// Switches calendar to shows the previous week
   @override
   void prev() {
-    final prevWeek = DateUtils.addDaysToDate(state.focusedDate, -7);
+    final prevWeek = DateUtils.addDaysToDate(
+      state.focusedDate,
+      -visibleDays,
+    );
 
     if (!initialDate.isAfter(prevWeek)) {
       final now = clock.now();
-      final isCurrentWeek = prevWeek.isSameWeekAs(now);
+      final isCurrentWeek = prevWeek.isSameWeekAs(visibleDays, now);
       emit(
         WeekViewPrevWeekSelected(
           focusedDate: isCurrentWeek ? now : prevWeek,
@@ -56,11 +63,14 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
   /// Switches calendar to shows the next week
   @override
   void next() {
-    final nextWeek = DateUtils.addDaysToDate(state.focusedDate, 7);
+    final nextWeek = DateUtils.addDaysToDate(
+      state.focusedDate,
+      visibleDays,
+    );
 
     if (!(endDate?.isBefore(nextWeek) ?? false)) {
       final now = clock.now();
-      final isCurrentWeek = nextWeek.isSameWeekAs(now);
+      final isCurrentWeek = nextWeek.isSameWeekAs(visibleDays, now);
       emit(
         WeekViewNextWeekSelected(
           focusedDate: isCurrentWeek ? now : nextWeek,
@@ -69,32 +79,30 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
     }
   }
 
+  void setDisplayedDate(DateTime date) {
+    emit(
+      WeekViewCurrentWeekIsSet(
+        focusedDate: DateTime(
+          date.year,
+          date.month,
+          date.day,
+        ),
+        reverseAnimation: state.focusedDate.isAfter(date),
+      ),
+    );
+  }
+
   @override
   void setPage(int page) {
-    final now = clock.now();
-
-    final pageDate = DateUtils.addDaysToDate(
-      initialDate,
-      page * 7,
+    final focusedDate = initialDate.addWeeks(
+      visibleDays,
+      page,
     );
-    final focusedDate = DateTime(
-      pageDate.year,
-      pageDate.month,
-      pageDate.day,
+    emit(
+      WeekViewCurrentWeekIsSet(
+        focusedDate: focusedDate,
+        reverseAnimation: state.focusedDate.isAfter(focusedDate),
+      ),
     );
-    final isCurrentWeek = focusedDate.isSameWeekAs(now);
-    if (focusedDate.isBefore(state.focusedDate)) {
-      emit(
-        WeekViewPrevWeekSelected(
-          focusedDate: isCurrentWeek ? now : focusedDate,
-        ),
-      );
-    } else {
-      emit(
-        WeekViewNextWeekSelected(
-          focusedDate: isCurrentWeek ? now : focusedDate,
-        ),
-      );
-    }
   }
 }
