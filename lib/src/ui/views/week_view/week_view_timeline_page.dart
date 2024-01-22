@@ -162,9 +162,9 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
           children: [
             Visibility(
               visible: false,
-              maintainSize: true,
               maintainAnimation: true,
               maintainState: true,
+              maintainSize: true,
               child: Padding(
                 padding: EdgeInsets.only(left: timeScaleWidth),
                 child: Column(

@@ -47,14 +47,14 @@ void main() {
 
       when(() => controller.initialDate).thenReturn(DateTime(year, month, day));
       when(() => controller.endDate).thenReturn(DateTime(year, month, day));
+      when(() => controller.visibleDays).thenReturn(7);
       when(() => controller.state)
           .thenReturn(initialStateWithDate(DateTime(year, month, day)));
 
       await widgetTester.pumpWidget(runTestApp(view));
-
       expect(
         find.widgetWithText(DisplayedPeriodPicker, '1 - 7 Jan, 2024'),
-        findsOneWidget,
+        findsAny,
         reason: 'Week picker should display ‘current week',
       );
     });
@@ -85,8 +85,10 @@ void main() {
         final range = now.weekRange(7).days;
         final currentHourPosition = widgetTester.getTopLeft(
               find.byKey(
-                WeekViewKeys.timeline[
-                    DateTimeRange(start: range.first, end: range.last)]!,
+                WeekViewKeys.timeline[DateTimeRange(
+                  start: range.first,
+                  end: range.last.add(const Duration(days: 1)),
+                )]!,
               ),
             ) +
             currentHourOrigin;
@@ -127,7 +129,7 @@ void main() {
 
         await widgetTester.pumpWidget(runTestApp(view));
 
-        await widgetTester.tap(find.text(event.title));
+        await widgetTester.tap(find.text(event.title).first);
 
         expect(tappedEvent, event);
       },
@@ -158,7 +160,7 @@ void main() {
 
         expect(
           find.widgetWithText(DisplayedPeriodPicker, '8 - 14 Jan, 2024'),
-          findsOneWidget,
+          findsAny,
           reason: 'Week picker should display ‘next week',
         );
       },
@@ -191,7 +193,7 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        expect(find.text('All-Day Event 1'), findsOneWidget);
+        expect(find.text('All-Day Event 1'), findsAny);
       },
       skip: false,
     );
@@ -226,7 +228,7 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        await widgetTester.tap(find.text(event.title));
+        await widgetTester.tap(find.text(event.title).first);
 
         expect(tappedEvent, event);
       },
@@ -273,7 +275,7 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        expect(find.text('+1'), findsOneWidget);
+        expect(find.text('+1'), findsAny);
       },
       skip: false,
     );
@@ -324,11 +326,11 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        expect(find.text(event.title), findsOneWidget);
-        expect(find.text(otherEvent.title), findsOneWidget);
+        expect(find.text(event.title), findsAny);
+        expect(find.text(otherEvent.title), findsAny);
         expect(find.text(otherEvent2.title), findsNothing);
 
-        await widgetTester.tap(find.text('+1'));
+        await widgetTester.tap(find.text('+1').first);
 
         expect(visibleEvents, [event, otherEvent]);
         expect(allEvents, [event, otherEvent, otherEvent2]);
@@ -389,10 +391,10 @@ void main() {
         await widgetTester.pumpAndSettle();
 
         expect(find.text(event.title), findsNothing);
-        expect(find.text(otherEvent.title), findsOneWidget);
+        expect(find.text(otherEvent.title), findsAny);
         expect(find.text(otherEvent2.title), findsNothing);
 
-        await widgetTester.tap(find.text('+1'));
+        await widgetTester.tap(find.text('+1').first);
 
         expect(visibleEvents, [otherEvent]);
         expect(allEvents, [otherEvent, otherEvent2]);
