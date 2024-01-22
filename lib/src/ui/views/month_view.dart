@@ -67,6 +67,11 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final DisplayedPeriodPickerTheme monthPickerTheme;
 
   /// The month picker builder
+  /// @prevMonth - callback which allows to go to the previous month
+  /// @nextMonth - callback which allows to go to the next month
+  /// These 2 callbacks are the same as [MonthViewController.prev]
+  /// and [MonthViewController.next]
+  /// @focusedDate - the date which is currently focused
   final Widget Function(
     BuildContext,
     void Function() prevMonth,
@@ -109,6 +114,8 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
   final MonthDayTheme monthDayTheme;
 
   /// Custom day cell builder
+  /// @events - list of events on day
+  /// @day - day date
   final Widget Function(
     BuildContext context,
     List<T> events,

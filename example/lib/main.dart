@@ -1,5 +1,4 @@
 import 'package:example/month_view_with_schedule_list_view/month_view_with_schedule_list_view_page.dart';
-import 'package:example/playground/playground_page.dart';
 import 'package:example/week_view_page/week_view_page.dart';
 import 'package:flutter/material.dart';
 
@@ -35,11 +34,11 @@ class HomePage extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          ListTile(
-            title: const Text('Playground'),
-            onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => PlaygroundPage())),
-          ),
+          // ListTile(
+          //   title: const Text('Playground'),
+          //   onTap: () => Navigator.of(context).push(
+          //       MaterialPageRoute(builder: (context) => PlaygroundPage())),
+          // ),
           ListTile(
             title: const Text('MonthView + ScheduleListView'),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(

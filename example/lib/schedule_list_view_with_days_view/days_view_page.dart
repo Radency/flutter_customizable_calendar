@@ -140,7 +140,6 @@ class _DaysViewPageState extends State<DaysViewPage> {
                     },
                     daysListBuilder: (
                       context,
-                      days,
                       focusedDate,
                       events,
                     ) {

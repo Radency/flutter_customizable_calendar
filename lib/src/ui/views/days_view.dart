@@ -60,6 +60,9 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// Works only if [monthPickerBuilder] not specified
   final DisplayedPeriodPickerTheme monthPickerTheme;
 
+  /// The builder for the month picker
+  /// @events - the events which are displayed on the timeline
+  /// @focusedDate - the date which is currently focused
   final Widget Function(
     BuildContext,
     DateTime focusedDate,
@@ -73,8 +76,11 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
   /// The builder for the days list
   final Widget Function(
     BuildContext context,
-    List<DateTime> days,
+
+    /// the date which is currently focused
     DateTime focusedDate,
+
+    ///  the events which are displayed on the timeline
     List<T> events,
   )? daysListBuilder;
 
@@ -471,18 +477,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
       return BlocBuilder<DaysViewController, DaysViewState>(
         bloc: widget.controller,
         builder: (context, state) {
-          final monthDate = DateUtils.addMonthsToMonthDate(
-            _initialDate,
-            DateUtils.monthDelta(_initialDate, state.focusedDate),
-          );
-          final daysInMonth =
-              DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
-
-          final days = List.generate(
-            daysInMonth,
-            (index) => DateUtils.addDaysToDate(monthDate, index + 1),
-          );
-
           final dayEvents = widget.events.where((event) {
             return DateUtils.isSameDay(event.start, state.focusedDate) ||
                 DateUtils.isSameDay(event.end, state.focusedDate);
@@ -490,7 +484,6 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
 
           return widget.daysListBuilder!(
             context,
-            days,
             state.focusedDate,
             dayEvents.cast<T>(),
           );

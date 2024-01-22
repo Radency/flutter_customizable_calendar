@@ -68,6 +68,7 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
   /// Make sure you don't have many widgets with 0 height in your builder
   /// If you don't need empty days, you can set
   /// [ignoreDaysWithoutEvents] to true
+  /// @events - list of events for the @date
   final Widget Function(
     List<CalendarEvent> events,
     DateTime date,
@@ -79,6 +80,11 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
   /// The builder for the month picker.
   /// If you want to use your own month picker, you need
   /// to specify this builder.
+  /// @nextMonth - callback which allows to go to the next month
+  /// @prevMonth - callback which allows to go to the previous month
+  /// @toTime - callback which allows to go to the specific month
+  /// These 3 are the same as those available
+  /// through the [ScheduleListViewController]
   final Widget Function(
     void Function() nextMonth,
     void Function() prevMonth,
