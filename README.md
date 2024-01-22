@@ -7,32 +7,34 @@
 <table>
     <tr>
         <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/DaysView.gif?raw=true" width="250" title="Basic Days view">
-            <p>Days View</p>
+            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/dev/doc/assets/MonthView_ScheduleListView.gif?raw=true" width="250" title="Basic Days view">
+            <p>MonthView + ScheduleListView</p>
         </th>
         <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/WeekView.gif?raw=true" width="250" title="Basic Week view">
+            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/dev/doc/assets/WeekView.gif?raw=true" width="250" title="Basic Week view">
             <p>Week View</p>
         </th>
         <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/MonthView.gif?raw=true" width="250" title="Basic Month view">
-            <p>Month View</p>
+            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/dev/doc/assets/ScheduleListView_DaysView.gif?raw=true" width="250" title="Basic Month view">
+            <p>ScheduleListView + DaysView</p>
         </th>
     </tr>
 </table>
 
+Check out the example app to get the full code for the above examples.
+
 ---
 
 ## Key Features
-**Various Views**: The package provides three main views: `DaysView`, `WeekView`, and `MonthView`, each catering to different time spans.
+**Various Views**: The package provides three main views: `DaysView`, `WeekView`, `MonthView` and `ScheduleListView` each catering to different time spans.
 
-**Customization**: Users can easily customize the appearance of the calendar using themes for different components such as `DaysListTheme`, `TimelineTheme`, `DaysRowTheme`, `MonthDayTheme`, `DraggableEventTheme`, `FloatingEventsTheme`, `TimeMarkTheme`, and `DisplayedPeriodPickerTheme`. 
+**Customization**: Users can easily customize the appearance of the calendar using themes for different components such as `DaysListTheme`, `TimelineTheme`, `DaysRowTheme`, `MonthDayTheme`, `DraggableEventTheme`, `FloatingEventsTheme`, `TimeMarkTheme`, and `DisplayedPeriodPickerTheme`. There are also corresponding custom builders available for each widget.
 
 **Dynamic Event Editing**: The calendar supports dynamic editing of events in each view. Utilizing callbacks like `onEventUpdated` and `onDiscardChanges`, users can seamlessly update or discard changes made to events.
 
-**Event Types**: The package supports various event types, including `SimpleEvent`, `TaskDue`, and `Break`.
+**Event Types**: The package supports various event types, including `SimpleEvent`, `TaskDue`, and `Break`. You can easily create your own type that extends the corresponding abstract event class.
 
-**Adding Events Dynamically**: Users can add events dynamically by handling long presses on dates in the views. The provided example showcases how to implement this feature using a bottom sheet.
+**Adding Events Dynamically**: Users can add events dynamically. The provided example showcases how to implement this feature using a bottom sheet and `onDateLongPress` callback.
 
 **Comprehensive Example**: The package comes with a comprehensive example app that demonstrates its usage and features. The example code is available on GitHub.
 
@@ -45,7 +47,7 @@ Add the following dependency to your pubspec.yaml file:
 
 ```yaml
 dependencies:
-  flutter_customizable_calendar: ^0.2.1
+  flutter_customizable_calendar: ^0.3.0
 ```
 
 Then, run:
@@ -383,6 +385,7 @@ The `DaysListItemTheme` class provides further customization options for list it
 * `weekdayStyle`: Weekday text style.
 * `weekdayStyleFocused`: Weekday text style if the item is focused.
 
+
 ----
 
 <table>
@@ -570,6 +573,98 @@ MonthView<T>(
 ```
 
 These code snippets provide examples of how to customize the appearance of each view by adjusting themes `DaysListTheme`, `TimelineTheme`, `DaysRowTheme`, `MonthDayTheme`, `DraggableEventTheme`, `FloatingEventsTheme`, `TimeMarkTheme`, and `DisplayedPeriodPickerTheme`. Feel free to experiment with these themes to achieve the desired visual style for your calendar.
+
+----
+
+Instead of themes, you can also use the corresponding builders for each individual component. 
+
+Custom constructor for a list of days for **DaysView**
+```dart
+  /// The builder for the days list
+  /// [focusedDate] - the date which is currently focused
+  /// [events] - the events which are displayed on the timeline
+  final Widget Function(
+    BuildContext context,
+    DateTime focusedDate,
+    List<T> events,
+  )? daysListBuilder;
+```
+
+Custom month builder for **DaysView**
+```dart
+  /// The builder for the month picker
+  /// @events - the events which are displayed on the timeline
+  /// @focusedDate - the date which is currently focused
+  final Widget Function(
+    BuildContext,
+    DateTime focusedDate,
+    List<T> events,
+  )? monthPickerBuilder;
+```
+
+Custom day builder for **ScheduleListView**
+
+```dart
+    /// Custom day builder
+  /// Allows to specify custom builder for day
+  /// Make sure you don't have many widgets with 0 height in your builder
+  /// If you don't need empty days, you can set
+  /// [ignoreDaysWithoutEvents] to true
+  /// [events] - list of events for the [date]
+  final Widget Function(
+    List<CalendarEvent> events,
+    DateTime date,
+  )? dayBuilder;
+```
+
+Custom month picker builder for **ScheduleListView**
+```dart
+    /// The builder for the month picker.
+  /// If you want to use your own month picker, you need
+  /// to specify this builder.
+  /// [nextMonth] - callback which allows to go to the next month
+  /// [prevMonth] - callback which allows to go to the previous month
+  /// [toTime] - callback which allows to go to the specific month
+  /// These 3 are the same as those available through the [ScheduleListViewController]
+  final Widget Function(
+    void Function() nextMonth,
+    void Function() prevMonth,
+    void Function(DateTime time) toTime,
+    DateTime currentTime,
+  )? monthPickerBuilder;
+
+```
+
+Custom month day builder for **MonthView**
+
+```dart
+  /// Custom day cell builder
+  /// [events] - list of events on day
+  /// [day] - day date
+  final Widget Function(
+      BuildContext context,
+      List<T> events,
+      DateTime day,
+      )? monthDayBuilder;
+
+```
+
+Custom month picker builder for **MonthView**
+
+```dart
+  /// The month picker builder
+  /// [prevMonth] - callback which allows to go to the previous month
+  /// [nextMonth] - callback which allows to go to the next month
+  /// These 2 callbacks are the same as [MonthViewController.prev]
+  /// and [MonthViewController.next]
+  /// [focusedDate] - the date which is currently focused
+  final Widget Function(
+      BuildContext,
+      void Function() prevMonth,
+      void Function() nextMonth,
+      DateTime focusedDate,
+      )? monthPickerBuilder;
+```
 
 ---
 

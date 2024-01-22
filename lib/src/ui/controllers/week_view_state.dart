@@ -9,7 +9,8 @@ abstract class WeekViewState extends Equatable {
   final DateTime focusedDate;
   final bool reverseAnimation;
 
-  DateTimeRange get displayedWeek => focusedDate.weekRange;
+  DateTimeRange displayedWeek(int visibleDays) =>
+      focusedDate.weekRange(visibleDays);
 
   @override
   List<Object?> get props => [

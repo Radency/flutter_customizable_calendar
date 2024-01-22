@@ -9,7 +9,10 @@ abstract class MonthViewState extends Equatable {
   final DateTime focusedDate;
   final bool reverseAnimation;
 
-  DateTimeRange get displayedMonth => focusedDate.monthViewRange;
+  DateTimeRange displayedMonth({bool weekStartsOnSunday = false}) =>
+      focusedDate.monthViewRange(
+        weekStartsOnSunday: weekStartsOnSunday,
+      );
 
   @override
   List<Object?> get props => [

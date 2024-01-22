@@ -11,8 +11,8 @@ class MonthShowMoreTheme {
     this.backgroundColor = const Color(0xFFD1D1D1),
     this.borderRadius = 4,
     this.padding = const EdgeInsets.symmetric(
-      vertical: 1,
-      horizontal: 1,
+      vertical: 2,
+      horizontal: 2,
     ),
     this.height = 24,
     this.eventHeight = 28,

@@ -35,3 +35,19 @@
 ## 0.2.1
 
 * Fix linter warnings.
+
+## 0.3.0
+
+- Added
+
+  * Introduced new examples showcasing package usage, combining multiple views:
+    * MonthView with ScheduleListView
+    * ScheduleListView with DaysView
+    * WeekView (optimized for portrait mode with 3 days)
+  * Implemented additional custom builders for MonthView, WeekView, and DaysView. See new examples and updated README.md for more details.
+
+- Fixed
+
+  * Addressed issue where WeekView event jumps to the next day upon dragging to the day's end.
+  * Fixed the issue when the WeekView event does not drag to the next/previous week correctly.
+  * Applied similar fixes to MonthView for consistency with WeekView.

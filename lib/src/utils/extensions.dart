@@ -9,21 +9,37 @@ extension CapitalizedString on String {
 ///
 extension DurationInWeeks on Duration {
   /// The number of entire weeks spanned by this Duration.
-  int get inWeeks => inDays ~/ 7;
+  int inWeeks(int visibleDay) => inDays ~/ visibleDay;
 }
 
 ///
 extension WeekUtils on DateTime {
   /// Returns all day dates of current week from Monday (1) to Sunday (7).
-  DateTimeRange get weekRange => DateTimeRange(
+  DateTimeRange weekRange(int visibleDays) {
+    if (visibleDays == 7) {
+      return DateTimeRange(
         start: DateUtils.addDaysToDate(this, 1 - weekday),
         end: DateUtils.addDaysToDate(this, 8 - weekday),
       );
+    }
+    final range = DateTimeRange(
+      start: DateUtils.addDaysToDate(this, 0),
+      end: DateUtils.addDaysToDate(this, visibleDays),
+    );
+    return range;
+  }
+
+  DateTime addWeeks(int visibleDays, int weeks) {
+    return DateUtils.addDaysToDate(
+      this,
+      weeks * visibleDays,
+    );
+  }
 
   /// Returns result of check whether both dates are in the same week range.
-  bool isSameWeekAs(DateTime? other) {
+  bool isSameWeekAs(int visibleDays, DateTime? other) {
     if (other == null) return false;
-    final week = weekRange;
+    final week = weekRange(visibleDays);
     return !other.isBefore(week.start) && other.isBefore(week.end);
   }
 }
@@ -31,15 +47,21 @@ extension WeekUtils on DateTime {
 ///
 extension MonthUtils on DateTime {
   /// Returns day dates of 6 weeks which include current month.
-  DateTimeRange get monthViewRange {
-    final first = DateUtils.addDaysToDate(this, 1 - day);
-    final startDate = DateUtils.addDaysToDate(first, 1 - first.weekday);
+  DateTimeRange monthViewRange({bool weekStartsOnSunday = false}) {
+    final first = DateUtils.addDaysToDate(
+      this,
+      1 - day,
+    );
+    final startDate = DateUtils.addDaysToDate(
+      first,
+      1 - first.weekday - (weekStartsOnSunday ? 1 : 0),
+    );
 
     /// In case of clock change, set end day to 12:00
     return DateTimeRange(
       start: startDate,
       end:
-          DateUtils.addDaysToDate(startDate, 42).add(const Duration(hours: 12)),
+          DateUtils.addDaysToDate(startDate, 35).add(const Duration(hours: 12)),
     );
   }
 }
