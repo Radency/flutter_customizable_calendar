@@ -173,6 +173,8 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
       _initialDate.weekRange(widget.controller.visibleDays);
 
   RenderBox? _getTimelineBox(DateTimeRange key) {
+    print(key);
+    final timeline = WeekViewKeys.timeline;
     return WeekViewKeys.timeline[key]?.currentContext?.findRenderObject()
         as RenderBox?;
   }
@@ -460,9 +462,19 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
               onResizingEnd: _stopAutoScrolling,
               onDropped: widget.onDiscardChanges,
               onChanged: widget.onEventUpdated,
-              getTimelineBox: () => _getTimelineBox(
-                state.focusedDate.weekRange(widget.controller.visibleDays),
-              ),
+              getTimelineBox: () {
+                final pageIndex = state.focusedDate
+                        .difference(widget.controller.initialDate)
+                        .inDays ~/
+                    widget.controller.visibleDays;
+
+                return _getTimelineBox(
+                  DateUtils.addDaysToDate(
+                    widget.controller.initialDate,
+                    pageIndex * widget.controller.visibleDays,
+                  ).weekRange(widget.controller.visibleDays),
+                );
+              },
               getLayoutBox: _getLayoutBox,
               getEventBox: _getEventBox,
               saverConfig: widget.saverConfig ?? SaverConfig.def(),
