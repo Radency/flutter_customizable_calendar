@@ -454,7 +454,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
 
   Future<void> _beforeEventUpdate() async {
     try {
-      if (!_needsBeforeEventUpdate) {
+      if (!_needsBeforeEventUpdate && widget.viewType != CalendarView.month) {
         return;
       }
 

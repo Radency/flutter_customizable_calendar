@@ -15,7 +15,7 @@ import 'package:flutter_customizable_calendar/src/utils/floating_event_notifier.
 @visibleForTesting
 abstract class MonthViewKeys {
   /// A key for the timeline view
-  static Map<DateTimeRange, GlobalKey> timeline = {};
+  static Map<DateTime, GlobalKey> timeline = {};
 
   /// Map of keys for the events layouts (by day date)
   static final layouts = <DateTime, GlobalKey>{};
@@ -180,17 +180,10 @@ class _MonthViewState<T extends FloatingCalendarEvent>
 
   RenderBox? _getTimelineBox(DateTimeRange key) {
     return MonthViewKeys
-        .timeline[DateTimeRange(
-      start: DateTime(
-        key.start.year,
-        key.start.month,
-        key.start.day,
-      ),
-      end: DateTime(
-        key.end.year,
-        key.end.month,
-        key.end.day,
-      ),
+        .timeline[DateTime(
+      key.start.year,
+      key.start.month,
+      key.start.day,
     )]
         ?.currentContext
         ?.findRenderObject() as RenderBox?;
@@ -212,7 +205,6 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     );
 
     _scrolling = timelineBox != null;
-
     if (!_scrolling) return; // Scrollable isn't found
 
     final fingerPosition = timelineBox!.globalToLocal(_pointerLocation);
@@ -534,12 +526,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
             }
           },
           child: Container(
-            key: MonthViewKeys.timeline[DateTimeRange(
-              start: days.first,
-              end: days.last.add(
-                const Duration(days: 1),
-              ),
-            )] = GlobalKey(),
+            key: MonthViewKeys.timeline[days.first] = GlobalKey(),
             padding: const EdgeInsets.only(
               bottom: 1,
             ),
@@ -606,7 +593,9 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   void _syncGridViewPosition() {
     if (!_shouldScroll) {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        _forward.jumpTo(0);
+        if (_forward.positions.isNotEmpty) {
+          _forward.jumpTo(0);
+        }
       });
       return;
     }

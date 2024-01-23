@@ -47,7 +47,7 @@ Add the following dependency to your pubspec.yaml file:
 
 ```yaml
 dependencies:
-  flutter_customizable_calendar: ^0.3.0
+  flutter_customizable_calendar: ^0.3.1
 ```
 
 Then, run:
