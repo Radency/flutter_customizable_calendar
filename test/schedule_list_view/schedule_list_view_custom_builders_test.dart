@@ -11,7 +11,7 @@ import 'schedule_list_view_controller.dart';
 
 void main() {
   group(
-    'ScheduleListView tests',
+    'ScheduleListView custom builders tests',
     () {
       final now = DateTime(2024, DateTime.january, 11, 9, 30);
       final currentMonth = DateTime(now.year, now.month);
@@ -245,15 +245,15 @@ void main() {
           );
 
           final view = ScheduleListView(
-            controller: controller,
-            events: [todayEvent, prevMonthEvent],
+              controller: controller,
+              events: [todayEvent, prevMonthEvent],
               monthPickerBuilder: (
-                  context,
-                  next,
-                  prev,
-                  setDate,
-                  date,
-                  ) {
+                context,
+                next,
+                prev,
+                setDate,
+                date,
+              ) {
                 return Row(
                   children: [
                     IconButton(
@@ -273,8 +273,7 @@ void main() {
                     ),
                   ],
                 );
-              }
-          );
+              });
 
           when(() => controller.state).thenReturn(
             ScheduleListViewControllerCurrentDateIsSet(

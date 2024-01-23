@@ -285,6 +285,7 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
   AllDaysEventsList _buildAllDayEventsList(List<DateTime> weekDays) {
     return AllDaysEventsList(
       eventKeys: widget.eventKeys,
+      eventBuilders: widget.eventBuilders,
       width: widget.constraints.maxWidth,
       theme: widget.allDayEventsTheme,
       weekRange: DateTimeRange(
