@@ -466,10 +466,17 @@ class _MonthViewWithScheduleListViewPageState
       EventsInitialized state) {
     return ScheduleListView(
       controller: scheduleListController,
-      monthPickerBuilder: (next, prev, toTime, currentTime) => const SizedBox(),
+      monthPickerBuilder: (
+        context,
+        next,
+        prev,
+        toTime,
+        currentTime,
+      ) =>
+          const SizedBox(),
       events: state.events,
       ignoreDaysWithoutEvents: false,
-      dayBuilder: (events, day) {
+      dayBuilder: (context, events, day) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(

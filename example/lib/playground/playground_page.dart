@@ -382,7 +382,13 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
           }
         },
         monthPickerTheme: _periodPickerTheme,
-        monthPickerBuilder: (nextMonth, prevMonth, toTime, currentTime) {
+        monthPickerBuilder: (
+          context,
+          nextMonth,
+          prevMonth,
+          toTime,
+          currentTime,
+        ) {
           return Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

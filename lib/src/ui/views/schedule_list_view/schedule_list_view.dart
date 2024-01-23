@@ -70,6 +70,7 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
   /// [ignoreDaysWithoutEvents] to true
   /// @events - list of events for the @date
   final Widget Function(
+    BuildContext context,
     List<CalendarEvent> events,
     DateTime date,
   )? dayBuilder;
@@ -86,6 +87,7 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
   /// These 3 are the same as those available
   /// through the [ScheduleListViewController]
   final Widget Function(
+    BuildContext context,
     void Function() nextMonth,
     void Function() prevMonth,
     void Function(DateTime time) toTime,
@@ -164,6 +166,7 @@ class _ScheduleListViewState<T extends CalendarEvent>
               builder: (context, state) {
                 if (widget.monthPickerBuilder != null) {
                   return widget.monthPickerBuilder!(
+                    context,
                     widget.controller.next,
                     widget.controller.prev,
                     widget.controller.setDisplayedDate,
@@ -240,7 +243,7 @@ class _ScheduleListViewState<T extends CalendarEvent>
     final events = group.value;
 
     if (widget.dayBuilder != null) {
-      return widget.dayBuilder!(events, date);
+      return widget.dayBuilder!(context, events, date);
     }
 
     return Container(

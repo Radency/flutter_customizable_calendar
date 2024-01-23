@@ -1,6 +1,4 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:clock/clock.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
@@ -8,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../common/custom_calendar_event.dart';
 import 'schedule_list_view_controller.dart';
 
 void main() {
@@ -28,8 +27,8 @@ void main() {
       setUp(() {
         controller = MockScheduleLisViewController();
         setupScheduleListViewController(
-          controller: controller,
           now: now,
+          controller: controller,
           nextMonthEnd: nextMonthEnd,
           prevMonth: prevMonth,
         );
@@ -42,45 +41,93 @@ void main() {
       testWidgets(
         'ScheduleListView initial state shows current time',
         (tester) async {
+          final formatter1 = DateFormat.y();
+          final formatter2 = DateFormat.MMMMEEEEd();
           await tester.pumpWidget(
             MaterialApp(
               home: Scaffold(
                 body: ScheduleListView<FloatingCalendarEvent>(
-                  controller: controller,
-                ),
+                    controller: controller,
+                    dayBuilder: (context, events, day) {
+                      return Column(
+                        children: [
+                          Text(
+                            formatter1.format(day),
+                          ),
+                          Text(
+                            formatter2.format(day),
+                          ),
+                        ],
+                      );
+                    }),
               ),
             ),
           );
 
           await tester.pumpAndSettle();
 
-          final weekDayFormatter = DateFormat('EEE');
-          final dayFormatter = DateFormat('d');
-
           expect(
-            find.text(weekDayFormatter.format(now)),
-            findsOneWidget,
+            find.text(formatter1.format(now)),
+            findsAny,
           );
 
           expect(
-            find.text(dayFormatter.format(now)),
+            find.text(formatter2.format(now)),
             findsOneWidget,
           );
         },
       );
 
-      testWidgets('ScheduleListView shows event correctly',
+      testWidgets('ScheduleListView shows custom event with image correctly',
           (widgetTester) async {
-        final event = SimpleEvent(
-          id: '1',
-          title: 'Test',
-          start: now,
+        final event = CustomCalendarEvent(
+          id: 'Task1',
+          title: 'Workout',
+          start: now.add(const Duration(hours: 13)),
           duration: const Duration(hours: 1),
+          color: Colors.black,
         );
+        CalendarEvent? tappedEvent;
 
-        final view = ScheduleListView<SimpleEvent>(
+        final view = ScheduleListView<CalendarEvent>(
           controller: controller,
           events: [event],
+          eventBuilders: {
+            CustomCalendarEvent: (context, e) {
+              final event = e as CustomCalendarEvent;
+              return InkWell(
+                onTap: () {
+                  tappedEvent = event;
+                },
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                  ),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.1),
+                    padding: const EdgeInsets.all(4),
+                    child: Text(
+                      event.title,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 8,
+                          ),
+                          Shadow(
+                            color: Colors.black45,
+                            blurRadius: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          },
         );
         await widgetTester.pumpWidget(
           MaterialApp(
@@ -92,7 +139,11 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        expect(find.text('Test'), findsOneWidget);
+        expect(find.text('Workout'), findsOneWidget);
+
+        await widgetTester.tap(find.text('Workout'));
+
+        expect(tappedEvent, event);
       });
 
       testWidgets('ScheduleListView switches to the next month',
@@ -116,6 +167,33 @@ void main() {
         final view = ScheduleListView(
           controller: controller,
           events: events,
+          monthPickerBuilder: (
+            context,
+            next,
+            prev,
+            setDate,
+            date,
+          ) {
+            return Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    prev();
+                  },
+                  icon: const Icon(CupertinoIcons.arrow_left),
+                ),
+                Text(
+                  DateFormat.yMMMM().format(date),
+                ),
+                IconButton(
+                  onPressed: () {
+                    next();
+                  },
+                  icon: const Icon(CupertinoIcons.arrow_right),
+                ),
+              ],
+            );
+          },
         );
 
         whenListen(
@@ -141,7 +219,7 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        await widgetTester.tap(find.byIcon(CupertinoIcons.chevron_right));
+        await widgetTester.tap(find.byIcon(CupertinoIcons.arrow_right));
 
         await widgetTester.pumpAndSettle();
 
@@ -169,6 +247,33 @@ void main() {
           final view = ScheduleListView(
             controller: controller,
             events: [todayEvent, prevMonthEvent],
+              monthPickerBuilder: (
+                  context,
+                  next,
+                  prev,
+                  setDate,
+                  date,
+                  ) {
+                return Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        prev();
+                      },
+                      icon: const Icon(CupertinoIcons.arrow_left),
+                    ),
+                    Text(
+                      DateFormat.yMMMM().format(date),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        next();
+                      },
+                      icon: const Icon(CupertinoIcons.arrow_right),
+                    ),
+                  ],
+                );
+              }
           );
 
           when(() => controller.state).thenReturn(
@@ -197,7 +302,7 @@ void main() {
 
           await widgetTester.pumpAndSettle();
 
-          await widgetTester.tap(find.byIcon(CupertinoIcons.chevron_left));
+          await widgetTester.tap(find.byIcon(CupertinoIcons.arrow_left));
 
           await widgetTester.pumpAndSettle();
 
