@@ -448,6 +448,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
           width: double.maxFinite,
           child: AllDaysEventsList(
             eventKeys: DaysViewKeys.events,
+            eventBuilders: widget.eventBuilders,
             theme: theme,
             allDayEvents: _allDayEvents
                 .where(

@@ -41,6 +41,7 @@ class AllDaysEventsList extends StatefulWidget {
     required this.width,
     required this.view,
     required this.eventKeys,
+    required this.eventBuilders,
     this.onShowMoreTap,
     this.showMoreBuilder,
     this.onEventTap,
@@ -48,6 +49,7 @@ class AllDaysEventsList extends StatefulWidget {
     super.key,
   });
 
+  final Map<Type, EventBuilder> eventBuilders;
   final Map<CalendarEvent, GlobalKey> eventKeys;
 
   final DateTimeRange? weekRange;
@@ -299,6 +301,7 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
                         viewType: widget.view,
                         key: _getEventKey(e.event),
                         allDayEventsTheme: _theme,
+                        eventBuilders: widget.eventBuilders,
                         onTap: () {
                           widget.onEventTap?.call(e.event);
                         },

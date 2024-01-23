@@ -1,16 +1,17 @@
-import 'package:bloc_test/bloc_test.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../common/custom_all_day_event.dart';
+import '../common/custom_calendar_event.dart';
 import 'week_view_controller.dart';
 
 void main() {
   MaterialApp runTestApp(Widget view) => MaterialApp(home: view);
 
-  group('WeekView test', () {
+  group('WeekView custom builders tests', () {
     final now = DateTime(2024, DateTime.january, 3, 12);
 
     final currentWeek = DateTime(now.year, now.month);
@@ -37,80 +38,58 @@ void main() {
       controller.close();
     });
 
-    testWidgets('Week picker displays current week', (widgetTester) async {
+    testWidgets('Custom Week picker displays current week',
+        (widgetTester) async {
       final view = WeekView(
         controller: controller,
-        saverConfig: _saverConfig(),
+        weekPickerBuilder: (context, events, week) {
+          // day rage is not inclusive, so we need to subtract 1
+          return Text('Week ${week.start.day} - ${week.end.day - 1}');
+        },
       );
 
       await widgetTester.pumpWidget(runTestApp(view));
       expect(
-        find.widgetWithText(DisplayedPeriodPicker, '1 - 7 Jan, 2024'),
+        find.text('Week 1 - 7'),
         findsAny,
         reason: 'Week picker should display ‘current week',
       );
     });
 
     testWidgets(
-      'Long press a time point on the timeline returns the time point',
+      'Tap on an custom event view returns the event',
       (widgetTester) async {
-        DateTime? pressedDate;
+        FloatingCalendarEvent? tappedEvent;
 
-        final view = WeekView(
+        final event = CustomCalendarEvent(
+          id: 'SimpleEvent1',
+          start: now,
+          duration: const Duration(hours: 1),
+          title: 'SimpleEvent1',
+          color: Colors.red,
+        );
+        final view = WeekView<FloatingCalendarEvent>(
           controller: controller,
-          saverConfig: _saverConfig(),
-          onDateLongPress: (date) {
-            pressedDate = date;
-            return Future.value();
+          onEventTap: (event) => tappedEvent = event,
+          events: [event],
+          eventBuilders: {
+            CustomCalendarEvent: (context, e) {
+              final event = e as CustomCalendarEvent;
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    width: 2,
+                  ),
+                ),
+                child: Text('${event.title}_custom'),
+              );
+            },
           },
         );
 
         await widgetTester.pumpWidget(runTestApp(view));
 
-        final padding = view.timelineTheme.padding;
-        final currentHourOrigin = Offset(padding.left, padding.top);
-        final range = now.weekRange(7).days;
-        final currentHourPosition = widgetTester.getTopLeft(
-              find.byKey(
-                WeekViewKeys.timeline[DateTimeRange(
-                  start: range.first,
-                  end: range.last.add(const Duration(days: 1)),
-                )]!,
-              ),
-            ) +
-            currentHourOrigin;
-
-        await widgetTester.longPressAt(currentHourPosition);
-
-        expect(
-          DateTime(pressedDate!.year, pressedDate!.month, pressedDate!.day),
-          DateTime(now.year, now.month),
-        );
-      },
-      skip: false,
-    );
-
-    testWidgets(
-      'Tap on an event view returns the event',
-      (widgetTester) async {
-        FloatingCalendarEvent? tappedEvent;
-
-        final event = SimpleEvent(
-          id: 'SimpleEvent1',
-          start: now,
-          duration: const Duration(hours: 1),
-          title: 'SimpleEvent1',
-        );
-        final view = WeekView<FloatingCalendarEvent>(
-          controller: controller,
-          saverConfig: _saverConfig(),
-          onEventTap: (event) => tappedEvent = event,
-          events: [event],
-        );
-
-        await widgetTester.pumpWidget(runTestApp(view));
-
-        await widgetTester.tap(find.text(event.title).first);
+        await widgetTester.tap(find.text('${event.title}_custom').first);
 
         expect(tappedEvent, event);
       },
@@ -118,11 +97,14 @@ void main() {
     );
 
     testWidgets(
-      'Switching to another week changes period picker text',
+      'Switching to another week changes custom period picker text',
       (widgetTester) async {
         final view = WeekView(
           controller: controller,
-          saverConfig: _saverConfig(),
+          weekPickerBuilder: (context, events, week) {
+            // day rage is not inclusive, so we need to subtract 1
+            return Text('Week ${week.start.day} - ${week.end.day - 1}');
+          },
         );
 
         when(() => controller.state).thenReturn(
@@ -137,7 +119,7 @@ void main() {
         await widgetTester.pumpAndSettle();
 
         expect(
-          find.widgetWithText(DisplayedPeriodPicker, '8 - 14 Jan, 2024'),
+          find.text('Week 8 - 14'),
           findsAny,
           reason: 'Week picker should display ‘next week',
         );
@@ -146,9 +128,9 @@ void main() {
     );
 
     testWidgets(
-      'All-Day event is displayed',
+      'Custom all-Day event is displayed',
       (widgetTester) async {
-        final event = SimpleAllDayEvent(
+        final event = CustomAllDayEvent(
           id: 'All-Day Event 1',
           start: now,
           duration: const Duration(days: 1),
@@ -157,36 +139,64 @@ void main() {
 
         final view = WeekView(
           controller: controller,
-          saverConfig: _saverConfig(),
           events: [event],
+          eventBuilders: {
+            CustomAllDayEvent: (context, e) {
+              final event = e as CustomAllDayEvent;
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    width: 2,
+                  ),
+                ),
+                child: Text('${event.title}_custom'),
+              );
+            },
+          },
         );
 
         await widgetTester.pumpWidget(runTestApp(view));
 
         await widgetTester.pumpAndSettle();
 
-        expect(find.text('All-Day Event 1'), findsAny);
+        expect(find.text('${event.title}_custom'), findsAny);
       },
       skip: false,
     );
 
     testWidgets(
-      'All-Day event onTap callback is called',
+      'custom All-Day event onTap callback is called',
       (widgetTester) async {
-        final event = SimpleAllDayEvent(
+        final event = CustomAllDayEvent(
           id: 'All-Day Event 1',
           start: now,
           duration: const Duration(days: 1),
           title: 'All-Day Event 1',
         );
 
+        AllDayCalendarEvent? tappedCustomEvent;
         AllDayCalendarEvent? tappedEvent;
         final view = WeekView(
           controller: controller,
           events: [event],
-          saverConfig: _saverConfig(),
-          onAllDayEventTap: (event) {
-            tappedEvent = event;
+          onEventTap: (event) => tappedEvent = event,
+          eventBuilders: {
+            CustomAllDayEvent: (context, e) {
+              final event = e as CustomAllDayEvent;
+              return InkWell(
+                onTap: () {
+                  tappedCustomEvent = event;
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      width: 2,
+                    ),
+                  ),
+                  child: Text('${event.title}_custom'),
+                ),
+              );
+            }
           },
         );
 
@@ -197,23 +207,24 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        await widgetTester.tap(find.text(event.title).first);
+        await widgetTester.tap(find.text('${event.title}_custom').first);
 
-        expect(tappedEvent, event);
+        expect(tappedCustomEvent, event);
+        expect(tappedEvent, null);
       },
       skip: false,
     );
 
     testWidgets(
-      'All-Day events show more button is displayed',
+      'All-Day events custom show more button is displayed',
       (widgetTester) async {
-        final event = SimpleAllDayEvent(
+        final event = CustomAllDayEvent(
           id: 'All-Day Event 1',
           start: now,
           duration: const Duration(days: 1),
           title: 'All-Day Event 1',
         );
-        final otherEvent = SimpleAllDayEvent(
+        final otherEvent = CustomAllDayEvent(
           id: 'All-Day Event 2',
           start: now,
           duration: const Duration(days: 1),
@@ -224,21 +235,27 @@ void main() {
           child: WeekView(
             controller: controller,
             events: [event, otherEvent],
-            saverConfig: _saverConfig(),
             allDayEventsTheme: const AllDayEventsTheme(
               listMaxRowsVisible: 1,
             ),
+            eventBuilders: {
+              CustomAllDayEvent: (context, e) {
+                final event = e as CustomAllDayEvent;
+                return Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      width: 2,
+                    ),
+                  ),
+                  child: Text('${event.title}_custom'),
+                );
+              }
+            },
             allDayEventsShowMoreBuilder: (visible, all) {
               return Text('+${all.length - visible.length}');
             },
           ),
         );
-
-        when(() => controller.initialDate).thenReturn(currentWeek);
-        when(() => controller.visibleDays).thenReturn(7);
-        when(() => controller.endDate).thenReturn(currentWeekEnd);
-        when(() => controller.state)
-            .thenReturn(initialStateWithDate(event.start));
 
         await widgetTester.pumpWidget(runTestApp(view));
 
@@ -250,21 +267,21 @@ void main() {
     );
 
     testWidgets(
-      'All-Day events show more button callback is called when tapped',
+      'Custom All-Day events show more button callback is called when tapped',
       (widgetTester) async {
-        final event = SimpleAllDayEvent(
+        final event = CustomAllDayEvent(
           id: 'All-Day Event 1',
           start: now,
           duration: const Duration(days: 1),
           title: 'All-Day Event 1',
         );
-        final otherEvent = SimpleAllDayEvent(
+        final otherEvent = CustomAllDayEvent(
           id: 'All-Day Event 2',
           start: now,
           duration: const Duration(days: 1),
           title: 'All-Day Event 2',
         );
-        final otherEvent2 = SimpleAllDayEvent(
+        final otherEvent2 = CustomAllDayEvent(
           id: 'All-Day Event 3',
           start: now,
           duration: const Duration(days: 1),
@@ -277,7 +294,19 @@ void main() {
           child: WeekView(
             controller: controller,
             events: [event, otherEvent, otherEvent2],
-            saverConfig: _saverConfig(),
+            eventBuilders: {
+              CustomAllDayEvent: (context, e) {
+                final event = e as CustomAllDayEvent;
+                return Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      width: 2,
+                    ),
+                  ),
+                  child: Text('${event.title}_custom'),
+                );
+              }
+            },
             onAllDayEventsShowMoreTap: (visible, all) {
               visibleEvents = visible;
               allEvents = all;
@@ -292,9 +321,9 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        expect(find.text(event.title), findsAny);
-        expect(find.text(otherEvent.title), findsAny);
-        expect(find.text(otherEvent2.title), findsNothing);
+        expect(find.text('${event.title}_custom'), findsAny);
+        expect(find.text('${event.title}_custom'), findsAny);
+        expect(find.text('${otherEvent2.title}_custom'), findsNothing);
 
         await widgetTester.tap(find.text('+1').first);
 
@@ -305,21 +334,21 @@ void main() {
     );
 
     testWidgets(
-      'All-Day events changes when switching to another week',
+      'Custom All-Day events changes when switching to another week',
       (widgetTester) async {
-        final event = SimpleAllDayEvent(
+        final event = CustomAllDayEvent(
           id: 'All-Day Event 1',
           start: now,
           duration: const Duration(days: 1),
           title: 'All-Day Event 1',
         );
-        final otherEvent = SimpleAllDayEvent(
+        final otherEvent = CustomAllDayEvent(
           id: 'All-Day Event 2',
           start: now.add(const Duration(days: 7)),
           duration: const Duration(days: 1),
           title: 'All-Day Event 2',
         );
-        final otherEvent2 = SimpleAllDayEvent(
+        final otherEvent2 = CustomAllDayEvent(
           id: 'All-Day Event 3',
           start: now.add(const Duration(days: 7)),
           duration: const Duration(days: 1),
@@ -335,7 +364,19 @@ void main() {
             allDayEventsTheme: const AllDayEventsTheme(
               listMaxRowsVisible: 1,
             ),
-            saverConfig: _saverConfig(),
+            eventBuilders: {
+              CustomAllDayEvent: (context, e) {
+                final event = e as CustomAllDayEvent;
+                return Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      width: 2,
+                    ),
+                  ),
+                  child: Text('${event.title}_custom'),
+                );
+              },
+            },
             onAllDayEventsShowMoreTap: (visible, all) {
               visibleEvents = visible;
               allEvents = all;
@@ -353,9 +394,9 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        expect(find.text(event.title), findsNothing);
-        expect(find.text(otherEvent.title), findsAny);
-        expect(find.text(otherEvent2.title), findsNothing);
+        expect(find.text('${event.title}_custom'), findsNothing);
+        expect(find.text('${otherEvent.title}_custom'), findsAny);
+        expect(find.text('${otherEvent2.title}_custom'), findsNothing);
 
         await widgetTester.tap(find.text('+1').first);
 
@@ -366,10 +407,3 @@ void main() {
     );
   });
 }
-
-SaverConfig _saverConfig() => SaverConfig(
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        child: const Icon(Icons.done),
-      ),
-    );
