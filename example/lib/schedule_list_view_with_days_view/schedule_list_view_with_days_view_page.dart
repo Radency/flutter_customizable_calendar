@@ -50,6 +50,7 @@ class _ScheduleListViewWithDaysViewState
                   events: state.events,
                   ignoreDaysWithoutEvents: true,
                   monthPickerBuilder: (
+                    context,
                     nextMonth,
                     prevMonth,
                     toTime,
@@ -131,7 +132,7 @@ class _ScheduleListViewWithDaysViewState
                       ),
                     );
                   },
-                  dayBuilder: (data, date) {
+                  dayBuilder: (context, data, date) {
                     final events = data.cast<EventWithLabel>();
                     return Padding(
                       padding: const EdgeInsets.symmetric(
