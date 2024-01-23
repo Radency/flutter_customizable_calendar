@@ -150,9 +150,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   var _scrolling = false;
 
   ScrollController? get _timelineController {
-    final range = widget.controller.state.focusedDate.weekRange(
-      widget.controller.visibleDays,
-    );
+    final range = widget.controller.weekRange();
     if (WeekViewKeys.timeline.containsKey(range)) {
       final widget = WeekViewKeys.timeline[range]!.currentWidget;
       return (widget as SingleChildScrollView?)?.controller;
@@ -202,10 +200,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
   }
 
   Future<void> _scrollIfNecessary() async {
-    final timelineBox = _getTimelineBox(
-      widget.controller.state.focusedDate
-          .weekRange(widget.controller.visibleDays),
-    );
+    final timelineBox = _getTimelineBox(widget.controller.weekRange());
 
     _scrolling = timelineBox != null;
 
