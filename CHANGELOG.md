@@ -51,3 +51,8 @@
   * Addressed issue where WeekView event jumps to the next day upon dragging to the day's end.
   * Fixed the issue when the WeekView event does not drag to the next/previous week correctly.
   * Applied similar fixes to MonthView for consistency with WeekView.
+
+## 0.3.1
+
+  - Fixed 
+    * Incorrect autoscroll behavior in MonthView and WeekView.
