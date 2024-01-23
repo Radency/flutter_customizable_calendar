@@ -23,6 +23,14 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
   @override
   final DateTime initialDate;
 
+  DateTimeRange weekRange() {
+    return DateUtils.addDaysToDate(
+      initialDate,
+      (state.focusedDate.difference(initialDate).inDays ~/ visibleDays) *
+          visibleDays,
+    ).weekRange(visibleDays);
+  }
+
   @override
   final DateTime? endDate;
   double? timelineOffset;
