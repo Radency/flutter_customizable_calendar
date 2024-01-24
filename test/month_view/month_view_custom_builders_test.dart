@@ -3,8 +3,10 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../common/custom_calendar_event.dart';
 import 'month_view_controller.dart';
 
 void main() {
@@ -37,15 +39,21 @@ void main() {
     });
 
     testWidgets(
-      'Month picker displays current month',
+      'custom Month picker displays current month',
       (widgetTester) async {
+        final formatter = DateFormat('MMMM yyyy dd');
         final view = MonthView(
           controller: controller,
+          monthPickerBuilder: (context, prev, next, date) {
+            return Text(
+              formatter.format(date),
+            );
+          },
         );
         await widgetTester.pumpWidget(runTestApp(view));
 
         expect(
-          find.widgetWithText(DisplayedPeriodPicker, 'January 2024'),
+          find.text(formatter.format(now)),
           findsOneWidget,
           reason: 'Month picker must display current month name and year',
         );
@@ -54,55 +62,38 @@ void main() {
     );
 
     testWidgets(
-      'Long press a time point on the timeline returns the time point',
-      (widgetTester) async {
-        DateTime? pressedDate;
-
-        final view = MonthView(
-          controller: controller,
-          onDateLongPress: (date) {
-            pressedDate = date;
-            return Future.value();
-          },
-        );
-
-        await widgetTester.pumpWidget(runTestApp(view));
-
-        final fifthDayPosition = widgetTester.getCenter(find.text('5'));
-
-        await widgetTester.longPressAt(fifthDayPosition);
-        expect(
-          DateTime(pressedDate!.year, pressedDate!.month, pressedDate!.day),
-          DateTime(now.year, now.month, 5),
-        );
-      },
-      skip: false,
-    );
-
-    testWidgets(
-      'Tap on an event view returns the event',
+      'Tap on an custom event view returns the event',
       (widgetTester) async {
         FloatingCalendarEvent? tappedEvent;
 
-        final event = SimpleEvent(
+        final event = CustomCalendarEvent(
           id: const ValueKey('event1'),
           title: 'Event 1',
           start: DateTime(now.year, now.month, 5),
           duration: const Duration(days: 1),
+          color: Colors.black,
         );
 
-        final view = MonthView<SimpleEvent>(
+        final view = MonthView<CustomCalendarEvent>(
           controller: controller,
           events: [event],
           onEventTap: (event) {
             tappedEvent = event;
           },
+          eventBuilders: {
+            CustomCalendarEvent: (context, e) {
+              final event = e as CustomCalendarEvent;
+              return Container(
+                key: ValueKey(event.id),
+                child: Text('${event.title}_custom'),
+              );
+            },
+          },
         );
 
         await widgetTester.pumpWidget(runTestApp(view));
 
-        final eventWidget =
-            find.widgetWithText(SimpleEventView, 'Event 1').first;
+        final eventWidget = find.text('${event.title}_custom').first;
 
         await widgetTester.tap(eventWidget);
 
@@ -111,11 +102,10 @@ void main() {
       skip: false,
     );
 
-
     testWidgets(
-      'Long press on an event creates overlay entry',
-          (widgetTester) async {
-        final event = SimpleEvent(
+      'Long press on an custom event creates overlay entry',
+      (widgetTester) async {
+        final event = CustomCalendarEvent(
           id: const ValueKey('event1'),
           title: 'Event 1',
           start: DateTime(now.year, now.month, 5),
@@ -123,9 +113,18 @@ void main() {
           color: Colors.black,
         );
 
-        final view = MonthView<SimpleEvent>(
+        final view = MonthView<CustomCalendarEvent>(
           controller: controller,
           events: [event],
+          eventBuilders: {
+            CustomCalendarEvent: (context, e) {
+              final event = e as CustomCalendarEvent;
+              return Container(
+                key: ValueKey(event.id),
+                child: Text('${event.title}_custom'),
+              );
+            },
+          },
         );
 
         await widgetTester.pumpWidget(runTestApp(view));
@@ -147,10 +146,10 @@ void main() {
     );
 
     testWidgets(
-      'Long press on an event creates saver',
-          (widgetTester) async {
+      'Long press on an custom event creates saver',
+      (widgetTester) async {
         final saverKey = GlobalKey();
-        final event = SimpleEvent(
+        final event = CustomCalendarEvent(
           id: const ValueKey('event1'),
           title: 'Event 1',
           start: DateTime(now.year, now.month, 5),
@@ -158,7 +157,7 @@ void main() {
           color: Colors.black,
         );
 
-        final view = MonthView<SimpleEvent>(
+        final view = MonthView<CustomCalendarEvent>(
           controller: controller,
           events: [event],
           saverConfig: SaverConfig(
@@ -169,6 +168,15 @@ void main() {
               ),
             ),
           ),
+          eventBuilders: {
+            CustomCalendarEvent: (context, e) {
+              final event = e as CustomCalendarEvent;
+              return Container(
+                key: ValueKey(event.id),
+                child: Text('${event.title}_custom'),
+              );
+            },
+          },
         );
 
         await widgetTester.pumpWidget(runTestApp(view));
@@ -210,9 +218,9 @@ void main() {
 
     testWidgets(
       'On click saver on an custom event, event is updated',
-          (widgetTester) async {
+      (widgetTester) async {
         final saverKey = GlobalKey();
-        final event = SimpleEvent(
+        final event = CustomCalendarEvent(
           id: const ValueKey('event1'),
           title: 'Event 1',
           start: DateTime(now.year, now.month, 5),
@@ -220,8 +228,8 @@ void main() {
           color: Colors.black,
         );
 
-        SimpleEvent? updatedEvent;
-        final view = MonthView<SimpleEvent>(
+        CustomCalendarEvent? updatedEvent;
+        final view = MonthView<CustomCalendarEvent>(
           controller: controller,
           events: [event],
           saverConfig: SaverConfig(
@@ -236,8 +244,8 @@ void main() {
             updatedEvent = event;
           },
           eventBuilders: {
-            SimpleEvent: (context, e) {
-              final event = e as SimpleEvent;
+            CustomCalendarEvent: (context, e) {
+              final event = e as CustomCalendarEvent;
               return Container(
                 key: ValueKey(event.id),
                 child: Text('${event.title}_custom'),
@@ -291,6 +299,49 @@ void main() {
       },
       skip: false,
     );
+
+    testWidgets(
+      'Long press on an custom event view returns the event',
+      (widgetTester) async {
+        final event = CustomCalendarEvent(
+          id: const ValueKey('event1'),
+          title: 'Event 1',
+          start: DateTime(now.year, now.month, 5),
+          duration: const Duration(days: 1),
+          color: Colors.black,
+        );
+
+        CustomCalendarEvent? tappedEvent;
+        final view = MonthView<CustomCalendarEvent>(
+          controller: controller,
+          events: [event],
+          overrideOnEventLongPress: (details, event) {
+            tappedEvent = event;
+          },
+          eventBuilders: {
+            CustomCalendarEvent: (context, e) {
+              final event = e as CustomCalendarEvent;
+              return Container(
+                key: ValueKey(event.id),
+                child: Text('${event.title}_custom'),
+              );
+            },
+          },
+        );
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        final eventWidget = find.text('${event.title}_custom').first;
+
+        await widgetTester.longPress(eventWidget);
+
+        await widgetTester.pumpAndSettle();
+
+        expect(tappedEvent, event);
+      },
+      skip: false,
+    );
+
 
   });
 }
