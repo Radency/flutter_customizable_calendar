@@ -1,4 +1,3 @@
-import 'package:bloc_test/bloc_test.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
@@ -16,9 +15,6 @@ void main() {
     final currentWeek = DateTime(now.year, now.month);
     final currentWeekEnd = DateTime(now.year, now.month, 7);
     final nextWeek = DateTime(now.year, now.month, 14);
-    final currentMonth = DateTime(now.year, now.month);
-    final daysInCurrentMonth = DateUtils.getDaysInMonth(now.year, now.month);
-    final currentMonthEnd = DateTime(now.year, now.month, daysInCurrentMonth);
 
     late WeekViewController controller;
 

@@ -3,7 +3,6 @@ import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
-import 'package:flutter_customizable_calendar/src/ui/controllers/controllers.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockScheduleLisViewController

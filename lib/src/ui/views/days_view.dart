@@ -352,11 +352,13 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
             state is DaysViewPrevMonthSelected) {
           _stopTimelineScrolling();
           // Change a displayed month
-          _monthPickerController.animateToPage(
-            _getMonthsDeltaForDate(state.displayedDate),
-            duration: const Duration(milliseconds: 450),
-            curve: Curves.fastLinearToSlowEaseIn,
-          );
+          if (widget.daysListBuilder == null) {
+            _monthPickerController.animateToPage(
+              _getMonthsDeltaForDate(state.displayedDate),
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.fastLinearToSlowEaseIn,
+            );
+          }
         }
       },
       child: Column(
@@ -478,15 +480,30 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
       return BlocBuilder<DaysViewController, DaysViewState>(
         bloc: widget.controller,
         builder: (context, state) {
-          final dayEvents = widget.events.where((event) {
-            return DateUtils.isSameDay(event.start, state.focusedDate) ||
-                DateUtils.isSameDay(event.end, state.focusedDate);
+          final start = DateTime(
+            state.focusedDate.year,
+            state.focusedDate.month,
+          );
+          final end = DateTime(
+            state.focusedDate.year,
+            state.focusedDate.month,
+            DateUtils.getDaysInMonth(
+              state.focusedDate.year,
+              state.focusedDate.month,
+            ),
+          );
+
+          final events = widget.events.where((event) {
+            return DateUtils.isSameDay(start, state.focusedDate) ||
+                DateUtils.isSameDay(end, state.focusedDate) ||
+                (event.start.isAfter(start) && event.start.isBefore(end)) ||
+                (event.end.isAfter(start) && event.end.isBefore(end));
           }).toList();
 
           return widget.daysListBuilder!(
             context,
             state.focusedDate,
-            dayEvents.cast<T>(),
+            events.cast<T>(),
           );
         },
       );
