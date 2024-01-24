@@ -474,6 +474,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
             _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
       }
       if (!_updateEventOriginAndStart()) {
+        print('Event update failed');
         await Future.delayed(
           const Duration(milliseconds: 100),
           _beforeEventUpdate,
@@ -605,8 +606,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
                   _eventBounds.height += details.delta.dy;
                 } else if (_dragging) {
                   widget.onDragUpdate?.call(details);
-                  _eventBounds.origin =
-                      details.localPosition - Offset(_eventBounds.width / 2, 0);
+                  _eventBounds.origin += details.delta;
                   if (!_resetPointerLocation(details.globalPosition)) return;
                   _pointerTimePoint =
                       _getTimePointAt(_pointerLocation) ?? _pointerTimePoint;
