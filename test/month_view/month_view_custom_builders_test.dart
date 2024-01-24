@@ -1,10 +1,7 @@
-import 'package:bloc_test/bloc_test.dart';
-import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
-import 'package:mocktail/mocktail.dart';
 
 import '../common/custom_calendar_event.dart';
 import 'month_view_controller.dart';
@@ -130,7 +127,6 @@ void main() {
         await widgetTester.pumpWidget(runTestApp(view));
 
         final eventKey = MonthViewKeys.events[event]!;
-        ;
         expect(
           find.byKey(DraggableEventOverlayKeys.elevatedEvent),
           findsNothing,
@@ -182,7 +178,6 @@ void main() {
         await widgetTester.pumpWidget(runTestApp(view));
 
         final eventKey = MonthViewKeys.events[event]!;
-        ;
         expect(
           find.byKey(DraggableEventOverlayKeys.elevatedEvent),
           findsNothing,
@@ -257,7 +252,6 @@ void main() {
         await widgetTester.pumpWidget(runTestApp(view));
 
         final eventKey = MonthViewKeys.events[event]!;
-        ;
         expect(
           find.byKey(DraggableEventOverlayKeys.elevatedEvent),
           findsNothing,
@@ -341,7 +335,5 @@ void main() {
       },
       skip: false,
     );
-
-
   });
 }
