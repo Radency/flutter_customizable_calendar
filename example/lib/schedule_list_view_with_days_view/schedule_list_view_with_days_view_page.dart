@@ -97,6 +97,7 @@ class _ScheduleListViewWithDaysViewState
                                     context,
                                     currentTime,
                                     context.read<EventsWithLabelCubit>(),
+                                    false,
                                   );
                                 },
                                 borderRadius: BorderRadius.circular(8),
@@ -140,10 +141,20 @@ class _ScheduleListViewWithDaysViewState
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => DaysViewPage(
+                                focusedDay: data.first.start,
+                                onAddClicked: (
+                                  c,
+                                  focusedDay,
+                                ) {
+                                  _onAddClicked(
+                                    c,
+                                    focusedDay,
+                                    context.read<EventsWithLabelCubit>(),
+                                    true,
+                                  );
+                                },
                                 eventsCubit:
                                     context.read<EventsWithLabelCubit>(),
-                                focusedDay: data.first.start,
-                                onAddClicked: _onAddClicked,
                               ),
                             ),
                           );
@@ -272,12 +283,14 @@ class _ScheduleListViewWithDaysViewState
     BuildContext c,
     DateTime initialDate,
     EventsWithLabelCubit cubit,
+    bool timePicker,
   ) {
     Navigator.of(c)
         .push(
       MaterialPageRoute(
         builder: (context) => AddEventPage(
           initialDate: initialDate,
+          timePicker: timePicker,
         ),
       ),
     )

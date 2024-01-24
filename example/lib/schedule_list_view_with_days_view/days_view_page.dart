@@ -18,7 +18,6 @@ class DaysViewPage extends StatefulWidget {
   final void Function(
     BuildContext context,
     DateTime focusDate,
-    EventsWithLabelCubit cubit,
   ) onAddClicked;
   final EventsWithLabelCubit eventsCubit;
   final DateTime focusedDay;
@@ -194,7 +193,6 @@ class _DaysViewPageState extends State<DaysViewPage> {
                                   widget.onAddClicked(
                                     context,
                                     focusedDate,
-                                    widget.eventsCubit,
                                   );
                                 },
                                 borderRadius: BorderRadius.circular(8),
