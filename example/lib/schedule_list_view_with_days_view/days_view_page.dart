@@ -143,6 +143,11 @@ class _DaysViewPageState extends State<DaysViewPage> {
                       focusedDate,
                       events,
                     ) {
+                      final filteredEvents = events.where((event) {
+                        return event.start.day == focusedDate.day &&
+                            event.start.month == focusedDate.month &&
+                            event.start.year == focusedDate.year;
+                      }).toList();
                       return Column(
                         children: [
                           const SizedBox(
@@ -179,7 +184,7 @@ class _DaysViewPageState extends State<DaysViewPage> {
                                 width: 24,
                               ),
                               Text(
-                                "${events.length} events",
+                                "${filteredEvents.length} events",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w400,

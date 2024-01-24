@@ -47,19 +47,20 @@ void main() {
             MaterialApp(
               home: Scaffold(
                 body: ScheduleListView<FloatingCalendarEvent>(
-                    controller: controller,
-                    dayBuilder: (context, events, day) {
-                      return Column(
-                        children: [
-                          Text(
-                            formatter1.format(day),
-                          ),
-                          Text(
-                            formatter2.format(day),
-                          ),
-                        ],
-                      );
-                    }),
+                  controller: controller,
+                  dayBuilder: (context, events, day) {
+                    return Column(
+                      children: [
+                        Text(
+                          formatter1.format(day),
+                        ),
+                        Text(
+                          formatter2.format(day),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           );
@@ -245,35 +246,36 @@ void main() {
           );
 
           final view = ScheduleListView(
-              controller: controller,
-              events: [todayEvent, prevMonthEvent],
-              monthPickerBuilder: (
-                context,
-                next,
-                prev,
-                setDate,
-                date,
-              ) {
-                return Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        prev();
-                      },
-                      icon: const Icon(CupertinoIcons.arrow_left),
-                    ),
-                    Text(
-                      DateFormat.yMMMM().format(date),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        next();
-                      },
-                      icon: const Icon(CupertinoIcons.arrow_right),
-                    ),
-                  ],
-                );
-              });
+            controller: controller,
+            events: [todayEvent, prevMonthEvent],
+            monthPickerBuilder: (
+              context,
+              next,
+              prev,
+              setDate,
+              date,
+            ) {
+              return Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      prev();
+                    },
+                    icon: const Icon(CupertinoIcons.arrow_left),
+                  ),
+                  Text(
+                    DateFormat.yMMMM().format(date),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      next();
+                    },
+                    icon: const Icon(CupertinoIcons.arrow_right),
+                  ),
+                ],
+              );
+            },
+          );
 
           when(() => controller.state).thenReturn(
             ScheduleListViewControllerCurrentDateIsSet(

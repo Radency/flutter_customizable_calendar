@@ -17,9 +17,6 @@ void main() {
     final currentWeek = DateTime(now.year, now.month);
     final currentWeekEnd = DateTime(now.year, now.month, 7);
     final nextWeek = DateTime(now.year, now.month, 14);
-    final currentMonth = DateTime(now.year, now.month);
-    final daysInCurrentMonth = DateUtils.getDaysInMonth(now.year, now.month);
-    final currentMonthEnd = DateTime(now.year, now.month, daysInCurrentMonth);
 
     late WeekViewController controller;
 
@@ -196,7 +193,7 @@ void main() {
                   child: Text('${event.title}_custom'),
                 ),
               );
-            }
+            },
           },
         );
 
@@ -249,7 +246,7 @@ void main() {
                   ),
                   child: Text('${event.title}_custom'),
                 );
-              }
+              },
             },
             allDayEventsShowMoreBuilder: (visible, all) {
               return Text('+${all.length - visible.length}');
@@ -305,7 +302,7 @@ void main() {
                   ),
                   child: Text('${event.title}_custom'),
                 );
-              }
+              },
             },
             onAllDayEventsShowMoreTap: (visible, all) {
               visibleEvents = visible;

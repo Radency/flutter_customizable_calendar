@@ -1,12 +1,11 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockDaysViewController extends MockCubit<DaysViewState>
-    implements DaysViewController {}
+import 'days_view_controller.dart';
 
 void main() {
   MaterialApp runTestApp(Widget view) => MaterialApp(home: view);
@@ -28,13 +27,14 @@ void main() {
 
       late DaysViewController controller;
 
-      DaysViewInitial initialStateWithDate(DateTime date) => withClock(
-            Clock.fixed(date), // It's needed to mock clock.now() return value
-            DaysViewInitial.new,
-          );
-
       setUp(() {
         controller = MockDaysViewController();
+        setupDaysViewController(
+          controller: controller,
+          currentMonth: currentMonth,
+          currentMonthEnd: currentMonthEnd,
+          now: now,
+        );
       });
 
       tearDown(() async {
@@ -44,24 +44,17 @@ void main() {
       testWidgets(
         'Month picker displays current month',
         (widgetTester) async {
-          const year = 2022;
-          const month = DateTime.june;
-          final daysInMonth = DateUtils.getDaysInMonth(year, month);
           final view = DaysView(
             controller: controller,
-            saverConfig: _saverConfig(),
           );
-
-          when(() => controller.initialDate).thenReturn(DateTime(year, month));
-          when(() => controller.endDate)
-              .thenReturn(DateTime(year, month, daysInMonth));
-          when(() => controller.state)
-              .thenReturn(initialStateWithDate(DateTime(year, month, 10)));
 
           await widgetTester.pumpWidget(runTestApp(view));
 
           expect(
-            find.widgetWithText(DisplayedPeriodPicker, 'June 2022'),
+            find.widgetWithText(
+              DisplayedPeriodPicker,
+              DateFormat('MMMM yyyy').format(now),
+            ),
             findsOneWidget,
             reason: 'Month picker must display current month name and year',
           );
@@ -74,12 +67,7 @@ void main() {
         (widgetTester) async {
           final view = DaysView(
             controller: controller,
-            saverConfig: _saverConfig(),
           );
-
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
-          when(() => controller.state).thenReturn(initialStateWithDate(now));
 
           await widgetTester.pumpWidget(runTestApp(view));
 
@@ -104,16 +92,11 @@ void main() {
 
           final view = DaysView(
             controller: controller,
-            saverConfig: _saverConfig(),
             onDateLongPress: (date) {
               pressedDate = date;
               return Future.value();
             },
           );
-
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
-          when(() => controller.state).thenReturn(initialStateWithDate(now));
 
           await widgetTester.pumpWidget(runTestApp(view));
 
@@ -143,15 +126,9 @@ void main() {
           );
           final view = DaysView<FloatingCalendarEvent>(
             controller: controller,
-            saverConfig: _saverConfig(),
             onEventTap: (event) => tappedEvent = event,
             events: [event],
           );
-
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
-          when(() => controller.state)
-              .thenReturn(initialStateWithDate(event.start));
 
           await widgetTester.pumpWidget(runTestApp(view));
 
@@ -175,14 +152,8 @@ void main() {
           );
           final view = DaysView(
             controller: controller,
-            saverConfig: _saverConfig(),
             events: [event],
           );
-
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
-          when(() => controller.state)
-              .thenReturn(initialStateWithDate(event.start));
 
           await widgetTester.pumpWidget(runTestApp(view));
 
@@ -204,6 +175,49 @@ void main() {
       );
 
       testWidgets(
+        'Does not create an elevated event view on the event long press'
+        ' when onLongPress is overridden',
+        (widgetTester) async {
+          final event = SimpleEvent(
+            id: 'SimpleEvent1',
+            start: now,
+            duration: const Duration(hours: 1),
+            title: '',
+            color: Colors.black,
+          );
+          FloatingCalendarEvent? tappedEvent;
+          final view = DaysView(
+            controller: controller,
+            events: [event],
+            overrideOnEventLongPress: (
+              details,
+              event,
+            ) {
+              tappedEvent = event;
+            },
+          );
+
+          await widgetTester.pumpWidget(runTestApp(view));
+
+          final eventKey = DaysViewKeys.events[event]!;
+
+          expect(
+            find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+            findsNothing,
+          );
+
+          await widgetTester.longPress(find.byKey(eventKey));
+
+          expect(
+            find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+            findsNothing,
+          );
+          expect(tappedEvent, event);
+        },
+        skip: false,
+      );
+
+      testWidgets(
         'The elevated event rect is expanded to the layout area rect',
         (widgetTester) async {
           final event = SimpleEvent(
@@ -214,14 +228,8 @@ void main() {
           );
           final view = DaysView(
             controller: controller,
-            saverConfig: _saverConfig(),
             events: [event],
           );
-
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
-          when(() => controller.state)
-              .thenReturn(initialStateWithDate(event.start));
 
           await widgetTester.pumpWidget(runTestApp(view));
 
@@ -265,14 +273,8 @@ void main() {
           );
           final view = DaysView(
             controller: controller,
-            saverConfig: _saverConfig(),
             events: [event],
           );
-
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
-          when(() => controller.state)
-              .thenReturn(initialStateWithDate(event.start));
 
           await widgetTester.pumpWidget(runTestApp(view));
 
@@ -302,7 +304,6 @@ void main() {
         (widgetTester) async {
           final view = DaysView(
             controller: controller,
-            saverConfig: _saverConfig(),
           );
 
           when(() => controller.initialDate).thenReturn(currentMonth);
@@ -371,12 +372,9 @@ void main() {
           );
           final view = DaysView(
             controller: controller,
-            saverConfig: _saverConfig(),
             events: [oneEvent, otherEvent],
           );
 
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
           whenListen(
             controller,
             Stream<DaysViewState>.fromIterable([
@@ -424,7 +422,6 @@ void main() {
           AllDayCalendarEvent? allDayEvent;
           final view = DaysView(
             controller: controller,
-            saverConfig: _saverConfig(),
             events: [oneEvent],
             allDayEventsTheme: const AllDayEventsTheme(
               elevation: 0,
@@ -435,11 +432,6 @@ void main() {
               allDayEvent = event;
             },
           );
-
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
-          when(() => controller.state)
-              .thenReturn(initialStateWithDate(oneEvent.start));
 
           await widgetTester.pumpWidget(runTestApp(view));
 
@@ -477,7 +469,6 @@ void main() {
           final view = Material(
             child: DaysView(
               controller: controller,
-              saverConfig: _saverConfig(),
               events: [oneEvent, otherEvent],
               allDayEventsTheme: const AllDayEventsTheme(
                 elevation: 0,
@@ -490,11 +481,6 @@ void main() {
               },
             ),
           );
-
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
-          when(() => controller.state)
-              .thenReturn(initialStateWithDate(oneEvent.start));
 
           await widgetTester.pumpWidget(runTestApp(view));
 
@@ -530,12 +516,9 @@ void main() {
           );
           final view = DaysView(
             controller: controller,
-            saverConfig: _saverConfig(),
             events: [oneEvent, otherEvent],
           );
 
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
           whenListen(
             controller,
             Stream<DaysViewState>.fromIterable([
@@ -596,7 +579,6 @@ void main() {
           final view = Material(
             child: DaysView(
               controller: controller,
-              saverConfig: _saverConfig(),
               events: [oneEvent, otherEvent, otherEvent2],
               allDayEventsTheme: const AllDayEventsTheme(
                 elevation: 0,
@@ -612,11 +594,6 @@ void main() {
             ),
           );
 
-          when(() => controller.initialDate).thenReturn(currentMonth);
-          when(() => controller.endDate).thenReturn(currentMonthEnd);
-          when(() => controller.state)
-              .thenReturn(initialStateWithDate(oneEvent.start));
-
           await widgetTester.pumpWidget(runTestApp(view));
 
           expect(find.byKey(showMoreKey), findsNothing);
@@ -627,10 +604,3 @@ void main() {
     skip: false,
   );
 }
-
-SaverConfig _saverConfig() => SaverConfig(
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        child: const Icon(Icons.done),
-      ),
-    );
