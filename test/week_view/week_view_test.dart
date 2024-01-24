@@ -24,8 +24,8 @@ void main() {
       setupWeekViewController(
         controller: controller,
         now: now,
-        currentWeek: currentWeek,
-        currentWeekEnd: currentWeekEnd,
+        initialDate: currentWeek,
+        endDate: currentWeekEnd,
       );
     });
 
@@ -357,6 +357,199 @@ void main() {
 
         expect(visibleEvents, [otherEvent]);
         expect(allEvents, [otherEvent, otherEvent2]);
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'Long press on an event creates overlay entry',
+      (widgetTester) async {
+        final event = SimpleEvent(
+          id: const ValueKey('event1'),
+          title: 'Event 1',
+          start: DateTime(now.year, now.month, 5),
+          duration: const Duration(days: 1),
+          color: Colors.black,
+        );
+
+        final view = WeekView<SimpleEvent>(
+          controller: controller,
+          events: [event],
+        );
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        final eventKey = WeekViewKeys.events[event]!;
+        expect(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+          findsNothing,
+        );
+
+        await widgetTester.longPress(find.byKey(eventKey));
+        expect(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+          findsOneWidget,
+        );
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'Long press on an event creates saver',
+      (widgetTester) async {
+        final saverKey = GlobalKey();
+        final event = SimpleEvent(
+          id: const ValueKey('event1'),
+          title: 'Event 1',
+          start: DateTime(now.year, now.month, 5),
+          duration: const Duration(days: 1),
+          color: Colors.black,
+        );
+
+        final view = WeekView<SimpleEvent>(
+          controller: controller,
+          events: [event],
+          saverConfig: SaverConfig(
+            child: Container(
+              key: saverKey,
+              child: const Icon(
+                Icons.check,
+              ),
+            ),
+          ),
+        );
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        final eventKey = WeekViewKeys.events[event]!;
+        expect(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+          findsNothing,
+        );
+
+        await widgetTester.longPress(find.byKey(eventKey));
+        await widgetTester.pumpAndSettle();
+
+        final start = widgetTester.getCenter(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent).first,
+        );
+
+        final end = start + const Offset(0, 100);
+        final gesture = await widgetTester.startGesture(
+          start,
+        );
+        await widgetTester.pump();
+
+        await gesture.moveTo(
+          end,
+        );
+
+        await widgetTester.pumpAndSettle();
+
+        await gesture.up();
+
+        await widgetTester.pumpAndSettle();
+
+        expect(
+          find.byKey(saverKey),
+          findsOneWidget,
+        );
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'On click saver on an event, event is updated',
+      (widgetTester) async {
+        final saverKey = GlobalKey();
+        final event = SimpleEvent(
+          id: const ValueKey('event1'),
+          title: 'Event 1',
+          start: now,
+          duration: const Duration(hours: 3),
+          color: Colors.black,
+        );
+
+        SimpleEvent? updatedEvent;
+        final view = WeekView<SimpleEvent>(
+          controller: controller,
+          events: [event],
+          saverConfig: SaverConfig(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Container(
+                key: saverKey,
+                child: const Icon(
+                  Icons.check,
+                ),
+              ),
+            ),
+          ),
+          onEventUpdated: (event) {
+            updatedEvent = event;
+          },
+        );
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        final eventKey = WeekViewKeys.events[event]!;
+        expect(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+          findsNothing,
+        );
+
+        await widgetTester.longPress(find.byKey(eventKey));
+        await widgetTester.pumpAndSettle();
+
+        final start = widgetTester.getCenter(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent).first,
+        );
+
+        final end = start + const Offset(50, 0);
+        final gesture = await widgetTester.startGesture(
+          start,
+        );
+        await widgetTester.pump();
+
+        await gesture.moveTo(
+          end,
+        );
+
+        await widgetTester.pumpAndSettle();
+
+        await gesture.up();
+
+        await widgetTester.pumpAndSettle();
+
+        expect(
+          find.byKey(saverKey),
+          findsOneWidget,
+        );
+        await widgetTester.pumpAndSettle();
+
+        await widgetTester.tapAt(
+          widgetTester.getCenter(
+            find.byKey(saverKey),
+          ),
+        );
+        await widgetTester.pumpAndSettle();
+
+        final gesture2 = await widgetTester.startGesture(
+          start,
+        );
+        await widgetTester.pump();
+
+        await gesture2.moveTo(
+          end,
+        );
+
+        await widgetTester.pumpAndSettle();
+
+        await gesture2.up();
+
+        await widgetTester.pumpAndSettle();
+
+        expect(updatedEvent, event);
       },
       skip: false,
     );

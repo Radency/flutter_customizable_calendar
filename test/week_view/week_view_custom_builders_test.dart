@@ -26,8 +26,8 @@ void main() {
       setupWeekViewController(
         controller: controller,
         now: now,
-        currentWeek: currentWeek,
-        currentWeekEnd: currentWeekEnd,
+        initialDate: currentWeek,
+        endDate: currentWeekEnd,
       );
     });
 

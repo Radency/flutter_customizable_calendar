@@ -1,9 +1,6 @@
-import 'package:bloc_test/bloc_test.dart';
-import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 
 import 'month_view_controller.dart';
 
@@ -111,10 +108,9 @@ void main() {
       skip: false,
     );
 
-
     testWidgets(
       'Long press on an event creates overlay entry',
-          (widgetTester) async {
+      (widgetTester) async {
         final event = SimpleEvent(
           id: const ValueKey('event1'),
           title: 'Event 1',
@@ -131,7 +127,6 @@ void main() {
         await widgetTester.pumpWidget(runTestApp(view));
 
         final eventKey = MonthViewKeys.events[event]!;
-        ;
         expect(
           find.byKey(DraggableEventOverlayKeys.elevatedEvent),
           findsNothing,
@@ -148,7 +143,7 @@ void main() {
 
     testWidgets(
       'Long press on an event creates saver',
-          (widgetTester) async {
+      (widgetTester) async {
         final saverKey = GlobalKey();
         final event = SimpleEvent(
           id: const ValueKey('event1'),
@@ -174,7 +169,6 @@ void main() {
         await widgetTester.pumpWidget(runTestApp(view));
 
         final eventKey = MonthViewKeys.events[event]!;
-        ;
         expect(
           find.byKey(DraggableEventOverlayKeys.elevatedEvent),
           findsNothing,
@@ -209,8 +203,8 @@ void main() {
     );
 
     testWidgets(
-      'On click saver on an custom event, event is updated',
-          (widgetTester) async {
+      'On click saver on an event, event is updated',
+      (widgetTester) async {
         final saverKey = GlobalKey();
         final event = SimpleEvent(
           id: const ValueKey('event1'),
@@ -249,7 +243,6 @@ void main() {
         await widgetTester.pumpWidget(runTestApp(view));
 
         final eventKey = MonthViewKeys.events[event]!;
-        ;
         expect(
           find.byKey(DraggableEventOverlayKeys.elevatedEvent),
           findsNothing,
@@ -291,6 +284,5 @@ void main() {
       },
       skip: false,
     );
-
   });
 }
