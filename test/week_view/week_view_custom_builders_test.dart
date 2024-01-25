@@ -248,7 +248,7 @@ void main() {
                 );
               },
             },
-            allDayEventsShowMoreBuilder: (visible, all) {
+            allDayEventsShowMoreBuilder: (context, visible, all) {
               return Text('+${all.length - visible.length}');
             },
           ),

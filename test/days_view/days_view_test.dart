@@ -585,7 +585,7 @@ void main() {
                 margin: EdgeInsets.zero,
                 listMaxRowsVisible: 3,
               ),
-              allDayEventsShowMoreBuilder: (v, a) {
+              allDayEventsShowMoreBuilder: (context, v, a) {
                 return Container(
                   key: showMoreKey,
                   child: const Text('+'),

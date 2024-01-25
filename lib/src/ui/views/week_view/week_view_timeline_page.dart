@@ -50,6 +50,7 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
   final void Function(AllDayCalendarEvent event)? onAllDayEventTap;
 
   final Widget Function(
+    BuildContext context,
     List<AllDayCalendarEvent> visibleEvents,
     List<AllDayCalendarEvent> events,
   )? allDayEventsShowMoreBuilder;

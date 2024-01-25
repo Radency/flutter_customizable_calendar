@@ -73,6 +73,7 @@ class AllDaysEventsList extends StatefulWidget {
   )? onShowMoreTap;
 
   final Widget Function(
+    BuildContext context,
     List<AllDayCalendarEvent> visibleEvents,
     List<AllDayCalendarEvent> events,
   )? showMoreBuilder;
@@ -357,7 +358,11 @@ class _AllDaysEventsListState extends State<AllDaysEventsList> {
     }
 
     if (widget.showMoreBuilder != null) {
-      return widget.showMoreBuilder!.call(_visibleEvents, eventsToDisplay);
+      return widget.showMoreBuilder!.call(
+        context,
+        _visibleEvents,
+        eventsToDisplay,
+      );
     }
 
     return InkWell(

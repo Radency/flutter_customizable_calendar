@@ -60,102 +60,9 @@ $ flutter pub get
 
 ## Usage
 
-### Saver config
-
-The SaverConfig allows users to configure a customized appearance for the saving indicator.
-Configure the `SaverConfig` for a customized appearance:
-```dart
-  SaverConfig _saverConfig() => SaverConfig(
-        child: Container(
-            color: Colors.transparent,
-            padding: EdgeInsets.all(15),
-            child: Icon(Icons.done)),
-      );
-```
-
----
-
-### Basic views
-
-
-Display basic views with `DaysView`, `WeekView`, an `MonthView` widgets:
-
-<table>
-    <tr>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/BasicDaysView.png?raw=true" width="280" title="Basic Days view">
-            <p>Basic Days View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/BasicWeekView.png?raw=true" width="280" title="Basic Week view">
-            <p>Basic Week View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/BasicMonthView.png?raw=true" width="280" title="Basic Month view">
-            <p>Basic Month View</p>
-        </th>
-    </tr>
-</table>
-
-
-```dart
-final _daysViewController = DaysViewController(
-  initialDate: _initialDate,
-  endDate: _endDate,
-);
-  
-SaverConfig _saverConfig() => SaverConfig(
-    child: Container(
-        color: Colors.transparent,
-        padding: EdgeInsets.all(15),
-        child: Icon(Icons.done)),
-    );
-
-
-DaysView<T>(
-      saverConfig: _saverConfig(),
-      controller: _daysViewController,
-      breaks: [],
-      events: [],
-    );
-
-WeekView<T>(
-      controller: _weekViewController,
-      saverConfig: _saverConfig(),
-      breaks: [],
-      events: [],
-    );
-
-MonthView<T>(
-      controller: _monthViewController,
-      saverConfig: _saverConfig(),
-      breaks: [],
-      events: [],
-    );
-```
-
----
-
 ### Adding events dynamically
 
-<table>
-    <tr>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/DaysViewAddEventDynamically.gif?raw=true" width="250" title="Basic Days view">
-            <p>Days View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/WeekViewAddEventDynamically.gif?raw=true" width="250" title="Basic Week view">
-            <p>Week View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/MonthViewAddEventDynamically.gif?raw=true" width="250" title="Basic Month view">
-            <p>Month View</p>
-        </th>
-    </tr>
-</table>
 
-You can dynamically add events to the calendar by handling long presses on dates in the `DaysView`. 
 This code snippet showcases how to handle long presses on dates in the `DaysView` and dynamically add different types of events such as Simple Event, Task Due, and Break. The provided callback (`_onDateLongPress`) creates a bottom sheet with options,and based on the user's selection, it adds the corresponding event to the calendar.
 
 ```dart
@@ -225,6 +132,379 @@ This code snippet showcases how to handle long presses on dates in the `DaysView
 ```
 
 ---
+
+
+### Editing Events Dynamically
+
+Effortlessly edit events dynamically in the calendar by utilizing the provided callbacks for each view: `DaysView`, `WeekView`, and `MonthView`. The visual representation below illustrates the dynamic editing feature across different views:
+
+
+<table>
+    <tr>
+        <th>
+            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/dev/doc/assets/DaysViewDrag&Drop.gif?raw=true" width="250" title="Days View">
+            <p>Days View</p>
+        </th>
+        <th>
+            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/dev/doc/assets/WeekViewDrag&Drop.gif?raw=true" width="250" title="Week View">
+            <p>Week View</p>
+        </th>
+    </tr>
+</table>
+
+To enable dynamic editing, you need to utilize the provided callbacks for each view. By implementing these callbacks, you can capture events when they are updated or discarded, allowing for seamless dynamic editing within your calendar views. The following code snippets demonstrate how to integrate the event editing functionality using the `onEventUpdated` and `onDiscardChanges` callbacks:
+
+```dart
+
+// List Cubit
+void save(CalendarEvent event) {
+  if (event is Break) {
+    emit(state.copyWith(breaks: state.breaks..[event.id] = event));
+  }
+  if (event is FloatingCalendarEvent) {
+    emit(state.copyWith(events: state.events..[event.id] = event));
+  }
+}
+
+DaysView<T>(
+    //...
+    onEventUpdated: (obj) {
+      print(obj);
+      context.read<ListCubit>().save(obj);
+    },
+    onDiscardChanges: (obj) {
+      print(obj);
+    },
+  )
+
+WeekView<T>(
+    //...
+    onEventTap: print,
+    onEventUpdated: (obj) {
+      print(obj);
+      context.read<ListCubit>().save(obj);
+    },
+    onDiscardChanges: (obj) {
+      print(obj);
+    },
+  );
+
+MonthView<T>(
+    //...
+    onEventTap: print,
+    onEventUpdated: (obj) {
+      print(obj);
+      context.read<ListCubit>().save(obj);
+    },
+    onDiscardChanges: (obj) {
+      print(obj);
+    },
+  );
+```
+
+---
+
+
+### All-Day Events
+
+The package supports all-day events for `DaysView` and `WeekView`. The following code snippet demonstrates how to create an all-day event:
+
+```dart
+SimpleAllDayEvent(
+  id: 'All-day 1',
+  start: today,
+  duration: const Duration(days: 2),
+  title: 'Event 1',
+  color: Colors.redAccent.shade200,
+)
+```
+
+This events can be added to the `events` list of the `DaysView` or `WeekView`:
+
+```dart
+DaysView<T>(
+  //...
+  events: [
+    SimpleAllDayEvent(
+      id: 'All-day 1',
+      start: today,
+      duration: const Duration(days: 2),
+      title: 'Event 1',
+      color: Colors.redAccent.shade200,
+    ),
+  ],
+)
+
+WeekView<T>(
+  //...
+  events: [
+    SimpleAllDayEvent(
+      id: 'All-day 1',
+      start: today,
+      duration: const Duration(days: 2),
+      title: 'Event 1',
+      color: Colors.redAccent.shade200,
+    ),
+  ],
+)
+```
+
+Here is an example of how to customize the appearance of all-day events:
+
+
+<table>
+    <tr>
+        <th>
+            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/dev/doc/assets/DaysViewAllDayEvent.png?raw=true" width="250" title="Days View">
+            <p>Days View</p>
+        </th>
+        <th>
+            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/dev/doc/assets/WeekViewAllDayEvent.png?raw=true" width="250" title="Week View">
+            <p>Week View</p>
+        </th>
+    </tr>
+</table>
+
+
+```dart
+
+  //...
+  allDayEventsTheme: const AllDayEventsTheme(
+      listMaxRowsVisible: 2,
+      eventHeight: 32,
+      backgroundColor: Colors.white,
+      containerPadding: EdgeInsets.zero,
+      eventPadding: const EdgeInsets.symmetric(horizontal: 4.0),
+      eventMargin: EdgeInsets.zero,
+      margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+      borderRadius: 0,
+      elevation: 0,
+      alwaysShowEmptyRows: true,
+      shape: BeveledRectangleBorder(),
+      showMoreButtonTheme: AllDayEventsShowMoreButtonTheme(
+      margin: const EdgeInsets.symmetric(
+          horizontal: 4.0,
+          vertical: 2.0,
+        ),
+      padding: EdgeInsets.zero,
+      height: 24,
+      )
+  ),
+  //...
+```
+The `AllDayEventsTheme` class provides a customizable theme for rendering all-day events in a day view. This theme allows you to control various aspects of the visual appearance of the all-day events.
+
+**Properties**
+* `showMoreButtonTheme`: An instance of AllDayEventsShowMoreButtonTheme that provides customization options for the "Show More" button.
+* `listMaxRowsVisible`: Maximum number of rows to show for all-day events.
+* `eventHeight`: Height of each individual all-day event.
+* `textStyle`: Text style for the all-day events.
+* `containerPadding`: Padding for the container of all-day events.
+* `eventPadding`: Padding for each all-day event.
+* `eventMargin`: Margin for each all-day event.
+* `borderRadius`: Border radius for the all-day events.
+* `elevation`: Elevation over a day view.
+* `shape`: Shape and border of the views.
+* `margin`: Padding between the views.
+
+The `AllDayEventsShowMoreButtonTheme` class provides customization options for the "Show More" button, which is used when there are more all-day events than can be displayed.
+
+**Properties**
+* `height`: Height of the "Show More" button.
+* `textStyle`: Text style for the "Show More" button.
+* `backgroundColor`: Background color of the "Show More" button.
+* `borderRadius`: Border radius for the "Show More" button.
+* `padding`: Padding for the "Show More" button.
+* `margin`: Margin for the "Show More" button.
+
+You can also create a custom builder for `Show more` button.
+In this case, you need to handle button clicks yourself.
+
+<table>
+    <tr>
+        <th>
+            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/dev/doc/assets/DaysViewCustomSHowMoreAllDayEventsButton.png?raw=true" width="250" title="Days View">
+            <p>Days View</p>
+        </th>
+        <th>
+            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/dev/doc/assets/WeekViewCustomShowMoreAllDayEventsButton.png?raw=true" width="250" title="Week View">
+            <p>Week View</p>
+        </th>
+    </tr>
+</table>
+
+
+```dart
+
+ //...
+ allDayEventsShowMoreBuilder: (context, visible, events) {
+     return Container(
+         width: double.maxFinite,
+         decoration: BoxDecoration(
+             color: ExampleColors.black.withOpacity(0.05),
+             borderRadius: BorderRadius.circular(2),
+         ),
+         padding: const EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: 2,
+          ),
+         child: Text("show more (${events.length - visible.length})",
+         style: const TextStyle(
+             fontSize: 12,
+             fontWeight: FontWeight.w500,
+            ),
+             textAlign: TextAlign.center,
+        )
+     );
+ }
+ //...
+
+
+```
+
+
+There are two callbacks that allow you to handle all-day events: `onAllDayEventTap` and `onAllDayEventsShowMoreTap`
+
+```dart
+
+  //...
+  onAllDayEventTap: (event) {
+    //...
+  },
+  onAllDayEventsShowMoreTap: (visibleEvents, allEvents) {
+    //...
+  },
+  //...
+
+```
+
+---
+
+### Custom events
+
+The package supports custom events. To create a custom event, you need to extend the `EditableCalendarEvent` class. The following code snippet demonstrates how to create a custom event with image background:
+
+```dart
+
+class EventWithLabel extends EditableCalendarEvent {
+  EventWithLabel(
+      {required super.id,
+        required super.start,
+        required super.duration,
+        required this.title,
+        required this.label});
+
+  final String title;
+  final EventLabel label;
+
+  @override
+  EditableCalendarEvent copyWith({DateTime? start, Duration? duration}) {
+    return EventWithLabel(
+      id: id,
+      start: start ?? this.start,
+      duration: duration ?? this.duration,
+      label: label,
+      title: title,
+    );
+  }
+}
+
+
+```
+
+<table>
+    <tr>
+        <th>
+            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/dev/doc/assets/WeekViewCustomEventBuilder.png?raw=true" width="250" title="Week View">
+        </th>
+    </tr>
+</table>
+
+
+Then you just need create a custom builder for your event:
+
+```dart
+
+  //...
+  eventBuilders: {
+      EventWithLabel: (context, data) {
+          return _buildEventWithLabel(data);
+      },
+      AllDayEventWithLabel: (context, data) {
+          return _buildEventWithLabel(data, allDay: true);
+      },
+  },
+  //...
+
+
+
+  Row _buildEventWithLabel(
+      CalendarEvent data, {
+        bool allDay = false,
+      }) {
+    final event = data as EventWithLabel;
+
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          decoration: BoxDecoration(
+            color: event.label.color,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(4),
+              bottomLeft: Radius.circular(4),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: double.maxFinite,
+            decoration: BoxDecoration(
+              color: event.label.color.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(allDay ? 2 : 4),
+            ),
+            padding: EdgeInsets.all(allDay ? 2 : 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    event.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+
+
+```
+---
+
+### Custom long press actions
+
+You can override the default long-press actions for each view. The following code snippet demonstrates how to override the default long-press `overrideOnEventLongPress` callback. This can be also used if you don't need editor functionality.
+
+```dart
+
+//...
+    overrideOnEventLongPress: (details, event) {
+        print(event);
+    },
+//...
+
+```
+
 
 ### Custom Themes
 
@@ -386,197 +666,9 @@ The `DaysListItemTheme` class provides further customization options for list it
 * `weekdayStyleFocused`: Weekday text style if the item is focused.
 
 
-----
+---
 
-<table>
-    <tr>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/DaysViewTheme.png?raw=true" width="280" title="Basic Days view">
-            <p>Days View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/WeekViewTheme.png?raw=true" width="280" title="Basic Week view">
-            <p>Week View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/MonthViewTheme.png?raw=true" width="280" title="Basic Month view">
-            <p>Month View</p>
-        </th>
-    </tr>
-</table>
-
-
-```dart
-DaysView<T>(
-  saverConfig: _saverConfig(),
-  controller: _daysViewController,
-  monthPickerTheme: _periodPickerTheme,
-  daysListTheme: DaysListTheme(
-    itemTheme: DaysListItemTheme(
-      foreground: _theme.primaryColor,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: _theme.primaryColor),
-        borderRadius: BorderRadius.circular(12),
-      ),
-    ),
-  ),
-  timelineTheme: TimelineTheme(
-    padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
-    timeScaleTheme: TimeScaleTheme(
-      textStyle: _textStyle,
-      currentTimeMarkTheme: _currentTimeMarkTheme,
-    ),
-    floatingEventsTheme: _floatingEventsTheme,
-    draggableEventTheme: _draggableEventTheme,
-  ),
-  breaks: listCubit.state.breaks.values.toList(),
-  events: listCubit.state.events.values.cast<T>().toList(),
-  onDateLongPress: _onDateLongPress
-)
-
-
-WeekView<T>(
-  saverConfig: _saverConfig(),
-  controller: _weekViewController,
-  weekPickerTheme: _periodPickerTheme,
-  divider: Divider(
-    height: 2,
-    thickness: 2,
-    color: Colors.grey.withOpacity(0.33),
-  ),
-  daysRowTheme: DaysRowTheme(
-    weekdayStyle: _textStyle,
-    numberStyle: _textStyle.copyWith(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      color: _theme.primaryColor,
-    ),
-  ),
-  timelineTheme: TimelineTheme(
-    padding: const EdgeInsets.symmetric(vertical: 32),
-    timeScaleTheme: TimeScaleTheme(
-      width: 48,
-      currentTimeMarkTheme: _currentTimeMarkTheme,
-      drawHalfHourMarks: false,
-      drawQuarterHourMarks: false,
-      hourFormatter: (time) => time.hour.toString(),
-      textStyle: _textStyle,
-      marksAlign: MarksAlign.center,
-    ),
-    floatingEventsTheme: _floatingEventsTheme,
-    draggableEventTheme: _draggableEventTheme,
-  ),
-  breaks: listCubit.state.breaks.values.toList(),
-  events: listCubit.state.events.values.cast<T>().toList(),
-  onDateLongPress: _onDateLongPress
-);
-
-
-MonthView<T>(
-      saverConfig: _saverConfig(),
-      controller: _monthViewController,
-      monthPickerTheme: _periodPickerTheme,
-      divider: Divider(
-        height: 2,
-        thickness: 2,
-        color: Colors.grey.withOpacity(0.33),
-        // color: Colors.green,
-      ),
-      daysRowTheme: DaysRowTheme(
-        weekdayStyle: _textStyle,
-        numberStyle: _textStyle.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: _theme.primaryColor,
-        ),
-      ),
-      timelineTheme: TimelineTheme(
-        padding: const EdgeInsets.symmetric(vertical: 32),
-        timeScaleTheme: TimeScaleTheme(
-          width: 48,
-          currentTimeMarkTheme: _currentTimeMarkTheme,
-          drawHalfHourMarks: false,
-          drawQuarterHourMarks: false,
-          hourFormatter: (time) => time.hour.toString(),
-          textStyle: _textStyle,
-          marksAlign: MarksAlign.center,
-        ),
-        floatingEventsTheme: _floatingEventsTheme,
-        draggableEventTheme: _draggableEventTheme,
-      ),
-      monthDayTheme: MonthDayTheme(
-        currentDayNumberTextStyle: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-        // currentDayColor: Colors.grey,
-        // dayColor: Colors.white,
-        // spacingColor: Colors.orange,
-        dayNumberHeight: 23,
-        dayNumberMargin: EdgeInsets.all(3),
-        dayNumberBackgroundColor: Colors.grey.withOpacity(0.3),
-      ),
-      breaks: listCubit.state.breaks.values.toList(),
-      events: listCubit.state.events.values.cast<T>().toList(),
-      onDateLongPress: _onDateLongPress
-    );
-
-
-  TextStyle get _textStyle => TextStyle(
-    fontSize: 12,
-    color: Colors.grey.shade700,
-  );
-
-  DisplayedPeriodPickerTheme get _periodPickerTheme =>
-      DisplayedPeriodPickerTheme(
-        height: 40,
-        foregroundColor: _theme.primaryColor,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: _theme.primaryColor),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        textStyle: TextStyle(
-          color: _theme.primaryColor,
-          fontWeight: FontWeight.w600,
-          backgroundColor: Colors.transparent,
-        ),
-      );
-
-  TimeMarkTheme get _currentTimeMarkTheme => TimeMarkTheme(
-        length: 48,
-        color: _theme.colorScheme.error,
-      );
-
-  FloatingEventsTheme get _floatingEventsTheme => FloatingEventsTheme(
-        elevation: 1,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: Colors.grey.withOpacity(0.1)),
-          borderRadius: const BorderRadius.all(Radius.circular(4)),
-        ),
-        margin: const EdgeInsets.all(1),
-        // monthTheme: ViewEventTheme(
-        //   titleStyle: TextStyle(
-        //     fontSize: 10,
-        //   ),
-        // )
-      );
-
-  DraggableEventTheme get _draggableEventTheme => DraggableEventTheme(
-        elevation: 5,
-        sizerTheme: SizerTheme(
-          decoration: BoxDecoration(
-            color: _theme.colorScheme.error,
-            shape: BoxShape.circle,
-          ),
-        ),
-      );
-```
-
-These code snippets provide examples of how to customize the appearance of each view by adjusting themes `DaysListTheme`, `TimelineTheme`, `DaysRowTheme`, `MonthDayTheme`, `DraggableEventTheme`, `FloatingEventsTheme`, `TimeMarkTheme`, and `DisplayedPeriodPickerTheme`. Feel free to experiment with these themes to achieve the desired visual style for your calendar.
-
-----
-
-Instead of themes, you can also use the corresponding builders for each individual component. 
+Instead of themes, you can also use the corresponding builders for each individual component.
 
 Custom constructor for a list of days for **DaysView**
 ```dart
@@ -668,384 +760,20 @@ Custom month picker builder for **MonthView**
 
 ---
 
-### Editing Events Dynamically
 
-Effortlessly edit events dynamically in the calendar by utilizing the provided callbacks for each view: `DaysView`, `WeekView`, and `MonthView`. The visual representation below illustrates the dynamic editing feature across different views:
+### Saver config
 
-
-<table>
-    <tr>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/DaysViewEditEvent.gif?raw=true" width="250" title="Basic Days view">
-            <p>Days View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/WeekViewEditEvent.gif?raw=true" width="250" title="Basic Week view">
-            <p>Week View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/MonthViewEditEvent.gif?raw=true" width="250" title="Basic Month view">
-            <p>Month View</p>
-        </th>
-    </tr>
-</table>
-
-To enable dynamic editing, you need to utilize the provided callbacks for each view. By implementing these callbacks, you can capture events when they are updated or discarded, allowing for seamless dynamic editing within your calendar views. The following code snippets demonstrate how to integrate the event editing functionality using the `onEventUpdated` and `onDiscardChanges` callbacks:
-
+The SaverConfig allows users to configure a customized appearance for the saving indicator.
+Configure the `SaverConfig` for a customized appearance:
 ```dart
-
-// List Cubit
-void save(CalendarEvent event) {
-  if (event is Break) {
-    emit(state.copyWith(breaks: state.breaks..[event.id] = event));
-  }
-  if (event is FloatingCalendarEvent) {
-    emit(state.copyWith(events: state.events..[event.id] = event));
-  }
-}
-
-DaysView<T>(
-    //...
-    onEventUpdated: (obj) {
-      print(obj);
-      context.read<ListCubit>().save(obj);
-    },
-    onDiscardChanges: (obj) {
-      print(obj);
-    },
-  )
-
-WeekView<T>(
-    //...
-    onEventTap: print,
-    onEventUpdated: (obj) {
-      print(obj);
-      context.read<ListCubit>().save(obj);
-    },
-    onDiscardChanges: (obj) {
-      print(obj);
-    },
-  );
-
-MonthView<T>(
-    //...
-    onEventTap: print,
-    onEventUpdated: (obj) {
-      print(obj);
-      context.read<ListCubit>().save(obj);
-    },
-    onDiscardChanges: (obj) {
-      print(obj);
-    },
-  );
-```
-
----
-
-
-### All-Day Events
-
-The package supports all-day events for `DaysView` and `WeekView`. The following code snippet demonstrates how to create an all-day event:
-
-```dart
-SimpleAllDayEvent(
-  id: 'All-day 1',
-  start: today,
-  duration: const Duration(days: 2),
-  title: 'Event 1',
-  color: Colors.redAccent.shade200,
-)
-```
-
-This events can be added to the `events` list of the `DaysView` or `WeekView`:
-
-<table>
-    <tr>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/DaysViewAllDayEventExample.png?raw=true" width="250" title="Days View">
-            <p>Days View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/WeekViewAllDayEventExample.png?raw=true" width="250" title="Week View">
-            <p>Week View</p>
-        </th>
-    </tr>
-    <tr>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/DaysViewAddAllDayEvents.gif?raw=true" width="250" title="Days View">
-            <p>Days View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/WeekViewAddAllDayEvents.gif?raw=true" width="250" title="Week View">
-            <p>Week View</p>
-        </th>
-    </tr>
-</table>
-
-```dart
-DaysView<T>(
-  //...
-  events: [
-    SimpleAllDayEvent(
-      id: 'All-day 1',
-      start: today,
-      duration: const Duration(days: 2),
-      title: 'Event 1',
-      color: Colors.redAccent.shade200,
-    ),
-  ],
-)
-
-WeekView<T>(
-  //...
-  events: [
-    SimpleAllDayEvent(
-      id: 'All-day 1',
-      start: today,
-      duration: const Duration(days: 2),
-      title: 'Event 1',
-      color: Colors.redAccent.shade200,
-    ),
-  ],
-)
-```
-
-Here is an example of how to customize the appearance of all-day events:
-
-
-<table>
-    <tr>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/DaysViewAllDayEventTheme.png?raw=true" width="250" title="Days View">
-            <p>Days View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/WeekViewAllDayEventTheme.png?raw=true" width="250" title="Week View">
-            <p>Week View</p>
-        </th>
-    </tr>
-</table>
-
-
-```dart
-
-  //...
-    allDayEventsTheme: AllDayEventsTheme(
-        listMaxRowsVisible: 1,
-        eventMargin: const EdgeInsets.all(2),
-        eventPadding: const EdgeInsets.all(2),
-        borderRadius: 8,
-        containerPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 4),
-        eventHeight: 32,
-        textStyle: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: _theme.secondaryHeaderColor,
-        ),
-    ),
-  //...
-```
-The `AllDayEventsTheme` class provides a customizable theme for rendering all-day events in a day view. This theme allows you to control various aspects of the visual appearance of the all-day events.
-
-**Properties**
-* `showMoreButtonTheme`: An instance of AllDayEventsShowMoreButtonTheme that provides customization options for the "Show More" button.
-* `listMaxRowsVisible`: Maximum number of rows to show for all-day events.
-* `eventHeight`: Height of each individual all-day event.
-* `textStyle`: Text style for the all-day events.
-* `containerPadding`: Padding for the container of all-day events.
-* `eventPadding`: Padding for each all-day event.
-* `eventMargin`: Margin for each all-day event.
-* `borderRadius`: Border radius for the all-day events.
-* `elevation`: Elevation over a day view.
-* `shape`: Shape and border of the views.
-* `margin`: Padding between the views.
-
-The `AllDayEventsShowMoreButtonTheme` class provides customization options for the "Show More" button, which is used when there are more all-day events than can be displayed.
-
-**Properties**
-* `height`: Height of the "Show More" button.
-* `textStyle`: Text style for the "Show More" button.
-* `backgroundColor`: Background color of the "Show More" button.
-* `borderRadius`: Border radius for the "Show More" button.
-* `padding`: Padding for the "Show More" button.
-* `margin`: Margin for the "Show More" button.
-
-You can also create a custom builder for `Show more` button.
-In this case, you need to handle button clicks yourself.
-
-<table>
-    <tr>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/DaysViewCustomAllDayEventShowMoreButton.png?raw=true" width="250" title="Days View">
-            <p>Days View</p>
-        </th>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/WeekViewCustomAllDayEventShowMoreButton.png?raw=true" width="250" title="Week View">
-            <p>Week View</p>
-        </th>
-    </tr>
-</table>
-
-
-```dart
-
- //...
-  allDayEventsShowMoreBuilder: _getCustomAllDayEventsShowMoreBuilder,
- //...
-
-  Widget _getCustomAllDayEventsShowMoreBuilder(visibleEvents, events) =>
-      GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => EventsListPage(
-                    events: events,
-                    day: events.first.start,
-                  )));
-        },
+  SaverConfig _saverConfig() => SaverConfig(
         child: Container(
-          margin: const EdgeInsets.all(4),
-          padding: const EdgeInsets.all(4),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            'Show more (${events.length - visibleEvents.length})',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: _theme.primaryColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
+            color: Colors.transparent,
+            padding: EdgeInsets.all(15),
+            child: Icon(Icons.done)),
       );
-
-
-```
-
-
-There are two callbacks that allow you to handle all-day events: `onAllDayEventTap` and `onAllDayEventsShowMoreTap`
-
-```dart
-
-  //...
-  onAllDayEventTap: (event) {
-    //...
-  },
-  onAllDayEventsShowMoreTap: (visibleEvents, allEvents) {
-    //...
-  },
-  //...
-
 ```
 
 ---
-
-### Custom events
-
-The package supports custom events. To create a custom event, you need to extend the `EditableCalendarEvent` class. The following code snippet demonstrates how to create a custom event with image background:
-
-```dart
-
-class ImageCalendarEvent extends EditableCalendarEvent {
-  ImageCalendarEvent(
-      {required super.id,
-      required super.start,
-      required super.duration,
-      required super.color,
-      required this.title,
-      required this.imgAsset});
-
-  final String title;
-  final String imgAsset;
-
-  @override
-  EditableCalendarEvent copyWith({DateTime? start, Duration? duration}) {
-    return ImageCalendarEvent(
-        id: id,
-        start: start ?? this.start,
-        duration: duration ?? this.duration,
-        color: color,
-        title: title,
-        imgAsset: imgAsset);
-  }
-}
-
-```
-
-Then you just need create a custom builder for your event:
-
-<table>
-    <tr>
-        <th>
-            <img src="https://github.com/Radency/flutter_customizable_calendar/blob/main/doc/assets/DaysViewCustomImageCalendarEvent.png?raw=true" width="250" title="Days View">
-            <p>Days View</p>
-        </th>
-    </tr>
-</table>
-
-```dart
-
-  //...
-  eventBuilders: _getEventBuilders(),
-  //...
-  
-  Map<Type, EventBuilder<CalendarEvent>> _getEventBuilders() {
-    return {
-      ImageCalendarEvent: <CustomEvent>(context, event) => Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          image: DecorationImage(
-            image: AssetImage(event.imgAsset),
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
-          ),
-        ),
-        child: Container(
-          color: Colors.black.withOpacity(0.1),
-          padding: const EdgeInsets.all(4),
-          child: Text(
-            event.title,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              shadows: [
-                Shadow(
-                  color: Colors.black,
-                  blurRadius: 8,
-                ),
-                Shadow(
-                  color: Colors.black45,
-                  blurRadius: 16,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    };
-  }
-
-  //...
-
-```
----
-
-### Custom long press actions
-
-You can override the default long-press actions for each view. The following code snippet demonstrates how to override the default long-press `overrideOnEventLongPress` callback. This can be also used if you don't need editor functionality.
-
-```dart
-
-//...
-    overrideOnEventLongPress: (details, event) {
-        print(event);
-    },
-//...
-
-```
-
 
 [See the complete example](https://github.com/Radency/flutter_customizable_calendar/blob/main/example/lib/main.dart).

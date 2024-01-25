@@ -64,7 +64,7 @@ class _WeekViewPageState extends State<WeekViewPage> {
                     //   print(event);
                     // },
                     allDayEventsTheme: const AllDayEventsTheme(
-                        listMaxRowsVisible: 2,
+                        listMaxRowsVisible: 1,
                         eventHeight: 32,
                         backgroundColor: Colors.white,
                         containerPadding: EdgeInsets.zero,
@@ -85,6 +85,27 @@ class _WeekViewPageState extends State<WeekViewPage> {
                           padding: EdgeInsets.zero,
                           height: 24,
                         )),
+                    allDayEventsShowMoreBuilder: (context, visible, events) {
+                      return Container(
+                        width: double.maxFinite,
+                        decoration: BoxDecoration(
+                          color: ExampleColors.black.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        child: Text(
+                          "show more (${events.length - visible.length})",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    },
                     weekPickerBuilder: _buildWeekPicker,
                     dayRowBuilder: _dayRowBuilder,
                     timelineTheme: TimelineTheme(

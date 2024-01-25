@@ -488,7 +488,11 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     );
   }
 
-  Widget _getCustomAllDayEventsShowMoreBuilder(visibleEvents, events) =>
+  Widget _getCustomAllDayEventsShowMoreBuilder(
+    BuildContext context,
+    List<CalendarEvent> visibleEvents,
+    List<CalendarEvent> events,
+  ) =>
       GestureDetector(
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(

@@ -224,7 +224,7 @@ void main() {
             allDayEventsTheme: const AllDayEventsTheme(
               listMaxRowsVisible: 1,
             ),
-            allDayEventsShowMoreBuilder: (visible, all) {
+            allDayEventsShowMoreBuilder: (context, visible, all) {
               return Text('+${all.length - visible.length}');
             },
           ),

@@ -104,6 +104,7 @@ class DaysView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Builder for all day events show more button
   final Widget Function(
+    BuildContext context,
     List<AllDayCalendarEvent> visibleEvents,
     List<AllDayCalendarEvent> events,
   )? allDayEventsShowMoreBuilder;
