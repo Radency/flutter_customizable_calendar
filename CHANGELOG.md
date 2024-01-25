@@ -54,5 +54,12 @@
 
 ## 0.3.1
 
-  - Fixed 
-    * Incorrect autoscroll behavior in MonthView and WeekView.
+- Fixed 
+  * Incorrect autoscroll behavior in MonthView and WeekView.
+
+## 0.3.2
+
+- Improved Test Code Coverage
+- Fixed:
+  * Custom event builders did not work for all-day events.
+  * Added `BuildContext` in some builder methods where it was missing.
