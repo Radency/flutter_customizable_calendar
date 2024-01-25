@@ -1,4 +1,5 @@
 import 'package:example/colors.dart';
+import 'package:example/common/event_with_label/all_day_event_with_label.dart';
 import 'package:example/common/event_with_label/event_label.dart';
 import 'package:example/common/event_with_label/event_with_label.dart';
 import 'package:example/common/event_with_label/events_with_label_cubit.dart';
@@ -62,89 +63,52 @@ class _WeekViewPageState extends State<WeekViewPage> {
                     // overrideOnEventLongPress: (details, event) {
                     //   print(event);
                     // },
-                    weekPickerBuilder: (context, events, range) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                onPressed: () {
-                                  _controller.prev();
-                                },
-                                icon: Icon(Icons.chevron_left),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  showDatePicker(
-                                    context: context,
-                                    initialDate: range.start,
-                                    firstDate: DateTime(1970),
-                                    lastDate: DateTime(2100),
-                                  ).then((value) {
-                                    if (value != null) {
-                                      _controller.setDisplayedDate(value);
-                                    }
-                                  });
-                                },
-                                child: Text(
-                                  DateFormat.yMMMM().format(range.start),
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  _controller.next();
-                                },
-                                icon: Icon(Icons.chevron_right),
-                              ),
-                            ],
-                          )
-                        ],
-                      );
-                    },
-                    dayRowBuilder: (context, day, events) {
-                      return Column(children: [
-                        Text(
-                          DateFormat.EEEE().format(day).substring(0, 3),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: ExampleColors.black.withOpacity(0.5),
+                    enableFloatingEvents: false,
+                    allDayEventsTheme: const AllDayEventsTheme(
+                        listMaxRowsVisible: 1,
+                        eventHeight: 32,
+                        backgroundColor: Colors.white,
+                        containerPadding: EdgeInsets.zero,
+                        eventPadding:
+                            const EdgeInsets.symmetric(horizontal: 4.0),
+                        eventMargin: EdgeInsets.zero,
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 4.0, vertical: 2.0),
+                        borderRadius: 0,
+                        elevation: 0,
+                        alwaysShowEmptyRows: true,
+                        shape: BeveledRectangleBorder(),
+                        showMoreButtonTheme: AllDayEventsShowMoreButtonTheme(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 4.0,
+                            vertical: 2.0,
                           ),
+                          padding: EdgeInsets.zero,
+                          height: 24,
+                        )),
+                    allDayEventsShowMoreBuilder: (context, visible, events) {
+                      return Container(
+                        width: double.maxFinite,
+                        decoration: BoxDecoration(
+                          color: ExampleColors.black.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                        Text(
-                          DateFormat.d().format(day),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        child: Text(
+                          "show more (${events.length - visible.length})",
                           style: const TextStyle(
-                            fontSize: 20,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(
-                          height: 8,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Container(
-                            width: double.maxFinite,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: DateUtils.isSameDay(DateTime.now(), day)
-                                  ? ExampleColors.swatch24()
-                                  : ExampleColors.black.withOpacity(0.05),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(4),
-                                topRight: Radius.circular(4),
-                              ),
-                            ),
-                          ),
-                        )
-                      ]);
+                      );
                     },
+                    weekPickerBuilder: _buildWeekPicker,
+                    dayRowBuilder: _dayRowBuilder,
                     timelineTheme: TimelineTheme(
                       timeScaleTheme: TimeScaleTheme(
                         textStyle: const TextStyle(
@@ -169,49 +133,7 @@ class _WeekViewPageState extends State<WeekViewPage> {
                         },
                       ),
                     ),
-                    eventBuilders: {
-                      EventWithLabel: (context, data) {
-                        final event = data as EventWithLabel;
-
-                        return Row(
-                          children: [
-                            Container(
-                              width: 4,
-                              decoration: BoxDecoration(
-                                color: event.label.color,
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(4),
-                                  bottomLeft: Radius.circular(4),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                height: double.maxFinite,
-                                decoration: BoxDecoration(
-                                  color: event.label.color.withOpacity(0.25),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                padding: const EdgeInsets.all(8),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      event.title,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-                    },
+                    eventBuilders: _getEventBuilders(),
                   );
                 },
               )),
@@ -219,6 +141,150 @@ class _WeekViewPageState extends State<WeekViewPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Map<Type, EventBuilder<CalendarEvent>> _getEventBuilders() {
+    return {
+      EventWithLabel: (context, data) {
+        return _buildEventWithLabel(data);
+      },
+      AllDayEventWithLabel: (context, data) {
+        return _buildEventWithLabel(data, allDay: true);
+      },
+    };
+  }
+
+  Row _buildEventWithLabel(
+    CalendarEvent data, {
+    bool allDay = false,
+  }) {
+    final event = data as EventWithLabel;
+
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          decoration: BoxDecoration(
+            color: event.label.color,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(4),
+              bottomLeft: Radius.circular(4),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: double.maxFinite,
+            decoration: BoxDecoration(
+              color: event.label.color.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(allDay ? 2 : 4),
+            ),
+            padding: EdgeInsets.all(allDay ? 2 : 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    event.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _dayRowBuilder(context, day, events) {
+    return Column(children: [
+      Text(
+        DateFormat.EEEE().format(day).substring(0, 3),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: ExampleColors.black.withOpacity(0.5),
+        ),
+      ),
+      Text(
+        DateFormat.d().format(day),
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      const SizedBox(
+        height: 8,
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: Container(
+          width: double.maxFinite,
+          height: 6,
+          decoration: BoxDecoration(
+            color: DateUtils.isSameDay(DateTime.now(), day)
+                ? ExampleColors.swatch24()
+                : ExampleColors.black.withOpacity(0.05),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ),
+      )
+    ]);
+  }
+
+  Widget _buildWeekPicker(context, events, range) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: () {
+                _controller.prev();
+              },
+              icon: Icon(Icons.chevron_left),
+            ),
+            GestureDetector(
+              onTap: () {
+                showDatePicker(
+                  context: context,
+                  initialDate: range.start,
+                  firstDate: DateTime(1970),
+                  lastDate: DateTime(2100),
+                ).then((value) {
+                  if (value != null) {
+                    _controller.setDisplayedDate(value);
+                  }
+                });
+              },
+              child: Text(
+                DateFormat.yMMMM().format(range.start),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                _controller.next();
+              },
+              icon: Icon(Icons.chevron_right),
+            ),
+          ],
+        )
+      ],
     );
   }
 }

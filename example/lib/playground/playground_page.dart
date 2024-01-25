@@ -382,7 +382,13 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
           }
         },
         monthPickerTheme: _periodPickerTheme,
-        monthPickerBuilder: (nextMonth, prevMonth, toTime, currentTime) {
+        monthPickerBuilder: (
+          context,
+          nextMonth,
+          prevMonth,
+          toTime,
+          currentTime,
+        ) {
           return Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -482,7 +488,11 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
     );
   }
 
-  Widget _getCustomAllDayEventsShowMoreBuilder(visibleEvents, events) =>
+  Widget _getCustomAllDayEventsShowMoreBuilder(
+    BuildContext context,
+    List<CalendarEvent> visibleEvents,
+    List<CalendarEvent> events,
+  ) =>
       GestureDetector(
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(

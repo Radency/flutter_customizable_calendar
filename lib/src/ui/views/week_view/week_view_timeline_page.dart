@@ -50,6 +50,7 @@ class WeekViewTimelinePage<T extends FloatingCalendarEvent>
   final void Function(AllDayCalendarEvent event)? onAllDayEventTap;
 
   final Widget Function(
+    BuildContext context,
     List<AllDayCalendarEvent> visibleEvents,
     List<AllDayCalendarEvent> events,
   )? allDayEventsShowMoreBuilder;
@@ -151,8 +152,8 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
               final weekDays = _getWeekDays(pageIndex);
               return Column(
                 children: [
-                  _buildAllDayEventsList(weekDays),
                   _daysRow(weekDays),
+                  _buildAllDayEventsList(weekDays, timeScaleWidth),
                 ],
               );
             },
@@ -170,7 +171,7 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
                 child: Column(
                   children: [
                     _daysRow(weekDays),
-                    _buildAllDayEventsList(weekDays),
+                    _buildAllDayEventsList(weekDays, timeScaleWidth),
                   ],
                 ),
               ),
@@ -282,11 +283,16 @@ class _WeekViewTimelinePageState<T extends FloatingCalendarEvent>
     );
   }
 
-  AllDaysEventsList _buildAllDayEventsList(List<DateTime> weekDays) {
+  AllDaysEventsList _buildAllDayEventsList(
+    List<DateTime> weekDays,
+    double timeScaleWidth,
+  ) {
     return AllDaysEventsList(
       eventKeys: widget.eventKeys,
-      width: widget.constraints.maxWidth,
+      eventBuilders: widget.eventBuilders,
+      width: widget.constraints.maxWidth - timeScaleWidth,
       theme: widget.allDayEventsTheme,
+      visibleDays: widget.controller.visibleDays,
       weekRange: DateTimeRange(
         start: weekDays.first,
         end: weekDays.last,

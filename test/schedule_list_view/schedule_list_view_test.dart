@@ -1,6 +1,4 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:clock/clock.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
@@ -8,16 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockScheduleLisViewController
-    extends MockCubit<ScheduleListViewControllerState>
-    implements ScheduleListViewController {}
+import 'schedule_list_view_controller.dart';
 
 void main() {
   group(
     'ScheduleListView tests',
     () {
       final now = DateTime(2024, DateTime.january, 11, 9, 30);
-      final mockClock = Clock.fixed(now);
       final currentMonth = DateTime(now.year, now.month);
       final prevMonth = DateUtils.addMonthsToMonthDate(currentMonth, -1);
       final nextMonth = DateUtils.addMonthsToMonthDate(currentMonth, 1);
@@ -26,95 +21,16 @@ void main() {
         DateUtils.getDaysInMonth(nextMonth.year, nextMonth.month),
       );
 
-      ScheduleListViewControllerInitial initial() =>
-          withClock(mockClock, ScheduleListViewControllerInitial.new);
-
       late ScheduleListViewController controller;
 
       setUp(() {
         controller = MockScheduleLisViewController();
-
-        when(
-          () => controller.initialDate,
-        ).thenReturn(
-          prevMonth,
+        setupScheduleListViewController(
+          controller: controller,
+          now: now,
+          nextMonthEnd: nextMonthEnd,
+          prevMonth: prevMonth,
         );
-        when(
-          () => controller.endDate,
-        ).thenReturn(nextMonthEnd);
-
-        when(
-          () => controller.state,
-        ).thenReturn(
-          initial(),
-        );
-        when(
-          () => controller.grouped,
-        ).thenReturn(
-          Map.fromEntries(
-            DateTimeRange(
-              start: prevMonth,
-              end: nextMonthEnd,
-            ).days.map(
-                  (e) => MapEntry(e, <CalendarEvent>[]),
-                ),
-          ),
-        );
-
-        when(
-          () => controller.animateToGroupIndex(
-            events: any(named: 'events'),
-            ignoreEmpty: any(named: 'ignoreEmpty'),
-          ),
-        ).thenAnswer((a) {
-          final events = a.namedArguments[const Symbol('events')]
-              as Map<DateTime, List<CalendarEvent>>;
-          final ignoreEmpty =
-              a.namedArguments[const Symbol('ignoreEmpty')] as bool;
-
-          final entries = events.entries;
-          late final List<DateTime> keys;
-
-          if (ignoreEmpty) {
-            keys = entries
-                .where((e) => e.value.isNotEmpty)
-                .map((e) => e.key)
-                .toList();
-          } else {
-            keys = entries.map((e) => e.key).toList();
-          }
-
-          late final DateTime targetDate;
-          final state = controller.state;
-
-          if (state is ScheduleListViewControllerCurrentDateIsSet) {
-            final animateTo = state.animateTo;
-            targetDate = DateTime(
-              animateTo.year,
-              animateTo.month,
-              animateTo.day,
-            );
-          } else {
-            targetDate = DateTime(
-              state.displayedDate.year,
-              state.displayedDate.month,
-              state.displayedDate.day,
-            );
-          }
-
-          final index = keys.indexOf(targetDate);
-          if (index != -1) {
-            return index;
-          }
-
-          // return closest target date or closes
-          final closest = keys.sorted((a, b) {
-            final aDiff = a.difference(targetDate).abs();
-            final bDiff = b.difference(targetDate).abs();
-            return aDiff.compareTo(bDiff);
-          });
-          return keys.indexOf(closest.first);
-        });
       });
 
       tearDown(() async {

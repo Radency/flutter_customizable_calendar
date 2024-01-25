@@ -43,6 +43,7 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
     this.onDropped,
     this.onChanged,
     this.onDateLongPress,
+    this.enableFloatingEvents = true,
   });
 
   /// Event builders
@@ -102,6 +103,9 @@ class DraggableEventOverlay<T extends FloatingCalendarEvent>
 
   /// Scrollable view which needs to be wrapped
   final Widget child;
+
+  /// Enable floating events
+  final bool enableFloatingEvents;
 
   @override
   State<DraggableEventOverlay<T>> createState() =>
@@ -251,6 +255,10 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       if (mounted) {
         setState(() {});
       }
+    }
+
+    if (!widget.enableFloatingEvents) {
+      _saveAndFinish();
     }
   }
 
@@ -637,22 +645,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
               if (_edited)
                 Saver(
                   alignment: widget.saverConfig.alignment,
-                  onPressed: () {
-                    _beforeEventUpdate().then((value) {
-                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                        widget.onChanged?.call(widget.event.value!);
-                        // _dropEvent(widget.event.value!);
-                        _edited = false;
-                        _removeEntries();
-                        widget.event.value = null;
-                        _resizing = false;
-                        _dragging = false;
-                        if (mounted) {
-                          setState(() {});
-                        }
-                      });
-                    });
-                  },
+                  onPressed: _saveAndFinish,
                   child: widget.saverConfig.child,
                 ),
             ],
@@ -660,6 +653,23 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
         ),
       ),
     );
+  }
+
+  void _saveAndFinish() {
+    _beforeEventUpdate().then((value) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        widget.onChanged?.call(widget.event.value!);
+        // _dropEvent(widget.event.value!);
+        _edited = false;
+        _removeEntries();
+        widget.event.value = null;
+        _resizing = false;
+        _dragging = false;
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    });
   }
 
   @override

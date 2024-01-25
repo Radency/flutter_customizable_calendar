@@ -10,10 +10,10 @@ class EventsWithLabelInitialized extends EventsWithLabelState {
     required this.events,
   });
 
-  final List<EventWithLabel> events;
+  final List<FloatingCalendarEvent> events;
 
   EventsWithLabelInitialized copyWith({
-    List<EventWithLabel>? events,
+    List<FloatingCalendarEvent>? events,
   }) {
     return EventsWithLabelInitialized(
       events: events ?? this.events,

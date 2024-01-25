@@ -1,12 +1,8 @@
-import 'package:bloc_test/bloc_test.dart';
-import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 
-class MockMonthViewController extends MockCubit<MonthViewState>
-    implements MonthViewController {}
+import 'month_view_controller.dart';
 
 void main() {
   MaterialApp runTestApp(Widget view) => MaterialApp(
@@ -23,13 +19,14 @@ void main() {
 
     late MonthViewController controller;
 
-    MonthViewInitial initialStateWithDate(DateTime date) => withClock(
-          Clock.fixed(date), // It's needed to mock clock.now() return value
-          MonthViewInitial.new,
-        );
-
     setUp(() {
       controller = MockMonthViewController();
+      setupMonthViewController(
+        controller: controller,
+        now: now,
+        currentMonth: currentMonth,
+        currentMonthEnd: currentMonthEnd,
+      );
     });
 
     tearDown(() {
@@ -39,20 +36,9 @@ void main() {
     testWidgets(
       'Month picker displays current month',
       (widgetTester) async {
-        const year = 2024;
-        const month = DateTime.january;
-        final daysInMonth = DateUtils.getDaysInMonth(year, month);
         final view = MonthView(
           controller: controller,
-          saverConfig: _saverConfig(),
         );
-
-        when(() => controller.initialDate).thenReturn(DateTime(year));
-        when(() => controller.endDate)
-            .thenReturn(DateTime(year, month, daysInMonth));
-        when(() => controller.state)
-            .thenReturn(initialStateWithDate(DateTime(year, month, 10)));
-
         await widgetTester.pumpWidget(runTestApp(view));
 
         expect(
@@ -71,16 +57,11 @@ void main() {
 
         final view = MonthView(
           controller: controller,
-          saverConfig: _saverConfig(),
           onDateLongPress: (date) {
             pressedDate = date;
             return Future.value();
           },
         );
-
-        when(() => controller.initialDate).thenReturn(currentMonth);
-        when(() => controller.endDate).thenReturn(currentMonthEnd);
-        when(() => controller.state).thenReturn(initialStateWithDate(now));
 
         await widgetTester.pumpWidget(runTestApp(view));
 
@@ -109,16 +90,11 @@ void main() {
 
         final view = MonthView<SimpleEvent>(
           controller: controller,
-          saverConfig: _saverConfig(),
           events: [event],
           onEventTap: (event) {
             tappedEvent = event;
           },
         );
-
-        when(() => controller.initialDate).thenReturn(currentMonth);
-        when(() => controller.endDate).thenReturn(currentMonthEnd);
-        when(() => controller.state).thenReturn(initialStateWithDate(now));
 
         await widgetTester.pumpWidget(runTestApp(view));
 
@@ -132,80 +108,181 @@ void main() {
       skip: false,
     );
 
-    // testWidgets(
-    //   'On event changed date',
-    //   (widgetTester) async {
-    //     FloatingCalendarEvent? updatedEvent;
-    //
-    //     final event = SimpleEvent(
-    //       id: const ValueKey('event1'),
-    //       title: 'Event 1',
-    //       start: DateTime(now.year, now.month, 5),
-    //       duration: const Duration(days: 1),
-    //     );
-    //
-    //     final view = MonthView<SimpleEvent>(
-    //       controller: controller,
-    //       saverConfig: _saverConfig(),
-    //       events: [event],
-    //       breaks: [],
-    //       onEventTap: (e) {
-    //         print(e);
-    //       },
-    //       onEventUpdated: (event) {
-    //         updatedEvent = event;
-    //       },
-    //     );
-    //
-    //     when(() => controller.initialDate).thenReturn(currentMonth);
-    //     when(() => controller.endDate).thenReturn(currentMonthEnd);
-    //     when(() => controller.state).thenReturn(initialStateWithDate(now));
-    //
-    //     await widgetTester.pumpWidget(runTestApp(view));
-    //
-    //     final eventWidget = find.byKey(MonthViewKeys.events[event]!);
-    //
-    //     print("from");
-    //     final from = widgetTester.getCenter(eventWidget);
-    //     print(from);
-    //     print("to");
-    //     final to = widgetTester.getCenter(find.text("19"));
-    //     print(to);
-    //
-    //     await widgetTester.longPressAt(from, pointer: 7);
-    //     await widgetTester.pump();
-    //     await widgetTester.pump(const Duration(seconds: 1));
-    //
-    //     final gesture = await widgetTester.startGesture(from, pointer: 7);
-    //     await widgetTester.pump();
-    //     await widgetTester.pump(const Duration(seconds: 1));
-    //
-    //     await gesture.moveTo(to);
-    //     await widgetTester.pump();
-    //     await widgetTester.pump(const Duration(seconds: 1));
-    //
-    //     await gesture.up();
-    //     await widgetTester.pump();
-    //     await widgetTester.pump(const Duration(seconds: 1));
-    //
-    //     print("after");
-    //     print(widgetTester.getCenter(eventWidget));
-    //
-    //     final saverWidget = find.byKey(const ValueKey("saver"));
-    //
-    //     await widgetTester.tapAt(widgetTester.getCenter(saverWidget));
-    //
-    //     expect(updatedEvent, event);
-    //   },
-    //   skip: false,
-    // );
+    testWidgets(
+      'Long press on an event creates overlay entry',
+      (widgetTester) async {
+        final event = SimpleEvent(
+          id: const ValueKey('event1'),
+          title: 'Event 1',
+          start: DateTime(now.year, now.month, 5),
+          duration: const Duration(days: 1),
+          color: Colors.black,
+        );
+
+        final view = MonthView<SimpleEvent>(
+          controller: controller,
+          events: [event],
+        );
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        final eventKey = MonthViewKeys.events[event]!;
+        expect(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+          findsNothing,
+        );
+
+        await widgetTester.longPress(find.byKey(eventKey));
+        expect(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+          findsOneWidget,
+        );
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'Long press on an event creates saver',
+      (widgetTester) async {
+        final saverKey = GlobalKey();
+        final event = SimpleEvent(
+          id: const ValueKey('event1'),
+          title: 'Event 1',
+          start: DateTime(now.year, now.month, 5),
+          duration: const Duration(days: 1),
+          color: Colors.black,
+        );
+
+        final view = MonthView<SimpleEvent>(
+          controller: controller,
+          events: [event],
+          saverConfig: SaverConfig(
+            child: Container(
+              key: saverKey,
+              child: const Icon(
+                Icons.check,
+              ),
+            ),
+          ),
+        );
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        final eventKey = MonthViewKeys.events[event]!;
+        expect(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+          findsNothing,
+        );
+
+        await widgetTester.longPress(find.byKey(eventKey));
+        await widgetTester.pumpAndSettle();
+
+        final gesture = await widgetTester.startGesture(
+          widgetTester.getCenter(
+            find.byKey(DraggableEventOverlayKeys.elevatedEvent).first,
+          ),
+        );
+        await widgetTester.pump();
+
+        await gesture.moveTo(
+          widgetTester.getCenter(find.text('19')),
+        );
+
+        await widgetTester.pumpAndSettle();
+
+        await gesture.up();
+
+        await widgetTester.pumpAndSettle();
+
+        expect(
+          find.byKey(saverKey),
+          findsOneWidget,
+        );
+      },
+      skip: false,
+    );
+
+    testWidgets(
+      'On click saver on an event, event is updated',
+      (widgetTester) async {
+        final saverKey = GlobalKey();
+        final event = SimpleEvent(
+          id: const ValueKey('event1'),
+          title: 'Event 1',
+          start: DateTime(now.year, now.month, 5),
+          duration: const Duration(days: 1),
+          color: Colors.black,
+        );
+
+        SimpleEvent? updatedEvent;
+        final view = MonthView<SimpleEvent>(
+          controller: controller,
+          events: [event],
+          saverConfig: SaverConfig(
+            child: Container(
+              key: saverKey,
+              child: const Icon(
+                Icons.check,
+              ),
+            ),
+          ),
+          onEventUpdated: (event) {
+            updatedEvent = event;
+          },
+          eventBuilders: {
+            SimpleEvent: (context, e) {
+              final event = e as SimpleEvent;
+              return Container(
+                key: ValueKey(event.id),
+                child: Text('${event.title}_custom'),
+              );
+            },
+          },
+        );
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        final eventKey = MonthViewKeys.events[event]!;
+        expect(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+          findsNothing,
+        );
+
+        await widgetTester.longPress(find.byKey(eventKey));
+        await widgetTester.pumpAndSettle();
+
+        final gesture = await widgetTester.startGesture(
+          widgetTester.getCenter(
+            find.byKey(DraggableEventOverlayKeys.elevatedEvent).first,
+          ),
+        );
+        await widgetTester.pump();
+
+        await gesture.moveTo(
+          widgetTester.getCenter(find.text('19')),
+        );
+
+        await widgetTester.pumpAndSettle();
+
+        await gesture.up();
+
+        await widgetTester.pumpAndSettle();
+
+        expect(
+          find.byKey(saverKey),
+          findsOneWidget,
+        );
+
+        await widgetTester.tapAt(
+          widgetTester.getCenter(
+            find.byKey(saverKey),
+          ),
+        );
+        await widgetTester.pumpAndSettle();
+
+        expect(updatedEvent, event);
+      },
+      skip: false,
+    );
   });
 }
-
-SaverConfig _saverConfig() => SaverConfig(
-      child: Container(
-        key: const ValueKey('saver'),
-        padding: const EdgeInsets.all(15),
-        child: const Icon(Icons.done),
-      ),
-    );
