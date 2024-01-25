@@ -26,12 +26,21 @@ class AllDayEventsTheme {
       borderRadius: BorderRadius.all(Radius.circular(4)),
     ),
     this.margin = const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+    this.backgroundColor = Colors.transparent,
+    this.alwaysShowEmptyRows = false,
   });
 
+  /// Background color of the all day events container
+  final Color backgroundColor;
+
+  /// Theme of the show more button
   final AllDayEventsShowMoreButtonTheme showMoreButtonTheme;
 
   /// Max number of rows to show
   final int listMaxRowsVisible;
+
+  /// Always show empty rows
+  final bool alwaysShowEmptyRows;
 
   /// Event height
   final double eventHeight;

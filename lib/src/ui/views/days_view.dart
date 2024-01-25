@@ -452,6 +452,7 @@ class _DaysViewState<T extends FloatingCalendarEvent> extends State<DaysView<T>>
             eventKeys: DaysViewKeys.events,
             eventBuilders: widget.eventBuilders,
             theme: theme,
+            visibleDays: 1,
             allDayEvents: _allDayEvents
                 .where(
                   (element) =>
