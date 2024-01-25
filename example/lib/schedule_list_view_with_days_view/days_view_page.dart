@@ -69,6 +69,7 @@ class _DaysViewPageState extends State<DaysViewPage> {
                     onEventUpdated: (event) {
                       widget.eventsCubit.updateEvent(event);
                     },
+                    enableFloatingEvents: false,
                     allDayEventsShowMoreBuilder: (context, visible, events) {
                       return Container(
                         width: double.maxFinite,

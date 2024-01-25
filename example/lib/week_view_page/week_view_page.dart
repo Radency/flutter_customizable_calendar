@@ -63,6 +63,7 @@ class _WeekViewPageState extends State<WeekViewPage> {
                     // overrideOnEventLongPress: (details, event) {
                     //   print(event);
                     // },
+                    enableFloatingEvents: false,
                     allDayEventsTheme: const AllDayEventsTheme(
                         listMaxRowsVisible: 1,
                         eventHeight: 32,

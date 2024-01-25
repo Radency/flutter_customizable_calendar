@@ -50,6 +50,7 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.onAllDayEventsShowMoreTap,
     this.onAllDayEventTap,
     this.allDayEventsShowMoreBuilder,
+    this.enableFloatingEvents = true,
   });
 
   /// Enable page view physics
@@ -136,6 +137,18 @@ class WeekView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Properties for widget which is used to save edited event
   final SaverConfig? saverConfig;
+
+  /// enable floating events
+  ///
+  /// If true, floating events will be saved
+  /// after the user clicks the save button
+  ///
+  /// If false, floating events will be saved
+  /// as soon as the user releases the tap
+  ///
+  /// Note: if set to false, the user will not be able to
+  /// change the size of floating events
+  final bool enableFloatingEvents;
 
   @override
   State<WeekView<T>> createState() => _WeekViewState<T>();
@@ -444,6 +457,7 @@ class _WeekViewState<T extends FloatingCalendarEvent> extends State<WeekView<T>>
             return DraggableEventOverlay<T>(
               _elevatedEvent,
               key: _overlayKey,
+              enableFloatingEvents: widget.enableFloatingEvents,
               onEventLongPressStart: widget.overrideOnEventLongPress,
               viewType: CalendarView.week,
               timelineTheme: widget.timelineTheme,

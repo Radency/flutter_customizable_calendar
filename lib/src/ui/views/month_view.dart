@@ -51,6 +51,7 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.pageViewPhysics,
     this.overrideOnEventLongPress,
     this.weekStartsOnSunday = false,
+    this.enableFloatingEvents = false,
   });
 
   /// If true, the week starts on Sunday. Otherwise, the week starts on Monday.
@@ -146,6 +147,18 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
 
   /// Properties for widget which is used to save edited event
   final SaverConfig? saverConfig;
+
+  /// enable floating events
+  ///
+  /// If true, floating events will be saved
+  /// after the user clicks the save button
+  ///
+  /// If false, floating events will be saved
+  /// as soon as the user releases the tap
+  ///
+  /// Note: if set to false, the user will not be able to
+  /// change the size of floating events
+  final bool enableFloatingEvents;
 
   @override
   State<MonthView<T>> createState() => _MonthViewState<T>();
@@ -329,6 +342,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                 child: DraggableEventOverlay<T>(
                   _elevatedEvent,
                   key: _overlayKey,
+                  enableFloatingEvents: widget.enableFloatingEvents,
                   onEventLongPressStart: widget.overrideOnEventLongPress,
                   eventBuilders: widget.eventBuilders,
                   viewType: CalendarView.month,
