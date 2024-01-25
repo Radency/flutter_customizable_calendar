@@ -38,7 +38,7 @@ class EventView<T extends CalendarEvent> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (event is SimpleAllDayEvent) {
+    if (event is AllDayCalendarEvent) {
       return Card(
         color: event.color,
         elevation: allDayEventsTheme.elevation,

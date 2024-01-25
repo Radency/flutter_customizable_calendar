@@ -1,8 +1,10 @@
 import 'dart:math';
 
 import 'package:bloc/bloc.dart';
+import 'package:example/common/event_with_label/all_day_event_with_label.dart';
 import 'package:example/common/event_with_label/event_label.dart';
 import 'package:example/common/event_with_label/event_with_label.dart';
+import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:meta/meta.dart';
 
 part 'events_with_label_state.dart';
@@ -68,7 +70,7 @@ class EventsWithLabelCubit extends Cubit<EventsWithLabelState> {
   };
 
   void init() {
-    final List<EventWithLabel> events = [];
+    final List<EditableCalendarEvent> events = [];
     final random = Random.secure();
 
     final start = DateTime.now().subtract(const Duration(days: 90));
@@ -87,11 +89,46 @@ class EventsWithLabelCubit extends Cubit<EventsWithLabelState> {
       }
 
       final number = random.nextInt(5);
+      // final numberOfAllDayEvents = 1;
+      final numberOfAllDayEvents = random.nextInt(5);
 
       final labels = titles.values.toSet().toList()..shuffle();
-      final randomLabels = labels.sublist(0, number);
 
-      randomLabels.forEach((element) {
+      labels.sublist(0, numberOfAllDayEvents).forEach((element) {
+        final shuffled = titles.entries.toList()..shuffle();
+        final title = shuffled.firstWhere((e) => e.value == element).key;
+
+        final duration = Duration(
+          hours: max(
+            24,
+            random.nextInt(96),
+          ),
+        );
+
+        events.add(
+          AllDayEventWithLabel(
+            id: "${current.millisecondsSinceEpoch}_${element.index}",
+            start: DateTime(
+              current.year,
+              current.month,
+              current.day,
+            ),
+            duration: duration,
+            title: title,
+            label: element,
+          ),
+        );
+        current = current.add(duration).subtract(Duration(
+              hours: min(
+                24,
+                random.nextInt(48),
+              ),
+            ));
+      });
+
+      labels..shuffle();
+
+      labels.sublist(0, number).forEach((element) {
         final shuffled = titles.entries.toList()..shuffle();
         final title = shuffled.firstWhere((e) => e.value == element).key;
 
@@ -128,7 +165,7 @@ class EventsWithLabelCubit extends Cubit<EventsWithLabelState> {
     emit(EventsWithLabelInitialized(events: events));
   }
 
-  void updateEvent(EventWithLabel value) {
+  void updateEvent(FloatingCalendarEvent value) {
     final state = this.state;
     if (state is EventsWithLabelInitialized) {
       final events = state.events;
@@ -140,7 +177,7 @@ class EventsWithLabelCubit extends Cubit<EventsWithLabelState> {
     }
   }
 
-  void addEvent(EventWithLabel value) {
+  void addEvent(FloatingCalendarEvent value) {
     final state = this.state;
     if (state is EventsWithLabelInitialized) {
       final events = state.events;
