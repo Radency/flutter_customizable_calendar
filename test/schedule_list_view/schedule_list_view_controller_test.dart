@@ -118,7 +118,7 @@ void main() {
             () => ScheduleListViewControllerCurrentDateIsSet(
               displayedDate: controller.state.displayedDate,
               reverseAnimation: false,
-              animePicker: false,
+              animatePicker: false,
               animateTo: DateTime(
                 now.year,
                 now.month,
@@ -144,7 +144,7 @@ void main() {
             () => ScheduleListViewControllerCurrentDateIsSet(
               displayedDate: controller.state.displayedDate,
               reverseAnimation: false,
-              animePicker: false,
+              animatePicker: false,
               animateTo: DateTime(
                 tomorrow.year,
                 tomorrow.month,
@@ -169,7 +169,7 @@ void main() {
               prevMonth.year,
               prevMonth.month,
             ),
-            animeList: false,
+            animateList: false,
             reverseAnimation: true,
           ),
         ],

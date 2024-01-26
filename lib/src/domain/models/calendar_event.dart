@@ -72,6 +72,7 @@ abstract class EditableCalendarEvent extends FloatingCalendarEvent {
     super.color,
   });
 
+  /// Returns modified instance of the event with given params
   @override
   EditableCalendarEvent copyWith({
     DateTime? start,
@@ -79,7 +80,11 @@ abstract class EditableCalendarEvent extends FloatingCalendarEvent {
   });
 }
 
+/// Base class for all day events
+/// Which allows to modify an event [start] date and it's [duration]
 abstract class AllDayCalendarEvent extends EditableCalendarEvent {
+
+  /// Create a calendar all day event
   const AllDayCalendarEvent({
     required super.id,
     required super.start,
@@ -89,6 +94,7 @@ abstract class AllDayCalendarEvent extends EditableCalendarEvent {
 }
 
 class Break extends CalendarEvent {
+  /// Create a break in the calendar
   const Break({
     required super.id,
     required super.start,
@@ -98,6 +104,7 @@ class Break extends CalendarEvent {
 }
 
 class TaskDue extends FloatingCalendarEvent {
+  /// create a task due event
   const TaskDue({
     required super.id,
     required super.start,
@@ -105,8 +112,10 @@ class TaskDue extends FloatingCalendarEvent {
     this.wholeDay = false,
   }) : super(duration: wholeDay ? const Duration(days: 1) : Duration.zero);
 
+  /// Whether the task is due for the whole day
   final bool wholeDay;
 
+  /// Returns modified instance of the event with given params
   @override
   TaskDue copyWith({
     DateTime? start,
@@ -122,7 +131,9 @@ class TaskDue extends FloatingCalendarEvent {
   }
 }
 
+/// Basic implementation of [FloatingCalendarEvent]
 class SimpleEvent extends EditableCalendarEvent {
+  /// Create a simple event
   const SimpleEvent({
     required super.id,
     required super.start,
@@ -131,7 +142,10 @@ class SimpleEvent extends EditableCalendarEvent {
     super.color = Colors.white,
   });
 
+  /// The event title
   final String title;
+
+  /// Returns modified instance of the event with given params
 
   @override
   SimpleEvent copyWith({
@@ -150,7 +164,9 @@ class SimpleEvent extends EditableCalendarEvent {
   }
 }
 
+/// Basic implementation of [FloatingCalendarEvent] for all day events
 class SimpleAllDayEvent extends AllDayCalendarEvent {
+  /// Create a simple all day event
   const SimpleAllDayEvent({
     required super.id,
     required super.start,
@@ -159,8 +175,10 @@ class SimpleAllDayEvent extends AllDayCalendarEvent {
     super.color = Colors.white,
   });
 
+  /// The event title
   final String title;
 
+  /// Returns modified instance of the event with given params
   @override
   SimpleAllDayEvent copyWith({
     DateTime? start,

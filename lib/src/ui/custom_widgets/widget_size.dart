@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+/// A widget which allow to listen to the size changes of the child widget
+///
+/// Note: Needs to be replaced later with better solution
+/// as it's not a good practice to use
+/// [SchedulerBinding.instance.addPostFrameCallback] in the build method.
+/// So every place in code where this widget is used needs to be refactored
 class WidgetSize extends StatefulWidget {
-  const WidgetSize({required this.onChange, required this.child, super.key});
+  /// Creates a [WidgetSize] widget
+  const WidgetSize({
+    required this.onChange,
+    required this.child,
+    super.key,
+  });
 
+  /// The child widget
   final Widget child;
+
+  /// The on change callback
   final void Function(Size? newSize) onChange;
 
   @override

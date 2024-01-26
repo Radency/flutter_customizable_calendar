@@ -3,7 +3,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 
+/// A widget which allows to display a [SimpleEvent] event
 class SimpleEventView extends StatelessWidget {
+
+  /// Creates a [SimpleEventView] widget
   const SimpleEventView(
     this.event, {
     required this.theme,
@@ -11,8 +14,13 @@ class SimpleEventView extends StatelessWidget {
     super.key,
   });
 
+  /// The [CalendarView] type
   final CalendarView viewType;
+
+  /// The [SimpleEvent] event to display
   final SimpleEvent event;
+
+  /// The [ViewEventTheme] theme
   final ViewEventTheme theme;
 
   @override

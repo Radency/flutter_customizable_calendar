@@ -4,14 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:mocktail/mocktail.dart';
 
+/// Mock [WeekViewController] class
 class MockWeekViewController extends MockCubit<WeekViewState>
     implements WeekViewController {}
 
+/// Initial state with date for [MockWeekViewController]
 WeekViewInitial initialStateWithDate(DateTime date) => withClock(
       Clock.fixed(date), // It's needed to mock clock.now() return value
       WeekViewInitial.new,
     );
 
+/// Setup [WeekViewController] mock
 void setupWeekViewController({
   required WeekViewController controller,
   required DateTime now,
