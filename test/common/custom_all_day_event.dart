@@ -3,7 +3,6 @@ import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart
 /// Custom [CalendarEvent] class for testing
 /// custom builder for [AllDayCalendarEvent]
 class CustomAllDayEvent extends AllDayCalendarEvent {
-
   /// Create [CustomAllDayEvent] with [title]
   const CustomAllDayEvent({
     required super.id,

@@ -3,7 +3,6 @@ import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart
 
 /// A widget which allows to display a [TaskDue] event
 class TaskDueView extends StatelessWidget {
-
   /// Creates a [TaskDueView] widget
   const TaskDueView(
     this.event, {

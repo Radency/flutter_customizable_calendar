@@ -2,7 +2,6 @@ part of 'month_view_controller.dart';
 
 /// Base class for all states of [MonthViewController].
 abstract class MonthViewState extends Equatable {
-
   /// Creates [MonthViewState] instance.
   const MonthViewState({
     required this.focusedDate,
@@ -37,7 +36,6 @@ class MonthViewInitial extends MonthViewState {
 
 /// The state of [MonthViewController] when the current month is set.
 class MonthViewCurrentMonthIsSet extends MonthViewState {
-
   /// Creates [MonthViewCurrentMonthIsSet] instance.
   const MonthViewCurrentMonthIsSet({
     required super.focusedDate,

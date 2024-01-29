@@ -326,7 +326,6 @@ void main() {
 
         await widgetTester.pumpWidget(runTestApp(view));
 
-        final eventKey = MonthViewKeys.events[event]!;
         expect(
           find.byKey(DraggableEventOverlayKeys.elevatedEvent),
           findsNothing,

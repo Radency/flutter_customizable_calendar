@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 /// A widget which allow to create a custom Widget for [SaverConfig]
 class Saver extends StatelessWidget {
-
   /// Creates a [Saver] widget
   const Saver({
     required this.onPressed,

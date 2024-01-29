@@ -338,7 +338,7 @@ void main() {
 
     testWidgets(
       'On release long press on an custom event, event is updated',
-          (widgetTester) async {
+      (widgetTester) async {
         final saverKey = GlobalKey();
         final event = CustomCalendarEvent(
           id: const ValueKey('event1'),
@@ -377,7 +377,6 @@ void main() {
 
         await widgetTester.pumpWidget(runTestApp(view));
 
-        final eventKey = MonthViewKeys.events[event]!;
         expect(
           find.byKey(DraggableEventOverlayKeys.elevatedEvent),
           findsNothing,

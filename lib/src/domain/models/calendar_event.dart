@@ -83,7 +83,6 @@ abstract class EditableCalendarEvent extends FloatingCalendarEvent {
 /// Base class for all day events
 /// Which allows to modify an event [start] date and it's [duration]
 abstract class AllDayCalendarEvent extends EditableCalendarEvent {
-
   /// Create a calendar all day event
   const AllDayCalendarEvent({
     required super.id,

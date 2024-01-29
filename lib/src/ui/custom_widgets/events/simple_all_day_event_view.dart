@@ -5,7 +5,6 @@ import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart
 
 /// A widget which allows to display a [SimpleAllDayEvent] event
 class SimpleAllDayEventView extends StatelessWidget {
-
   /// Creates a [SimpleAllDayEventView] widget
   const SimpleAllDayEventView(
     this.event, {

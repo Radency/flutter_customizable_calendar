@@ -603,7 +603,7 @@ void main() {
 
       testWidgets(
         'On release long press on an event, event is updated',
-            (widgetTester) async {
+        (widgetTester) async {
           final event = SimpleEvent(
             id: const ValueKey('event1'),
             title: 'Event 1',
