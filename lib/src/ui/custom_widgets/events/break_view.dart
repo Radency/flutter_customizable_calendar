@@ -3,7 +3,6 @@ import 'package:flutter_customizable_calendar/src/domain/models/models.dart';
 
 /// A widget which allows to display a [Break] event
 class BreakView extends StatelessWidget {
-
   /// Creates a [BreakView] widget
   const BreakView(
     this.event, {

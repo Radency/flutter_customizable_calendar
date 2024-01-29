@@ -2,7 +2,6 @@ part of 'week_view_controller.dart';
 
 /// Base class for all states of [WeekViewController].
 abstract class WeekViewState extends Equatable {
-
   /// Creates [WeekViewState] instance.
   const WeekViewState({
     required this.focusedDate,
@@ -29,14 +28,12 @@ abstract class WeekViewState extends Equatable {
 
 /// The initial state of [WeekViewController].
 class WeekViewInitial extends WeekViewState {
-
   /// Creates [WeekViewInitial] instance.
   WeekViewInitial() : super(focusedDate: clock.now());
 }
 
 /// The state of [WeekViewController] when the current week is set.
 class WeekViewCurrentWeekIsSet extends WeekViewState {
-
   /// Creates [WeekViewCurrentWeekIsSet] instance.
   const WeekViewCurrentWeekIsSet({
     required super.focusedDate,
@@ -46,7 +43,6 @@ class WeekViewCurrentWeekIsSet extends WeekViewState {
 
 /// The state of [WeekViewController] when the previous week is selected.
 class WeekViewPrevWeekSelected extends WeekViewState {
-
   /// Creates [WeekViewPrevWeekSelected] instance.
   const WeekViewPrevWeekSelected({required super.focusedDate})
       : super(reverseAnimation: true);

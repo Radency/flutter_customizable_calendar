@@ -10,8 +10,6 @@ class MockScheduleLisViewController
     extends MockCubit<ScheduleListViewControllerState>
     implements ScheduleListViewController {}
 
-
-
 /// Setup [ScheduleListViewController] mock
 void setupScheduleListViewController({
   required ScheduleListViewController controller,
@@ -24,7 +22,6 @@ void setupScheduleListViewController({
   /// initial state with date for [MockScheduleListViewController]
   ScheduleListViewControllerInitial initial() =>
       withClock(mockClock, ScheduleListViewControllerInitial.new);
-
 
   when(
     () => controller.initialDate,

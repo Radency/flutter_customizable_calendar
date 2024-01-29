@@ -553,6 +553,72 @@ void main() {
       },
       skip: false,
     );
+
+    testWidgets(
+      'On release long press on an event, event is updated',
+      (widgetTester) async {
+        final event = SimpleEvent(
+          id: const ValueKey('event1'),
+          title: 'Event 1',
+          start: now,
+          duration: const Duration(hours: 3),
+          color: Colors.black,
+        );
+
+        SimpleEvent? updatedEvent;
+        final view = Material(
+          child: WeekView<SimpleEvent>(
+            controller: controller,
+            events: [event],
+            onEventUpdated: (event) {
+              updatedEvent = event;
+            },
+            enableFloatingEvents: false,
+          ),
+        );
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        final eventKey = WeekViewKeys.events[event]!;
+        expect(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+          findsNothing,
+        );
+
+        await widgetTester.pumpAndSettle();
+
+        final start = widgetTester.getCenter(
+          find.byKey(eventKey).first,
+        );
+        final end = start + const Offset(50, 0);
+        await widgetTester.timedDragFrom(
+          start,
+          start - end,
+          const Duration(seconds: 2),
+        );
+
+        await widgetTester.pump();
+        await widgetTester.pumpAndSettle();
+
+        final gesture2 = await widgetTester.startGesture(
+          start,
+        );
+        await widgetTester.pump();
+
+        await gesture2.moveTo(
+          end,
+        );
+
+        await widgetTester.pumpAndSettle();
+
+        await gesture2.up();
+
+        await widgetTester.pumpAndSettle();
+
+        expect(updatedEvent, event);
+      },
+      skip: false,
+    );
   });
 }
 

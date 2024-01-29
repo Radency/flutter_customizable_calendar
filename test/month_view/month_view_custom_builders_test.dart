@@ -335,5 +335,94 @@ void main() {
       },
       skip: false,
     );
+
+    testWidgets(
+      'On release long press on an custom event, event is updated',
+      (widgetTester) async {
+        final saverKey = GlobalKey();
+        final event = CustomCalendarEvent(
+          id: const ValueKey('event1'),
+          title: 'Event 1',
+          start: DateTime(now.year, now.month, 5),
+          duration: const Duration(days: 1),
+          color: Colors.black,
+        );
+
+        CustomCalendarEvent? updatedEvent;
+        final view = MonthView<CustomCalendarEvent>(
+          controller: controller,
+          events: [event],
+          saverConfig: SaverConfig(
+            child: Container(
+              key: saverKey,
+              child: const Icon(
+                Icons.check,
+              ),
+            ),
+          ),
+          onEventUpdated: (event) {
+            updatedEvent = event;
+          },
+          enableFloatingEvents: false,
+          eventBuilders: {
+            CustomCalendarEvent: (context, e) {
+              final event = e as CustomCalendarEvent;
+              return Container(
+                key: ValueKey(event.id),
+                child: Text('${event.title}_custom'),
+              );
+            },
+          },
+        );
+
+        await widgetTester.pumpWidget(runTestApp(view));
+
+        expect(
+          find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+          findsNothing,
+        );
+
+        await widgetTester.pumpAndSettle();
+
+        final start = widgetTester.getCenter(
+          find.byKey(ValueKey(event.id)),
+        );
+        final end = widgetTester.getCenter(find.text('19'));
+
+        await widgetTester.timedDragFrom(
+          start,
+          end - start,
+          const Duration(seconds: 5),
+          pointer: 7,
+        );
+
+        await widgetTester.pump();
+        await widgetTester.pumpAndSettle();
+        expect(
+          find.byKey(saverKey),
+          findsNothing,
+        );
+
+        await widgetTester.pumpAndSettle();
+
+        final gesture2 = await widgetTester.startGesture(
+          start,
+        );
+        await widgetTester.pump();
+
+        await gesture2.moveTo(
+          end,
+        );
+
+        await widgetTester.pumpAndSettle();
+
+        await gesture2.up();
+
+        await widgetTester.pumpAndSettle();
+
+        expect(updatedEvent?.id, event.id);
+      },
+      skip: false,
+    );
   });
 }

@@ -62,7 +62,6 @@ class DaysViewFocusedDateIsSet extends DaysViewState {
 
 /// State of the [DaysViewController] when the previous month is selected.
 class DaysViewPrevMonthSelected extends DaysViewState {
-
   /// Creates a [DaysViewPrevMonthSelected] instance.
   const DaysViewPrevMonthSelected({
     required super.displayedDate,
@@ -72,7 +71,6 @@ class DaysViewPrevMonthSelected extends DaysViewState {
 
 /// State of the [DaysViewController] when the next month is selected.
 class DaysViewNextMonthSelected extends DaysViewState {
-
   /// Creates a [DaysViewNextMonthSelected] instance.
   const DaysViewNextMonthSelected({
     required super.displayedDate,

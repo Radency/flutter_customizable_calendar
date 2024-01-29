@@ -22,7 +22,6 @@ abstract class ScheduleListViewControllerState extends Equatable {
 /// The initial state of [ScheduleListViewController].
 class ScheduleListViewControllerInitial
     extends ScheduleListViewControllerState {
-
   /// Creates [ScheduleListViewControllerInitial] instance.
   ScheduleListViewControllerInitial()
       : super(displayedDate: clock.now(), reverseAnimation: false);
@@ -31,7 +30,6 @@ class ScheduleListViewControllerInitial
 /// The state of [ScheduleListViewController] when the current date is set.
 class ScheduleListViewControllerCurrentDateIsSet
     extends ScheduleListViewControllerState {
-
   /// Creates [ScheduleListViewControllerCurrentDateIsSet] instance.
   const ScheduleListViewControllerCurrentDateIsSet({
     required super.displayedDate,

@@ -48,7 +48,6 @@ class AllDaysEventListItemRow {
 /// A widget which allows to display a [AllDayCalendarEvent] events
 
 class AllDaysEventsList extends StatefulWidget {
-
   /// Creates a [AllDaysEventsList] widget
   const AllDaysEventsList({
     required this.theme,
