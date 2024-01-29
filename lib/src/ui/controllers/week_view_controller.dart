@@ -15,11 +15,15 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
     DateTime? initialDate,
     this.endDate,
   })  : initialDate = initialDate ?? DateTime(1970),
+
+        /// The number of days to be displayed in the week view.
         assert(visibleDays > 0, 'visibleDays must be greater than 0'),
         assert(visibleDays <= 7, 'visibleDays must be less or equal to 7'),
         super(WeekViewInitial());
 
+  /// The number of days to be displayed in the week view.
   final int visibleDays;
+
   @override
   final DateTime initialDate;
 
@@ -33,6 +37,8 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
 
   @override
   final DateTime? endDate;
+
+  /// The offset of the timeline.
   double? timelineOffset;
 
   @override
@@ -49,7 +55,6 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
     );
   }
 
-  /// Switches calendar to shows the previous week
   @override
   void prev() {
     final prevWeek = DateUtils.addDaysToDate(
@@ -68,7 +73,6 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
     }
   }
 
-  /// Switches calendar to shows the next week
   @override
   void next() {
     final nextWeek = DateUtils.addDaysToDate(
@@ -87,6 +91,7 @@ class WeekViewController extends Cubit<WeekViewState> with CalendarController {
     }
   }
 
+  /// Sets the displayed date.
   void setDisplayedDate(DateTime date) {
     emit(
       WeekViewCurrentWeekIsSet(

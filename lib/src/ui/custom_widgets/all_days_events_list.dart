@@ -4,23 +4,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/ui/custom_widgets/widget_size.dart';
 
+/// A wrapper class which allows to display a [CalendarEvent] events
+/// in the [AllDaysEventsList]
 class AllDaysEventsListRow {
   const AllDaysEventsListRow({required this.events});
 
+  /// The [AllDayCalendarEvent] events to display
   final List<AllDaysEventListItemRow> events;
 }
 
+/// A wrapper class which allows to display a [CalendarEvent] event
 class AllDaysEventListItemRow {
+  /// Creates a [AllDaysEventListItemRow]
   const AllDaysEventListItemRow({
     required this.event,
     required this.paddingLeft,
     required this.width,
   });
 
+  /// The [AllDayCalendarEvent] event to display
   final AllDayCalendarEvent event;
+
+  /// Left padding (start)
   final double paddingLeft;
+
+  /// Width (duration)
   final double width;
 
+  /// Creates a copy of this [AllDaysEventListItemRow] but with the given fields
   AllDaysEventListItemRow copyWith({
     AllDayCalendarEvent? event,
     double? paddingLeft,
@@ -34,7 +45,11 @@ class AllDaysEventListItemRow {
   }
 }
 
+/// A widget which allows to display a [AllDayCalendarEvent] events
+
 class AllDaysEventsList extends StatefulWidget {
+
+  /// Creates a [AllDaysEventsList] widget
   const AllDaysEventsList({
     required this.theme,
     required this.allDayEvents,
@@ -50,28 +65,48 @@ class AllDaysEventsList extends StatefulWidget {
     super.key,
   });
 
+  /// Number of visible days (used only with [CalendarView.week])
+
   final int visibleDays;
 
+  /// Custom event builders
+
   final Map<Type, EventBuilder> eventBuilders;
+
+  /// Event keys map
   final Map<CalendarEvent, GlobalKey> eventKeys;
+
+  /// The week range (used only with [CalendarView.week])
 
   final DateTimeRange? weekRange;
 
+  /// The [CalendarView] type
+
   final CalendarView view;
+
+  /// Width of the widget
 
   final double width;
 
+  /// Custom [AllDayEventsTheme] theme
   final AllDayEventsTheme theme;
+
+  /// The [AllDayCalendarEvent] events to display
 
   final List<AllDayCalendarEvent> allDayEvents;
 
+  /// On event tap callback
+
   final void Function(AllDayCalendarEvent event)? onEventTap;
+
+  /// On show more tap callback
 
   final void Function(
     List<AllDayCalendarEvent> visibleEvents,
     List<AllDayCalendarEvent> events,
   )? onShowMoreTap;
 
+  /// A builder which allows to customize the show more button
   final Widget Function(
     BuildContext context,
     List<AllDayCalendarEvent> visibleEvents,
