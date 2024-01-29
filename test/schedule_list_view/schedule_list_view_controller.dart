@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:mocktail/mocktail.dart';
 
+/// Mock [ScheduleListViewController] class
 class MockScheduleLisViewController
     extends MockCubit<ScheduleListViewControllerState>
     implements ScheduleListViewController {}
 
+/// Setup [ScheduleListViewController] mock
 void setupScheduleListViewController({
   required ScheduleListViewController controller,
   required DateTime now,
@@ -17,6 +19,7 @@ void setupScheduleListViewController({
 }) {
   final mockClock = Clock.fixed(now);
 
+  /// initial state with date for [MockScheduleListViewController]
   ScheduleListViewControllerInitial initial() =>
       withClock(mockClock, ScheduleListViewControllerInitial.new);
 

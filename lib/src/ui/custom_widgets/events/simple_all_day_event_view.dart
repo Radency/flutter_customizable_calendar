@@ -3,7 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 
+/// A widget which allows to display a [SimpleAllDayEvent] event
 class SimpleAllDayEventView extends StatelessWidget {
+  /// Creates a [SimpleAllDayEventView] widget
   const SimpleAllDayEventView(
     this.event, {
     required this.theme,
@@ -11,10 +13,13 @@ class SimpleAllDayEventView extends StatelessWidget {
     super.key,
   });
 
+  /// The [CalendarView] type
   final CalendarView viewType;
 
+  /// The [SimpleAllDayEvent] event to display
   final SimpleAllDayEvent event;
 
+  /// The [ViewEventTheme] theme
   final AllDayEventsTheme theme;
 
   @override

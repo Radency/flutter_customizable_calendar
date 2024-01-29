@@ -145,7 +145,7 @@ class _ScheduleListViewState<T extends CalendarEvent>
       listenWhen: (previous, current) => true,
       listener: (context, state) {
         if (state is ScheduleListViewControllerCurrentDateIsSet &&
-            state.animeList) {
+            state.animateList) {
           _scrollToCurrentPosition(events: grouped);
         }
       },
@@ -162,7 +162,7 @@ class _ScheduleListViewState<T extends CalendarEvent>
               buildWhen: (previous, current) =>
                   current is ScheduleListViewControllerCurrentDateIsSet &&
                   previous.displayedDate.month != current.displayedDate.month &&
-                  current.animePicker,
+                  current.animatePicker,
               builder: (context, state) {
                 if (widget.monthPickerBuilder != null) {
                   return widget.monthPickerBuilder!(

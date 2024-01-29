@@ -90,7 +90,6 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
     close();
   }
 
-  /// Switches calendar to shows the next month
   @override
   void next() {
     final displayedDate =
@@ -108,7 +107,6 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
     );
   }
 
-  /// Switches calendar to shows the previous month
   @override
   void prev() {
     final displayedDate =
@@ -126,7 +124,6 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
     );
   }
 
-  /// Resets the calendar to the current date.
   @override
   void reset() {
     final now = clock.now();
@@ -145,7 +142,6 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
     );
   }
 
-  /// Sets the current page of the calendar.
   @override
   void setPage(int page) {
     final displayedDate = DateUtils.addDaysToDate(initialDate, page);
@@ -169,8 +165,8 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
       ScheduleListViewControllerCurrentDateIsSet(
         displayedDate: date,
         animateTo: date,
-        animePicker: date.month != state.displayedDate.month,
-        animeList: false,
+        animatePicker: date.month != state.displayedDate.month,
+        animateList: false,
         reverseAnimation: date.isBefore(state.displayedDate),
       ),
     );
@@ -183,7 +179,7 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
       ScheduleListViewControllerCurrentDateIsSet(
         animateTo: displayedDate,
         displayedDate: state.displayedDate,
-        animePicker: displayedDate.month != state.displayedDate.month,
+        animatePicker: displayedDate.month != state.displayedDate.month,
         reverseAnimation: displayedDate.isBefore(
           DateTime(
             state.displayedDate.year,

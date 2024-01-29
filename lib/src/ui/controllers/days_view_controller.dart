@@ -40,7 +40,6 @@ class DaysViewController extends Cubit<DaysViewState> with CalendarController {
     );
   }
 
-  /// Switches calendar to shows the previous month
   @override
   void prev() {
     final prevMonth = DateUtils.addMonthsToMonthDate(state.displayedDate, -1);
@@ -57,7 +56,6 @@ class DaysViewController extends Cubit<DaysViewState> with CalendarController {
     }
   }
 
-  /// Switches calendar to shows the next month
   @override
   void next() {
     final nextMonth = DateUtils.addMonthsToMonthDate(state.displayedDate, 1);
@@ -93,7 +91,6 @@ class DaysViewController extends Cubit<DaysViewState> with CalendarController {
         ),
       );
 
-  /// Switches calendar to shows a specific day
   @override
   void setPage(int page) {
     final now = clock.now();

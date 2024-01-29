@@ -340,6 +340,84 @@ void main() {
         },
         skip: false,
       );
+
+      testWidgets(
+        'On release long press on an custom event, event is updated',
+        (widgetTester) async {
+          final event = CustomCalendarEvent(
+            id: const ValueKey('event1'),
+            title: 'Event 1',
+            start: now,
+            duration: const Duration(hours: 3),
+            color: Colors.black,
+          );
+
+          CustomCalendarEvent? updatedEvent;
+          final view = DaysView<CustomCalendarEvent>(
+            controller: controller,
+            events: [event],
+            onEventUpdated: (event) {
+              updatedEvent = event;
+            },
+            enableFloatingEvents: false,
+            eventBuilders: {
+              CustomCalendarEvent: (context, e) {
+                final event = e as CustomCalendarEvent;
+                return Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      width: 2,
+                    ),
+                  ),
+                  child: Text('${event.title}_custom'),
+                );
+              },
+            },
+          );
+
+          await widgetTester.pumpWidget(runTestApp(view));
+          await widgetTester.pumpAndSettle();
+
+          final eventKey = DaysViewKeys.events[event]!;
+          expect(
+            find.byKey(DraggableEventOverlayKeys.elevatedEvent),
+            findsNothing,
+          );
+
+          await widgetTester.pumpAndSettle();
+
+          final start = widgetTester.getCenter(
+            find.byKey(eventKey).first,
+          );
+          final end = start + const Offset(50, 0);
+          await widgetTester.timedDragFrom(
+            start,
+            start - end,
+            const Duration(seconds: 2),
+          );
+
+          await widgetTester.pump();
+          await widgetTester.pumpAndSettle();
+
+          final gesture2 = await widgetTester.startGesture(
+            start,
+          );
+          await widgetTester.pump();
+
+          await gesture2.moveTo(
+            end,
+          );
+
+          await widgetTester.pumpAndSettle();
+
+          await gesture2.up();
+
+          await widgetTester.pumpAndSettle();
+
+          expect(updatedEvent, event);
+        },
+        skip: false,
+      );
     },
     skip: false,
   );

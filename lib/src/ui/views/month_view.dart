@@ -51,7 +51,7 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.pageViewPhysics,
     this.overrideOnEventLongPress,
     this.weekStartsOnSunday = false,
-    this.enableFloatingEvents = false,
+    this.enableFloatingEvents = true,
   });
 
   /// If true, the week starts on Sunday. Otherwise, the week starts on Monday.
