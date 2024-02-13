@@ -215,7 +215,7 @@ class _ScheduleListViewState<T extends CalendarEvent>
   Map<DateTime, List<CalendarEvent>> _getGrouped() {
     final result = {
       ...widget.controller.grouped,
-      ...groupBy(
+      ...groupBy<CalendarEvent, DateTime>(
         [...widget.breaks, ...widget.events].sortedBy((e) => e.start),
         (e) => DateTime(e.start.year, e.start.month, e.start.day),
       ),

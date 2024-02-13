@@ -1,3 +1,7 @@
+## 0.3.4
+
+- Fixed issues related to the support of Dart SDK 3.0.0 and higher.
+
 ## 0.3.3
 
 - Improved Test Code Coverage

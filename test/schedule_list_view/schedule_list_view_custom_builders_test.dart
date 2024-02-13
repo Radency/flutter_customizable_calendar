@@ -69,7 +69,7 @@ void main() {
 
           expect(
             find.text(formatter1.format(now)),
-            findsAny,
+            findsWidgets,
           );
 
           expect(
@@ -100,7 +100,7 @@ void main() {
                 onTap: () {
                   tappedEvent = event;
                 },
-                child: Container(
+                child: DecoratedBox(
                   decoration: const BoxDecoration(
                     color: Colors.white,
                   ),

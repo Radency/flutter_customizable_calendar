@@ -48,7 +48,7 @@ void main() {
       await widgetTester.pumpWidget(runTestApp(view));
       expect(
         find.text('Week 1 - 7'),
-        findsAny,
+        findsWidgets,
         reason: 'Week picker should display ‘current week',
       );
     });
@@ -117,7 +117,7 @@ void main() {
 
         expect(
           find.text('Week 8 - 14'),
-          findsAny,
+          findsWidgets,
           reason: 'Week picker should display ‘next week',
         );
       },
@@ -156,7 +156,7 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        expect(find.text('${event.title}_custom'), findsAny);
+        expect(find.text('${event.title}_custom'), findsWidgets);
       },
       skip: false,
     );
@@ -173,10 +173,10 @@ void main() {
 
         AllDayCalendarEvent? tappedCustomEvent;
         AllDayCalendarEvent? tappedEvent;
-        final view = WeekView(
+        final view = WeekView<FloatingCalendarEvent>(
           controller: controller,
           events: [event],
-          onEventTap: (event) => tappedEvent = event,
+          onEventTap: (event) => tappedEvent = event as AllDayCalendarEvent,
           eventBuilders: {
             CustomAllDayEvent: (context, e) {
               final event = e as CustomAllDayEvent;
@@ -258,7 +258,7 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        expect(find.text('+1'), findsAny);
+        expect(find.text('+1'), findsWidgets);
       },
       skip: false,
     );
@@ -318,8 +318,8 @@ void main() {
 
         await widgetTester.pumpAndSettle();
 
-        expect(find.text('${event.title}_custom'), findsAny);
-        expect(find.text('${event.title}_custom'), findsAny);
+        expect(find.text('${event.title}_custom'), findsWidgets);
+        expect(find.text('${event.title}_custom'), findsWidgets);
         expect(find.text('${otherEvent2.title}_custom'), findsNothing);
 
         await widgetTester.tap(find.text('+1').first);
@@ -392,7 +392,7 @@ void main() {
         await widgetTester.pumpAndSettle();
 
         expect(find.text('${event.title}_custom'), findsNothing);
-        expect(find.text('${otherEvent.title}_custom'), findsAny);
+        expect(find.text('${otherEvent.title}_custom'), findsWidgets);
         expect(find.text('${otherEvent2.title}_custom'), findsNothing);
 
         await widgetTester.tap(find.text('+1').first);

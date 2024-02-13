@@ -186,7 +186,7 @@ void main() {
             color: Colors.black,
           );
           FloatingCalendarEvent? tappedEvent;
-          final view = DaysView(
+          final view = DaysView<FloatingCalendarEvent>(
             controller: controller,
             events: [event],
             overrideOnEventLongPress: (

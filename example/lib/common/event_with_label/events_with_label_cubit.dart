@@ -94,6 +94,8 @@ class EventsWithLabelCubit extends Cubit<EventsWithLabelState> {
 
       final labels = titles.values.toSet().toList()..shuffle();
 
+      final DateTime initial = current.add(Duration.zero);
+
       labels.sublist(0, numberOfAllDayEvents).forEach((element) {
         final shuffled = titles.entries.toList()..shuffle();
         final title = shuffled.firstWhere((e) => e.value == element).key;
@@ -125,6 +127,8 @@ class EventsWithLabelCubit extends Cubit<EventsWithLabelState> {
               ),
             ));
       });
+
+      current = initial;
 
       labels..shuffle();
 
@@ -169,11 +173,12 @@ class EventsWithLabelCubit extends Cubit<EventsWithLabelState> {
     final state = this.state;
     if (state is EventsWithLabelInitialized) {
       final events = state.events;
-      final index = events.indexWhere((element) => element.id == value.id);
-      if (index != -1) {
-        events[index] = value;
-        emit(EventsWithLabelInitialized(events: events));
-      }
+      events.removeWhere((element) => element.id == value.id);
+
+      emit(EventsWithLabelInitialized(events: [
+        ...events,
+        value,
+      ]));
     }
   }
 
