@@ -154,7 +154,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
                     id: event,
                     child: RenderIdProvider(
                       id: event,
-                      child: ValueListenableBuilder(
+                      child: ValueListenableBuilder<T?>(
                         valueListenable: widget.elevatedEvent,
                         builder: (context, elevatedEvent, child) => Opacity(
                           opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
@@ -285,7 +285,7 @@ class _EventsLayoutState<T extends FloatingCalendarEvent>
           ),
           child: RenderIdProvider(
             id: event,
-            child: ValueListenableBuilder(
+            child: ValueListenableBuilder<T?>(
               valueListenable: widget.elevatedEvent,
               builder: (context, elevatedEvent, child) => Opacity(
                 opacity: (elevatedEvent?.id == event.id) ? 0.5 : 1,
