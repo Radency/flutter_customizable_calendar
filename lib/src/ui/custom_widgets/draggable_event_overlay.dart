@@ -294,7 +294,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   Iterable<RenderId<dynamic>> _globalHitTest(Offset globalPosition) {
     final result = HitTestResult();
 
-    WidgetsBinding.instance.hitTestInView(result, globalPosition, 0);
+    WidgetsBinding.instance.hitTest(result, globalPosition);
 
     return result.path
         .map((entry) => entry.target)
@@ -521,7 +521,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
       onLongPressEnd: onEventLongPressEnd,
       child: ColoredBox(
         color: Colors.transparent,
-        child: ValueListenableBuilder(
+        child: ValueListenableBuilder<T?>(
           valueListenable: widget.event,
           builder: (context, elevatedEvent, child) {
             if (elevatedEvent == null) return child!;
@@ -808,7 +808,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   Widget _floatingEventBuilder(BuildContext context) {
     final event = widget.event.value;
 
-    return ValueListenableBuilder(
+    return ValueListenableBuilder<Rect>(
       valueListenable: _eventBounds,
       builder: (context, rect, child) {
         SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
@@ -855,7 +855,7 @@ class DraggableEventOverlayState<T extends FloatingCalendarEvent>
   }
 
   Widget _sizerBuilder(BuildContext context, Offset offset) =>
-      ValueListenableBuilder(
+      ValueListenableBuilder<double>(
         valueListenable: _animation,
         builder: (context, scale, child) {
           final theme = _draggableEventTheme.sizerTheme;
