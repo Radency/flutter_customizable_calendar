@@ -35,8 +35,8 @@ class _MonthViewWithScheduleListViewPageState
   late final Animation<double> _monthPickerSizeYAnimation;
   late final Animation<double> _arrowRotationAnimation;
 
-  final double maxCalendarHeight = 425;
-  final double minCalendarHeight = 140;
+  final double maxCalendarHeight = 470;
+  final double minCalendarHeight = 115;
 
   DateTime _selectedDate = DateTime.now();
 
@@ -281,10 +281,11 @@ class _MonthViewWithScheduleListViewPageState
   Widget _buildMonthView(EventsInitialized state) {
     return MonthView<DeliveryEvent<EventAttachment>>(
       controller: monthViewController,
+      numberOfWeeks: 6,
       events: state.events,
       weekStartsOnSunday: true,
       daysRowTheme: DaysRowTheme(
-        height: 32,
+        height: 24,
         backgroundColor: ExampleColors.swatch24(),
         weekdayFormatter: weekDayFormatter,
         weekdayStyle: TextStyle(
@@ -296,7 +297,7 @@ class _MonthViewWithScheduleListViewPageState
       pageViewPhysics: const BouncingScrollPhysics(),
       showMoreTheme: MonthShowMoreTheme(eventHeight: 0),
       monthDayTheme: MonthDayTheme(
-        dayNumberHeight: 48,
+        dayNumberHeight: 42,
         dayNumberMargin: EdgeInsets.zero,
         spacingColor: ExampleColors.swatch24(),
         dayColor: ExampleColors.swatch24(),
@@ -328,35 +329,34 @@ class _MonthViewWithScheduleListViewPageState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 2.0),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: ExampleColors.swatch24(),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color:
-                          selected ? ExampleColors.swatch1 : Colors.transparent,
-                      width: 2,
-                    ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: ExampleColors.swatch24(),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        selected ? ExampleColors.swatch1 : Colors.transparent,
+                    width: 2,
                   ),
-                  child: Center(
-                    child: Text(
-                      day.day.toString(),
-                      style: TextStyle(
-                        fontWeight: highlight ? FontWeight.bold : null,
-                        color: ExampleColors.white.withOpacity(
-                          highlight ? 1 : .5,
-                        ),
+                ),
+                child: Center(
+                  child: Text(
+                    day.day.toString(),
+                    style: TextStyle(
+                      fontWeight: highlight ? FontWeight.bold : null,
+                      color: ExampleColors.white.withOpacity(
+                        highlight ? 1 : .5,
                       ),
                     ),
                   ),
                 ),
               ),
-              Spacer(),
+              const SizedBox(
+                height: 4,
+              ),
               if (eventsStartedToday.isNotEmpty)
                 Center(
                   child: Container(
@@ -371,7 +371,6 @@ class _MonthViewWithScheduleListViewPageState
                     ),
                   ),
                 ),
-              Spacer(),
             ],
           ),
         );

@@ -16,9 +16,13 @@ abstract class MonthViewState extends Equatable {
 
   /// The month range which is currently displayed in the month view.
 
-  DateTimeRange displayedMonth({bool weekStartsOnSunday = false}) =>
+  DateTimeRange displayedMonth({
+    bool weekStartsOnSunday = false,
+    int numberOfWeeks = 6,
+  }) =>
       focusedDate.monthViewRange(
         weekStartsOnSunday: weekStartsOnSunday,
+        numberOfWeeks: numberOfWeeks,
       );
 
   @override

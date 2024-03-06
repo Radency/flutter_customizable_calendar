@@ -65,12 +65,12 @@ void main() {
 
         await widgetTester.pumpWidget(runTestApp(view));
 
-        final fifthDayPosition = widgetTester.getCenter(find.text('5'));
+        final fifthDayPosition = widgetTester.getCenter(find.text('15'));
 
         await widgetTester.longPressAt(fifthDayPosition);
         expect(
           DateTime(pressedDate!.year, pressedDate!.month, pressedDate!.day),
-          DateTime(now.year, now.month, 5),
+          DateTime(now.year, now.month, 15),
         );
       },
       skip: false,
