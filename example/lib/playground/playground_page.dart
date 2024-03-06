@@ -646,6 +646,7 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
       ),
       daysRowTheme: DaysRowTheme(
         weekdayStyle: _textStyle,
+        height: 24,
         numberStyle: _textStyle.copyWith(
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -674,8 +675,8 @@ class _CalendarPageState<T extends FloatingCalendarEvent>
         // currentDayColor: Colors.grey,
         // dayColor: Colors.white,
         // spacingColor: Colors.orange,
-        dayNumberHeight: 24,
-        dayNumberMargin: EdgeInsets.all(3),
+        dayNumberHeight: 16,
+        dayNumberMargin: EdgeInsets.all(2),
         dayNumberBackgroundColor: Colors.grey.withOpacity(0.3),
       ),
       breaks: listCubit.state.breaks.values.toList(),
