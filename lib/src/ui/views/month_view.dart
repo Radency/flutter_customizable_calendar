@@ -3,8 +3,10 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:clock/clock.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/custom/custom_linked_scroll_controller.dart';
@@ -52,7 +54,16 @@ class MonthView<T extends FloatingCalendarEvent> extends StatefulWidget {
     this.overrideOnEventLongPress,
     this.weekStartsOnSunday = false,
     this.enableFloatingEvents = true,
-  });
+    this.numberOfWeeks = 6,
+  }) : assert(
+          numberOfWeeks >= 5 && numberOfWeeks <= 9,
+          'Number of weeks should be between 5 and 9',
+        );
+
+  /// The number of weeks to display
+  /// It should be between 5 and 9
+  /// Default is 6
+  final int numberOfWeeks;
 
   /// If true, the week starts on Sunday. Otherwise, the week starts on Monday.
   final bool weekStartsOnSunday;
@@ -186,6 +197,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
 
   DateTimeRange get _displayedMonth => widget.controller.state.displayedMonth(
         weekStartsOnSunday: widget.weekStartsOnSunday,
+        numberOfWeeks: widget.numberOfWeeks,
       );
 
   late final ScrollController _forward;
@@ -214,6 +226,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     final timelineBox = _getTimelineBox(
       widget.controller.state.displayedMonth(
         weekStartsOnSunday: widget.weekStartsOnSunday,
+        numberOfWeeks: widget.numberOfWeeks,
       ),
     );
 
@@ -366,6 +379,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                     return _getTimelineBox(
                       state.displayedMonth(
                         weekStartsOnSunday: widget.weekStartsOnSunday,
+                        numberOfWeeks: widget.numberOfWeeks,
                       ),
                     );
                   },
@@ -445,6 +459,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
         )
             .monthViewRange(
               weekStartsOnSunday: widget.weekStartsOnSunday,
+              numberOfWeeks: widget.numberOfWeeks,
             )
             .days;
 
@@ -498,9 +513,9 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     );
   }
 
-  double _rowHeight = 1;
+  double _rowHeight = 1.0;
 
-  double get _rowsHeight => _rowHeight * 5;
+  double get _rowsHeight => _rowHeight * widget.numberOfWeeks;
 
   bool _shouldScroll = false;
 
@@ -515,12 +530,12 @@ class _MonthViewState<T extends FloatingCalendarEvent>
         var aspectRatio = (constraints.maxWidth - crossAxisSpacing * 6) /
             7 /
             (constraints.maxHeight - mainAxisSpacing * 4) *
-            5;
-        _shouldScroll = _rowsHeight.round() > constraints.maxHeight.round();
+            widget.numberOfWeeks;
+        final rowsHeight = _rowsHeight;
+        _shouldScroll = rowsHeight > constraints.maxHeight;
         if (_shouldScroll) {
           aspectRatio = 1.0;
         }
-
         WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
           if (!_shouldScroll) {
             _forward.jumpTo(0);
@@ -581,7 +596,9 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                     ...days.map(
                       (day) => WidgetSize(
                         onChange: (size) {
-                          if (size != null && _rowHeight != size.height) {
+                          if (size != null &&
+                              _rowHeight == 1.0 &&
+                              _rowHeight != size.height) {
                             _rowHeight = size.height;
                             if (mounted) {
                               setState(() {});
@@ -591,6 +608,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                         child: _singleDayView(
                           day,
                           constraints.maxWidth * 13 / 7,
+                          widget.controller.state.focusedDate,
                         ),
                       ),
                     ),
@@ -617,13 +635,18 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     final monthDays = widget.controller.state
         .displayedMonth(
           weekStartsOnSunday: widget.weekStartsOnSunday,
+          numberOfWeeks: widget.numberOfWeeks,
         )
         .days;
 
     final index = monthDays.indexOf(widget.controller.state.focusedDate);
     if (index == -1) return;
 
-    final row = clampDouble(index / 7, 0, 5).floor();
+    final row = clampDouble(
+      index / 7,
+      0,
+      widget.numberOfWeeks.toDouble(),
+    ).floor();
 
     final offset = clampDouble(
       row * _rowHeight,
@@ -664,96 +687,93 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     );
   }
 
-  Widget _singleDayView(DateTime dayDate, double maxWidth) {
-    return BlocBuilder<MonthViewController, MonthViewState>(
-      bloc: widget.controller,
-      builder: (context, state) {
-        final theme = widget.monthDayTheme;
-        final isSelected = DateUtils.isSameDay(dayDate, state.focusedDate);
-        final eventsToShow = dayEventMap[dayDate] ?? [];
+  Widget _singleDayView(
+      DateTime dayDate, double maxWidth, DateTime focusedDate) {
+    final theme = widget.monthDayTheme;
+    final isSelected = DateUtils.isSameDay(dayDate, focusedDate);
+    final eventsToShow = dayEventMap[dayDate] ?? [];
 
-        return RenderIdProvider(
-          id: dayDate,
-          child: ColoredBox(
-            color: Colors.transparent, // Needs for hitTesting
-            child: Column(
-              children: [
-                if (widget.monthDayBuilder != null)
-                  Container(
-                    height: theme.dayNumberHeight,
-                    margin: theme.dayNumberMargin,
-                    padding: theme.dayNumberPadding,
-                    child: widget.monthDayBuilder!.call(
-                      context,
-                      eventsToShow,
-                      dayDate,
-                    ),
-                  )
-                else ...[
-                  Container(
-                    padding: theme.dayNumberPadding,
-                    margin: theme.dayNumberMargin,
-                    height: theme.dayNumberHeight,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isSelected
-                          ? theme.selectedDayNumberBackgroundColor
-                          : theme.dayNumberBackgroundColor,
-                    ),
-                    child: Text(
-                      dayDate.day.toString(),
-                      style: isSelected
-                          ? theme.selectedDayNumberTextStyle
-                          : theme.dayNumberTextStyle,
-                    ),
-                  ),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Positioned(
-                              left: 0,
-                              top: 0,
-                              width: maxWidth,
-                              height: constraints.maxHeight,
-                              child: Container(
-                                constraints: BoxConstraints(
-                                  maxHeight: constraints.maxHeight,
-                                ),
-                                child: EventsLayout<T>(
-                                  dayDate: dayDate,
-                                  overlayKey: _overlayKey,
-                                  layoutsKeys: MonthViewKeys.layouts,
-                                  eventsKeys: MonthViewKeys.events,
-                                  timelineTheme: widget.timelineTheme,
-                                  breaks: widget.breaks,
-                                  events: eventsToShow,
-                                  eventBuilders: widget.eventBuilders,
-                                  elevatedEvent: _elevatedEvent,
-                                  onEventTap: widget.onEventTap,
-                                  viewType: CalendarView.month,
-                                  dayWidth: maxWidth / 13,
-                                  showMoreTheme: widget.showMoreTheme,
-                                  onShowMoreTap: widget.onShowMoreTap,
-                                  eventsListBuilder: widget.eventsListBuilder,
-                                  controller: dayControllerMap[dayDate],
-                                ),
-                              ),
+    return RenderIdProvider(
+      id: dayDate,
+      child: ColoredBox(
+        color: Colors.transparent, // Needs for hitTesting
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.monthDayBuilder != null)
+              Container(
+                height: theme.dayNumberHeight,
+                margin: theme.dayNumberMargin,
+                padding: theme.dayNumberPadding,
+                child: widget.monthDayBuilder!.call(
+                  context,
+                  eventsToShow,
+                  dayDate,
+                ),
+              )
+            else ...[
+              Container(
+                padding: theme.dayNumberPadding,
+                margin: theme.dayNumberMargin,
+                height: theme.dayNumberHeight,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected
+                      ? theme.selectedDayNumberBackgroundColor
+                      : theme.dayNumberBackgroundColor,
+                ),
+                child: Text(
+                  dayDate.day.toString(),
+                  style: isSelected
+                      ? theme.selectedDayNumberTextStyle
+                      : theme.dayNumberTextStyle,
+                ),
+              ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          left: 0,
+                          top: 0,
+                          width: maxWidth,
+                          height: constraints.maxHeight,
+                          child: Container(
+                            constraints: BoxConstraints(
+                              maxHeight: constraints.maxHeight,
                             ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
+                            child: EventsLayout<T>(
+                              dayDate: dayDate,
+                              overlayKey: _overlayKey,
+                              layoutsKeys: MonthViewKeys.layouts,
+                              eventsKeys: MonthViewKeys.events,
+                              timelineTheme: widget.timelineTheme,
+                              breaks: widget.breaks,
+                              events: eventsToShow,
+                              eventBuilders: widget.eventBuilders,
+                              elevatedEvent: _elevatedEvent,
+                              onEventTap: widget.onEventTap,
+                              viewType: CalendarView.month,
+                              dayWidth: maxWidth / 13,
+                              showMoreTheme: widget.showMoreTheme,
+                              onShowMoreTap: widget.onShowMoreTap,
+                              eventsListBuilder: widget.eventsListBuilder,
+                              controller: dayControllerMap[dayDate],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -765,7 +785,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   void _initDailyEvents() {
     final monthDays = _displayedMonth.days;
 
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < widget.numberOfWeeks; i++) {
       final monday = DateUtils.dateOnly(monthDays[7 * i]);
       dayEventMap[monday] = _getEventsOnDay(events, monday, true);
       for (var j = 1; j < 7; j++) {
@@ -797,7 +817,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
 
     LinkedScrollControllerGroup group;
 
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < widget.numberOfWeeks; i++) {
       final monday = DateUtils.dateOnly(monthDays[7 * i]);
       group = LinkedScrollControllerGroup();
       final controller = group.addAndGet();
