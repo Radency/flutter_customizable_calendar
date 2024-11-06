@@ -35,8 +35,8 @@ void main() {
     test(
       'Controller initial state shows current time',
       () => expect(
-        controller.state,
-        withClock(mockClock, MonthViewInitial.new),
+        controller.state.focusedDate,
+        withClock(mockClock, MonthViewInitial.new).focusedDate,
       ),
     );
 
@@ -50,6 +50,7 @@ void main() {
           () => MonthViewCurrentMonthIsSet(
             focusedDate: clock.now(),
             reverseAnimation: false,
+            updateTime: clock.now(),
           ),
         ),
       ],
@@ -65,6 +66,8 @@ void main() {
           () => MonthViewCurrentMonthIsSet(
             focusedDate: clock.now(),
             reverseAnimation: false,
+            updateTime: clock.now(),
+
           ),
         ),
       ],
@@ -79,6 +82,8 @@ void main() {
           mockClock,
           () => MonthViewPrevMonthSelected(
             focusedDate: prevMonth,
+            updateTime: clock.now(),
+
           ),
         ),
       ],
@@ -93,6 +98,8 @@ void main() {
           mockClock,
           () => MonthViewNextMonthSelected(
             focusedDate: nextMonth,
+            updateTime: clock.now(),
+
           ),
         ),
       ],

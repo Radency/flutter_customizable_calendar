@@ -3,10 +3,8 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:clock/clock.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/custom/custom_linked_scroll_controller.dart';
@@ -507,7 +505,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
     );
   }
 
-  double _rowHeight = 1.0;
+  double _rowHeight = 1;
 
   double get _rowsHeight => _rowHeight * widget.numberOfWeeks;
 
@@ -680,7 +678,10 @@ class _MonthViewState<T extends FloatingCalendarEvent>
   }
 
   Widget _singleDayView(
-      DateTime dayDate, double maxWidth, DateTime focusedDate) {
+    DateTime dayDate,
+    double maxWidth,
+    DateTime focusedDate,
+  ) {
     final theme = widget.monthDayTheme;
     final isSelected = DateUtils.isSameDay(dayDate, focusedDate);
     final eventsToShow = dayEventMap[dayDate] ?? [];
