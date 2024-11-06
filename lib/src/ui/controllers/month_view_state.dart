@@ -1,7 +1,7 @@
 part of 'month_view_controller.dart';
 
 /// Base class for all states of [MonthViewController].
-abstract class MonthViewState extends Equatable {
+abstract class MonthViewState {
   /// Creates [MonthViewState] instance.
   const MonthViewState({
     required this.focusedDate,
@@ -24,12 +24,6 @@ abstract class MonthViewState extends Equatable {
         weekStartsOnSunday: weekStartsOnSunday,
         numberOfWeeks: numberOfWeeks,
       );
-
-  @override
-  List<Object?> get props => [
-        focusedDate,
-        reverseAnimation,
-      ];
 }
 
 /// The initial state of [MonthViewController].

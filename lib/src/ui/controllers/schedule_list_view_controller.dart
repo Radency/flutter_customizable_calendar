@@ -160,7 +160,7 @@ class ScheduleListViewController extends Cubit<ScheduleListViewControllerState>
     Map<DateTime, List<CalendarEvent>> events,
   ) {
     final keys = events.keys.toList();
-    final date = keys[min(keys.length - 1, index)];
+    final date = keys[max(0, min(keys.length - 1, index - 1))];
     emit(
       ScheduleListViewControllerCurrentDateIsSet(
         displayedDate: date,

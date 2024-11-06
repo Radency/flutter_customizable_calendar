@@ -5,6 +5,7 @@ import 'package:example/month_view_with_schedule_list_view/cubit/events_cubit.da
 import 'package:example/colors.dart';
 import 'package:example/month_view_with_schedule_list_view/custom_events/delivery_event.dart';
 import 'package:example/month_view_with_schedule_list_view/custom_events/event_attachment.dart';
+import 'package:example/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
@@ -35,8 +36,8 @@ class _MonthViewWithScheduleListViewPageState
   late final Animation<double> _monthPickerSizeYAnimation;
   late final Animation<double> _arrowRotationAnimation;
 
-  final double maxCalendarHeight = 470;
-  final double minCalendarHeight = 115;
+  final double maxCalendarHeight = 500;
+  final double minCalendarHeight = 112;
 
   DateTime _selectedDate = DateTime.now();
 
@@ -61,6 +62,14 @@ class _MonthViewWithScheduleListViewPageState
       begin: 0,
       end: pi,
     ).animate(_animationController);
+
+    _animationController.addListener(() {
+      if (_animationController.value.comparePrecision(0) ||
+          _animationController.value.comparePrecision(1)) {
+        monthViewController
+            .setFocusedDate(monthViewController.state.focusedDate);
+      }
+    });
 
     super.initState();
   }

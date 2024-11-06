@@ -322,25 +322,17 @@ class _MonthViewState<T extends FloatingCalendarEvent>
         );
         _syncGridViewPosition();
 
-        if (state is MonthViewCurrentMonthIsSet) {
-          Future.wait([
-            if (displayedMonth != _monthPickerController?.page?.round())
-              _monthPickerController!.animateToPage(
-                displayedMonth,
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.linearToEaseOut,
-              ),
-          ]).whenComplete(() {
-            setState(() {});
-          });
-        } else if (state is MonthViewNextMonthSelected ||
-            state is MonthViewPrevMonthSelected) {
-          _monthPickerController?.animateToPage(
-            displayedMonth,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.linearToEaseOut,
-          );
-        }
+        Future.wait([
+          if (displayedMonth != _monthPickerController?.page?.round())
+            _monthPickerController!.animateToPage(
+              displayedMonth,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.linearToEaseOut,
+            ),
+        ]).whenComplete(() {
+          setState(() {});
+        });
+
         if (displayedMonth != _monthPickerController?.page?.round()) {
           _initDailyEventsAndControllers();
         }
@@ -449,7 +441,9 @@ class _MonthViewState<T extends FloatingCalendarEvent>
       physics: widget.pageViewPhysics ?? const NeverScrollableScrollPhysics(),
       onPageChanged: (pageIndex) {
         widget.controller.setPage(pageIndex);
-        _syncGridViewPosition();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _syncGridViewPosition();
+        });
       },
       dragStartBehavior: DragStartBehavior.down,
       itemBuilder: (context, pageIndex) {
@@ -556,9 +550,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
           },
           child: Container(
             key: MonthViewKeys.timeline[days.first] = GlobalKey(),
-            padding: const EdgeInsets.only(
-              bottom: 1,
-            ),
+            padding: EdgeInsets.zero,
             color: theme.spacingColor ??
                 widget.divider?.color ??
                 Colors.transparent,
@@ -596,9 +588,7 @@ class _MonthViewState<T extends FloatingCalendarEvent>
                     ...days.map(
                       (day) => WidgetSize(
                         onChange: (size) {
-                          if (size != null &&
-                              _rowHeight == 1.0 &&
-                              _rowHeight != size.height) {
+                          if (size != null && _rowHeight != size.height) {
                             _rowHeight = size.height;
                             if (mounted) {
                               setState(() {});
@@ -632,24 +622,26 @@ class _MonthViewState<T extends FloatingCalendarEvent>
       return;
     }
 
-    final monthDays = widget.controller.state
-        .displayedMonth(
-          weekStartsOnSunday: widget.weekStartsOnSunday,
-          numberOfWeeks: widget.numberOfWeeks,
-        )
-        .days;
+    final monthDays = widget.controller.state.displayedMonth(
+      weekStartsOnSunday: widget.weekStartsOnSunday,
+      numberOfWeeks: widget.numberOfWeeks,
+    );
 
-    final index = monthDays.indexOf(widget.controller.state.focusedDate);
+    var index = 0;
+    for (var i = monthDays.start;
+        i.millisecondsSinceEpoch < monthDays.end.millisecondsSinceEpoch;
+        i = i.add(const Duration(days: 7)), index++) {
+      if (i.millisecondsSinceEpoch >
+          widget.controller.state.focusedDate.millisecondsSinceEpoch) {
+        index--;
+        break;
+      }
+    }
+
     if (index == -1) return;
 
-    final row = clampDouble(
-      index / 7,
-      0,
-      widget.numberOfWeeks.toDouble(),
-    ).floor();
-
     final offset = clampDouble(
-      row * _rowHeight,
+      index * _rowHeight,
       0,
       _rowsHeight - _rowHeight,
     );
