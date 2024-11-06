@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/schedule_list_view_theme.dart';
+import 'package:flutter_customizable_calendar/src/utils/num.dart';
 import 'package:intl/intl.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -117,19 +118,26 @@ class _ScheduleListViewState<T extends CalendarEvent>
       _scrollToCurrentPosition(animate: false, events: _getGrouped())
           .then((value) {
         _itemPositionsListener.itemPositions.addListener(() {
-          final index = _itemPositionsListener.itemPositions.value
-              .sorted(
-                (a, b) => a.itemLeadingEdge.compareTo(b.itemLeadingEdge),
-              )
-              .firstOrNull
-              ?.index;
+          final sorted = _itemPositionsListener.itemPositions.value.sorted(
+            (a, b) => a.itemLeadingEdge.compareTo(b.itemLeadingEdge),
+          );
 
-          if (index != null) {
-            widget.controller.setDisplayedDateByGroupIndex(
-              index,
-              _getGrouped(),
-            );
+          if (sorted.isEmpty) {
+            return;
           }
+
+          var position = sorted.first;
+
+          if (position.itemLeadingEdge.comparePrecision(0)) {
+            if (sorted.length > 1) {
+              position = sorted[1];
+            }
+          }
+
+          widget.controller.setDisplayedDateByGroupIndex(
+            position.index,
+            _getGrouped(),
+          );
         });
       });
     });

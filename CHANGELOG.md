@@ -1,3 +1,9 @@
+## 0.3.6
+
+- Fixed:
+  - **ScheduleListView** state points to incorrect date when changing days while scrolling.
+  - **MonthView** grid has an incorrect row height in collapsed mode.
+  - **MonthView** grid does not synchronize position correctly when switching between expanded/collapsed modes after scrolling
 ## 0.3.5
 
 - Added option to change the number of day rows visible in **MonthView**. Defaults to 6 rows.

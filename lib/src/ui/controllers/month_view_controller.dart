@@ -32,6 +32,7 @@ class MonthViewController extends Cubit<MonthViewState>
       MonthViewCurrentMonthIsSet(
         focusedDate: now,
         reverseAnimation: state.focusedDate.isAfter(now),
+        updateTime: now,
       ),
     );
   }
@@ -46,6 +47,7 @@ class MonthViewController extends Cubit<MonthViewState>
       emit(
         MonthViewPrevMonthSelected(
           focusedDate: isCurrentMonth ? now : prevMonth,
+          updateTime: now,
         ),
       );
     }
@@ -61,6 +63,7 @@ class MonthViewController extends Cubit<MonthViewState>
       emit(
         MonthViewNextMonthSelected(
           focusedDate: isCurrentMonth ? now : nextMonth,
+          updateTime: now,
         ),
       );
     }
@@ -78,6 +81,7 @@ class MonthViewController extends Cubit<MonthViewState>
       MonthViewCurrentMonthIsSet(
         focusedDate: isCurrentMonth ? now : focusedDate,
         reverseAnimation: state.focusedDate.isAfter(now),
+        updateTime: now,
       ),
     );
   }
@@ -88,6 +92,7 @@ class MonthViewController extends Cubit<MonthViewState>
       MonthViewCurrentMonthIsSet(
         focusedDate: date,
         reverseAnimation: state.focusedDate.isAfter(date),
+        updateTime: clock.now(),
       ),
     );
   }
