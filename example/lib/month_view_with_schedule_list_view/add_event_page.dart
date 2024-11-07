@@ -460,11 +460,11 @@ class _AddEventPageState extends State<AddEventPage> {
                                         },
                                         style: ButtonStyle(
                                           backgroundColor:
-                                              MaterialStateProperty.all(
+                                              WidgetStateProperty.all(
                                             ExampleColors.swatch24()
                                                 .withOpacity(0.1),
                                           ),
-                                          shape: MaterialStateProperty.all(
+                                          shape: WidgetStateProperty.all(
                                             RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(8),
@@ -492,11 +492,11 @@ class _AddEventPageState extends State<AddEventPage> {
                                         },
                                         style: ButtonStyle(
                                           backgroundColor:
-                                              MaterialStateProperty.all(
+                                              WidgetStateProperty.all(
                                             ExampleColors.swatch24()
                                                 .withOpacity(0.1),
                                           ),
-                                          shape: MaterialStateProperty.all(
+                                          shape: WidgetStateProperty.all(
                                             RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(8),

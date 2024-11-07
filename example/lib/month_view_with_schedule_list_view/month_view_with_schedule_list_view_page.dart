@@ -474,6 +474,7 @@ class _MonthViewWithScheduleListViewPageState
       EventsInitialized state) {
     return ScheduleListView(
       controller: scheduleListController,
+      displayedDateEdge: EScheduleListViewDisplayedDateEdge.leading,
       monthPickerBuilder: (
         context,
         next,

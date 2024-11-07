@@ -51,3 +51,14 @@ class ScheduleListViewTheme {
   /// Date margin
   final EdgeInsets dateMargin;
 }
+
+/// Enum for the schedule list view displayed date edge mode
+enum EScheduleListViewDisplayedDateEdge {
+  /// Leading edge
+  leading,
+
+  /// Trailing edge
+  trailing,
+}
+
+

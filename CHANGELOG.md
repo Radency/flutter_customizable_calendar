@@ -1,3 +1,6 @@
+## 0.3.7
+- add EScheduleListViewDisplayedDateEdge enumeration, which will allow changing between two different modes of updating the `displayedDate` field in the ScheduleListViewControllerState, for example, it should be updated either when the widget is at the top of the scroll or at the bottom.
+
 ## 0.3.6
 
 - Fixed:
