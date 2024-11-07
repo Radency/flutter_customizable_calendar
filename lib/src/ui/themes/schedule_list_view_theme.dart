@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 /// Theme for [ScheduleListView]
 class ScheduleListViewTheme {
@@ -51,3 +52,14 @@ class ScheduleListViewTheme {
   /// Date margin
   final EdgeInsets dateMargin;
 }
+
+/// Enum for the schedule list view displayed date edge mode
+enum EScheduleListViewDisplayedDateEdge {
+  /// Leading edge
+  leading,
+
+  /// Trailing edge
+  trailing,
+}
+
+

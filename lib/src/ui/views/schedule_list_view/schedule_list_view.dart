@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_customizable_calendar/flutter_customizable_calendar.dart';
 import 'package:flutter_customizable_calendar/src/ui/themes/schedule_list_view_theme.dart';
 import 'package:flutter_customizable_calendar/src/utils/num.dart';
+import 'package:flutter_customizable_calendar/src/utils/positioned_list_utils.dart';
 import 'package:intl/intl.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -22,6 +23,7 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
     this.monthPickerBuilder,
     this.dayBuilder,
     this.ignoreDaysWithoutEvents = false,
+    this.displayedDateEdge = EScheduleListViewDisplayedDateEdge.trailing,
     super.key,
   });
 
@@ -63,6 +65,12 @@ class ScheduleListView<T extends CalendarEvent> extends StatefulWidget {
   /// Allows to specify custom builders for events
   /// Works only if you don't specify [dayBuilder] builder.
   final Map<Type, EventBuilder> eventBuilders;
+
+  /// The edge mode for the displayed date.
+  /// If you want to specify the edge for the displayed date to be triggered to,
+  /// you need to specify this mode.
+  /// By default, it's [EScheduleListViewDisplayedDateEdge.trailing].
+  final EScheduleListViewDisplayedDateEdge displayedDateEdge;
 
   /// Custom day builder
   /// Allows to specify custom builder for day
@@ -119,7 +127,15 @@ class _ScheduleListViewState<T extends CalendarEvent>
           .then((value) {
         _itemPositionsListener.itemPositions.addListener(() {
           final sorted = _itemPositionsListener.itemPositions.value.sorted(
-            (a, b) => a.itemLeadingEdge.compareTo(b.itemLeadingEdge),
+            (a, b) => a
+                .getEdgeByMode(
+                  widget.displayedDateEdge,
+                )
+                .compareTo(
+                  b.getEdgeByMode(
+                    widget.displayedDateEdge,
+                  ),
+                ),
           );
 
           if (sorted.isEmpty) {
@@ -128,7 +144,11 @@ class _ScheduleListViewState<T extends CalendarEvent>
 
           var position = sorted.first;
 
-          if (position.itemLeadingEdge.comparePrecision(0)) {
+          if (position
+              .getEdgeByMode(
+                widget.displayedDateEdge,
+              )
+              .comparePrecision(0)) {
             if (sorted.length > 1) {
               position = sorted[1];
             }
