@@ -11,3 +11,14 @@ extension ItemPositionExtension on ItemPosition {
     }
   }
 }
+
+extension PositionedListScrollControllerExtension on ItemScrollController {
+  double getAlignmentByMode(EScheduleListViewDisplayedDateEdge mode) {
+    switch (mode) {
+      case EScheduleListViewDisplayedDateEdge.leading:
+        return -.01;
+      case EScheduleListViewDisplayedDateEdge.trailing:
+        return .01;
+    }
+  }
+}

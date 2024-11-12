@@ -336,13 +336,18 @@ class _ScheduleListViewState<T extends CalendarEvent>
               1,
           duration: const Duration(milliseconds: 300),
           curve: Curves.ease,
-          alignment: .01,
+          alignment: _scrollController.getAlignmentByMode(
+            widget.displayedDateEdge,
+          ),
         );
       } else {
         _scrollController.jumpTo(
           index: widget.controller.animateToGroupIndex(
             ignoreEmpty: widget.ignoreDaysWithoutEvents,
             events: events,
+          ),
+          alignment: _scrollController.getAlignmentByMode(
+            widget.displayedDateEdge,
           ),
         );
       }
