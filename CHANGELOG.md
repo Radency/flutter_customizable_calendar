@@ -1,5 +1,8 @@
+## 0.3.8
+- Fixed:
+  - when changing the position of the **ScheduleListView**, use the alignment based on the provided **EScheduleListViewDisplayedDateEdge** so that it aligns the correct edge of the screen when changing the list position
 ## 0.3.7
-- add EScheduleListViewDisplayedDateEdge enumeration, which will allow changing between two different modes of updating the `displayedDate` field in the ScheduleListViewControllerState, for example, it should be updated either when the widget is at the top of the scroll or at the bottom.
+- add **EScheduleListViewDisplayedDateEdge** enumeration, which will allow changing between two different modes of updating the `displayedDate` field in the **ScheduleListViewControllerState**, for example, it should be updated either when the widget is at the top of the scroll or at the bottom.
 
 ## 0.3.6
 
