@@ -1,6 +1,6 @@
 name: flutter_customizable_calendar
 description: a feature-rich Flutter package that offers highly customizable calendar views for displaying days, weeks, and months.
-version: 0.3.7
+version: 0.3.8
 homepage: https://github.com/Radency/flutter_customizable_calendar
 
 environment:
